@@ -148,6 +148,23 @@ ros2 service call /lift/stop std_srvs/srv/Trigger '{}'
 Trong SIM, xe bị khóa khi chưa homing, đang nâng/hạ hoặc trạng thái càng không cho
 phép di chuyển. Gửi vận tốc teleop vào `/cmd_vel_teleop`; `/cmd_vel` là đầu ra nội bộ.
 
+## Tay cầm PS4 trong mô phỏng
+
+Cài `ros-humble-joy`, build lại workspace và kết nối tay cầm PS4 qua USB hoặc
+Bluetooth. Chạy mô phỏng thủ công như trên, rồi ở terminal đã source khác:
+
+```bash
+ros2 launch forklift_bringup ps4.launch.py
+```
+
+Thả L1 và đưa cần về giữa, sau đó giữ L1 để chạy: cần trái tiến/lùi/đi ngang,
+cần phải xoay. L1 + D-pad lên/xuống nâng/hạ từng 1 cm; L1 + Triangle homing;
+Circle gửi dừng bánh và nâng. Nhả L1 hoặc mất Joy sẽ gửi zero trong SIM.
+Không chạy đồng thời với bàn phím hoặc nhiệm vụ tự động.
+
+Xem [kết nối, ánh xạ nút và giới hạn PS4](docs/ps4_teleop.md).
+Đã có tích hợp phần mềm; chưa kiểm chứng bằng tay cầm thật trong phiên này.
+
 ## SLAM và điều hướng riêng
 
 Các chế độ dưới đây đã bao gồm Gazebo và RViz. Chạy từng chế độ riêng, không mở

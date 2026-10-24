@@ -1,0 +1,27 @@
+# SDL game_controller_node layout; do not use raw joy_node with these indices.
+ps4_driver:
+  ros__parameters:
+    device_id: 0
+    device_name: ""
+    deadzone: 0.10
+    autorepeat_rate: 20.0
+    sticky_buttons: false
+    coalesce_interval_ms: 1
+ps4_teleop:
+  ros__parameters:
+    axis_forward: 1
+    axis_lateral: 0
+    axis_yaw: 2
+    button_enable: 9  # L1
+    button_home: 3  # Triangle
+    button_up: 11  # D-pad up
+    button_down: 12  # D-pad down
+    button_stop: 1  # Circle
+    speed_forward: 0.15
+    speed_lateral: 0.12
+    speed_yaw: 0.4
+    joy_timeout: 0.25
+    state_timeout: 0.5
+    neutral_tolerance: 0.05
+    lift_step: 0.01
+    lift_max_height: 0.115  # SIM supervisor limit; not physical screw calibration.

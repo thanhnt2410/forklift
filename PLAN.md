@@ -5,6 +5,11 @@ runner và recorder chuyển sang `controller:=mppi`, RPP giữ làm phương á
 bằng `controller:=rpp`. Lượt demo Gazebo có GUI mới nhất hoàn thành 29/29:
 [video MPPI](results/mppi_trial/visible_demo/mission_demo.mp4).
 Người dùng yêu cầu các lần sau không tự chạy kiểm thử tránh vật cản.
+Đã tích hợp điều khiển PS4 cho SIM bằng `ps4.launch.py`: SDL game controller,
+L1 cho phép lái mecanum, D-pad nâng/hạ 1 cm, Triangle home, Circle dừng.
+Đã build hai package và đạt 18/18 kiểm tra bằng Joy/action/service ROS giả;
+chưa có tay cầm thật kết nối để xác nhận USB/Bluetooth và ánh xạ thực tế.
+[Cách chạy và bảng nút](docs/ps4_teleop.md). Không chạy thêm bài tránh vật cản.
 Đã bắt đầu P2 phần mềm theo phần cứng người dùng xác nhận: ESP32 DevKit 38 chân
 WROOM, 4 GA25-370 encoder khoảng 280 RPM, 4 BTS7960, TB6600/NEMA17.
 Chọn MPU6050 nối Pi và 2 limit NC dưới/trên. Đã tạo
