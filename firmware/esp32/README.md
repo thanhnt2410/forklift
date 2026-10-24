@@ -3,7 +3,7 @@
 Bản khung cho **ESP32 DevKit 38 chân, WROOM**, 4 GA25-370 có encoder,
 4 BTS7960 và TB6600/NEMA17. MPU6050 được chọn nối **Raspberry Pi qua I2C**
 để dành GPIO ESP32 cho encoder và cơ cấu chấp hành. Chưa triển khai driver MPU6050
-thật. Backend ROS USB/UART v2 đã có ở `forklift_hardware`, xem
+thật. Backend ROS USB/UART CSV đơn giản đã có ở `forklift_hardware`, xem
 [hướng dẫn điều khiển ESP32](../../docs/esp32_manual_control.md).
 
 **Mặc định bật profile thử bánh + nâng một công tắc dưới. Chưa nạp hoặc thử xe thật.**
@@ -47,7 +47,7 @@ không đọc GPIO âm. Phản hồi E-stop chưa gán trong profile thử thủ
 Quãng đường vật lý chưa biết. Giả định 200 bước/vòng, vi bước 1/8, lead 8 mm/vòng
 chỉ tạo **thang tọa độ UART danh nghĩa 200000 step/m**. Giá trị 0,01 trong goal
 hiện nghĩa là 2.000 xung, **chưa xác nhận nâng 1 cm**. ROS dùng cùng thang để đổi
-tọa độ ra xung, báo `PULSE_PRESET`, `lift_calibrated=False`. Chưa chọn dòng DIP
+tọa độ ra xung; status hiển thị `steps`, chưa coi đó là chiều cao đo thực. Chưa chọn dòng DIP
 TB6600 khi không biết dòng pha NEMA17; cần chọn dòng phù hợp động cơ thật.
 Xem [cách đo và hiệu chỉnh](../../docs/esp32_manual_control.md#đo-quãng-nâng-và-hiệu-chỉnh).
 Đặt `enable_lift=false` và cấu hình ROS phù hợp nếu chỉ thử bánh.
@@ -77,8 +77,9 @@ STEP khi lỗi và giữ homing/giới hạn. Chưa nạp hoặc kiểm chứng 
 - Profile hiện tại dùng **một công tắc NC dưới**, không yêu cầu công tắc trên.
   Homing tìm dưới → đi lên cho công tắc nhả → đi thêm khoảng backoff → chạm lại chậm.
   Không nhả công tắc hoặc không hoàn tất đúng thời gian sẽ lỗi.
-- CRC32, ID phiên boot, số thứ tự tăng, handshake vô hiệu hóa trước khi cho phép
-  chạy; chẩn đoán timeout lệnh 300 ms, fault latch và reset sau khi có lệnh dừng.
+- CSV từng dòng đơn giản, kiểm tra kiểu số/giới hạn và bắt đầu disarm; chẩn đoán
+  timeout lệnh 300 ms, fault latch và reset sau khi có lệnh dừng. Giao thức v2 cũ
+  vẫn có thể chọn riêng để đối chiếu.
 - Kiểm tra chu kỳ điều khiển quá 50 ms. Timer ISR chặn STEP khi trễ; latch yêu cầu
   reboot. Trong profile hiện tại, lỗi timeout/encoder/IO/deadline không tự ngắt PWM bánh.
   Các thời gian trên là thiết kế phần mềm, **chưa đo trên ESP32 thật**.
@@ -162,52 +163,54 @@ Profile nâng một công tắc dùng giả định số xung theo yêu cầu; �
 kiểm tra chiều nâng/hạ, mức điện và dòng DIP trước khi thử không tải. Các bảo vệ
 phần mềm và công tắc dưới không thay cho công tắc trên hoặc mạch dừng vật lý.
 
-## UART v2
+## Serial CSV đơn giản — mặc định
 
-USB–UART, 230400 baud, 8N1; mỗi frame ASCII:
+USB–UART **230400 baud, 8N1**. Mỗi bản tin ASCII kết thúc bằng newline, không CRC,
+không boot ID, không sequence hoặc ACK trên dây. Serial Monitor chọn 230400 và
+New Line (Both NL & CR cũng được). ESP32 tự phát trạng thái **20 lần/giây**:
 
 ```text
-PAYLOAD*crc32_8_hex\n
-C,2,boot,seq,wFL,wFR,wRL,wRR,lift_m,enabled
-H,2,boot,seq
-D,2,boot,seq
-R,2,boot,seq
-S,2,boot,state_seq,time_us,ack,tFL,tFR,tRL,tRR,lift_steps,fault,mode,homed,low,high,estop,capabilities
+S,ms,tFL,tFR,tRL,tRR,lift_steps,mode,homed,lower,fault,capabilities
+S,1200,0,0,0,0,0,1,0,1,0,3
 ```
 
-CRC32/ISO-HDLC tính trên PAYLOAD, không gồm `*`, CRC, newline. Không có CR.
-Tối đa 256 byte/frame kể cả LF. Vận tốc bánh rad/s, vị trí nâng m, timestamp µs
-64 bit từ MCU; tick encoder là số đếm x4 có dấu, không phải vị trí mô phỏng.
-Trong profile `PULSE_PRESET`, lift_m là tọa độ danh nghĩa đổi ra xung; chưa là mét đo thực.
-`boot` là ID boot 64 bit ngẫu nhiên phát trong S, host phải đọc trước khi gửi lệnh.
-`seq` > 0 và tăng nghiêm ngặt; frame sai boot/lặp/cũ không ACK, không nuôi watchdog.
-Đây là chống nhầm phiên/lệnh cũ, không phải cơ chế xác thực bảo mật.
+- `ms`: thời gian ESP32 chạy, ms, dùng tính vận tốc từ số đếm encoder.
+- `tFL…tRR`: encoder có dấu; `lift_steps`: xung nâng tính từ home.
+- `mode`: 0 khóa, 1 disarmed, 2 active, 3 homing, 4 fault.
+- `homed`, `lower`: 0/1; `lower=1` chỉ nói input công tắc đang tác động, chưa
+  tự xác nhận vị trí home nếu chưa thực hiện chu trình tìm/nhả/chạm lại.
+- `fault`: bitmask 1 config, 2 E-stop, 4 watchdog, 8 encoder, 16 limit,
+  32 home timeout, 64 deadline, 128 peripheral.
+- `capabilities`: 0 cấu hình lỗi, 1 bánh, 3 bánh+nâng.
 
-| Lệnh/trạng thái | Nghĩa |
-|---|---|
-| C, enabled=0 | Vô hiệu hóa; trong homing giữ vai trò heartbeat để tiếp tục H |
-| C, enabled=1 | Chấp nhận sau handshake disabled và không lỗi; nâng cần homed |
-| H | Chỉ từ Disarmed, bánh dừng; tìm home, cần tiếp tục C disabled đều đặn |
-| D | Dừng/hủy, kể cả homing; không tự xóa lỗi |
-| R | Reset khi input khỏe và bánh đã dừng; xóa homed, phải home lại trước nâng |
-| mode | 0 Locked, 1 Disarmed, 2 Active, 3 Homing, 4 Faulted |
-| capabilities | 0 cấu hình chưa đủ, 1 hỗ trợ base, 3 hỗ trợ base+nâng; xem fault/mode để biết sẵn sàng |
-| fault bitmask | 1 Config, 2 E-stop, 4 watchdog, 8 encoder, 16 limit, 32 home timeout, 64 control deadline, 128 peripheral |
+Các lệnh ROS gửi xuống:
 
-Sau fault, C enabled mới bị từ chối. Profile ngắt nguồn thủ công vẫn giữ PWM cũ,
-nên host cần gửi D/C-disabled để dừng trước khi R có thể được chấp nhận. Với lỗi
-khôi phục được, kiểm tra ACK/trạng thái sau R trước khi gửi lệnh tiếp. Timer deadline latch hoặc
-khởi tạo peripheral hỏng yêu cầu reboot sau xử lý nguyên nhân.
-Vận tốc/lift ngoài giới hạn bị từ chối nguyên frame. Bản base-only cho phép thử
-bánh khi chưa homing với lift target = 0. Giá trị setpoint vượt khả năng tải thực
-không được tự hiệu chỉnh bằng thông số 280 RPM.
+```text
+C,wFL,wFR,wRL,wRR,lift_steps,enabled
+C,0,0,0,0,0,0
+C,0,0,0,0,0,1
+H
+D
+R
+```
 
-**Không tương thích trực tiếp với UART v1 của `PtySystem`/MCU giả.** Backend đó
-vẫn chỉ mở `/dev/pts/*`, được giữ nguyên cho SIM. Backend v2 riêng
-`forklift_hardware/esp32_bridge.py` và `forklift_bringup/real.launch.py` mở USB/UART,
-tính động học và đọc encoder trực tiếp, không chạy ros2_control hoặc supervisor
-nâng SIM. Backend có cùng action nâng cho bàn phím. Kết nối không tự mở khóa
-`board_config.h`; đã kiểm tra phần mềm qua PTY, chưa thử ESP32 hoặc xe thật.
+`C` đặt vận tốc bánh **rad/s**, đích nâng **số xung**, enabled 0/1. `H` home,
+`D` dừng, `R` reset fault (khác phím R bàn phím nâng; node chuyển phím thành C).
+Khởi động vẫn disarm; C disabled trước rồi mới bật. Khi home phải tiếp tục
+C disabled định kỳ. Bộ điều khiển vẫn kiểm tra tốc độ, chiều encoder, xung,
+homing và watchdog. Lỗi bánh vẫn giữ PWM theo lựa chọn ngắt nguồn thủ công.
+
+Bản tin lỗi định dạng bị bỏ qua. Vì không có CRC/ID/ACK, định dạng này dễ xem
+bằng Monitor nhưng không kiểm tra được lỗi bit tạo thành số hợp lệ hoặc xác
+nhận riêng từng lệnh. ROS đợi telemetry mới và kiểm tra mode/vị trí/công tắc,
+không coi việc gửi lệnh là hoàn tất. Uptime giảm được coi là MCU khởi động lại,
+không tự tiếp tục nhiệm vụ.
+
+**Phải cập nhật cả firmware và ROS cùng lúc**: `simple_serial=true` trong
+`board_config.h` và `serial_protocol: simple` trong `esp32.yaml`. Bản firmware
+v2 cũ (`S,2,...*CRC`) không được parser simple chấp nhận. Có thể dùng lại v2
+bằng `simple_serial=false`, `serial_protocol: v2`; mã v2 giữ cho đối chiếu và
+MCU PTY cũ vẫn riêng biệt. Backend ros2_control PTY v1 không đổi.
 
 ## Build và kiểm thử
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: Apache-2.0
-"""ROS manual-control bridge for the ESP32 UART v2 firmware (no Gazebo)."""
+"""ROS manual-control bridge for ESP32 plain CSV (optional legacy UART v2)."""
 import binascii
 from dataclasses import dataclass
 import errno
@@ -84,6 +84,29 @@ def parse_state(line):
         raise ValueError('invalid state enumeration')
     return State(boot, seq, us, ack, ticks, steps, fault, mode,
                  bool(homed), bool(low), bool(high), bool(estop), caps)
+
+
+def parse_simple_state(line):
+    """S,ms,tFL,tFR,tRL,tRR,lift_steps,mode,homed,lower,fault,capabilities."""
+    if not 1 <= len(line) <= 256 or not line.endswith(b'\n'):
+        raise ValueError('invalid CSV line')
+    fields = line.rstrip(b'\r\n').decode('ascii').split(',')
+    if len(fields) != 12 or fields[0] != 'S':
+        raise ValueError('expected plain S CSV')
+    values = []
+    for index, field in enumerate(fields[1:], 1):
+        signed = 2 <= index <= 6
+        if not re.fullmatch(r'-?[0-9]+' if signed else r'[0-9]+', field):
+            raise ValueError('invalid CSV integer')
+        value = int(field)
+        if not (-(2**63) <= value < 2**63 if signed else 0 <= value < 2**64):
+            raise ValueError('CSV integer overflow')
+        values.append(value)
+    ms, fl, fr, rl, rr, steps, mode, homed, low, fault, caps = values
+    if ms >= 2**64//1000 or mode > 4 or homed not in (0, 1) or low not in (0, 1) or fault > 255 or caps not in (0, 1, 3):
+        raise ValueError('invalid CSV state values')
+    return State(0, 0, ms*1000, 0, (fl, fr, rl, rr), steps, fault, mode,
+                 bool(homed), bool(low), False, bool(fault & 2), caps)
 
 
 def inverse(vx, vy, wz, radius, k):
@@ -175,7 +198,7 @@ class SerialPort:
 class Esp32Bridge(Node):
     def __init__(self):
         super().__init__('esp32_bridge')
-        defaults = dict(port='/dev/serial/by-id/SET_ESP32_PORT', baud=230400,
+        defaults = dict(port='/dev/serial/by-id/SET_ESP32_PORT', baud=230400, serial_protocol='simple',
                         wheel_radius=.05, kinematic_sum=.260145, encoder_cpr=937.2,
                         max_wheel_speed=2., state_timeout=.25, command_timeout=.3,
                         ack_timeout=.25, lift_steps_per_m=0., lift_max_height=0.,
@@ -184,6 +207,11 @@ class Esp32Bridge(Node):
         for key, value in defaults.items():
             self.declare_parameter(key, value)
         self.p = {key: self.get_parameter(key).value for key in defaults}
+        if self.p['serial_protocol'] not in ('simple', 'v2'):
+            raise ValueError('serial_protocol must be simple or v2')
+        self.simple = self.p['serial_protocol'] == 'simple'
+        self.sent_after = {}
+        self.simple_rx_seq = self.simple_boot = 0
         positive = ('wheel_radius', 'kinematic_sum', 'encoder_cpr', 'max_wheel_speed',
                     'state_timeout', 'command_timeout', 'ack_timeout', 'lift_tolerance')
         if any(not math.isfinite(self.p[k]) or self.p[k] <= 0 for k in positive):
@@ -255,7 +283,7 @@ class Esp32Bridge(Node):
         # Open last, after ROS construction and parameter validation.
         self.serial = SerialPort(self.p['port'], self.p['baud'])
         self.create_timer(.02, self.tick, clock=Clock())
-        self.get_logger().info(f'UART v2: {self.p["port"]}, baud={self.p["baud"]}, '
+        self.get_logger().info(f'UART {self.p["serial_protocol"]}: {self.p["port"]}, baud={self.p["baud"]}, '
                                f'DTR/RTS={self.serial.modem_lines}; DISARMED, waiting for telemetry')
 
     def fresh(self):
@@ -293,8 +321,20 @@ class Esp32Bridge(Node):
             wheels, height, enabled = values
             payload += ''.join(f',{v:.9g}' for v in wheels) + f',{height:.9g},{int(enabled)}'
         try:
-            self.serial.write(frame(payload))
-            self.pending_tx.append((self.seq, time.monotonic()))
+            if self.simple:
+                payload = kind
+                if values is not None:
+                    wheels, height, enabled = values
+                    steps = round(height*self.p['lift_steps_per_m'])
+                    payload += ''.join(f',{v:.4f}' for v in wheels) + f',{steps},{int(enabled)}'
+                self.serial.write((payload+'\n').encode('ascii'))
+                self.sent_after[self.seq] = self.state.seq
+                keep = {self.arm_seq, self.stop_seq, self.reset_seq, self.handshake_seq,
+                        self.hold_after_stop_seq, self.op['seq'] if self.op else None}
+                self.sent_after = {k: v for k, v in self.sent_after.items() if k in keep or k > self.seq-64}
+            else:
+                self.serial.write(frame(payload))
+                self.pending_tx.append((self.seq, time.monotonic()))
             # Bound bookkeeping even with an unresponsive MCU.
             self.pending_tx = self.pending_tx[-64:]
             return self.seq
@@ -302,6 +342,15 @@ class Esp32Bridge(Node):
             self.transport_broken = True
             self.fail(f'UART_WRITE: {error}')
             return None
+
+    def confirmed(self, token, state=None):
+        """CSV has no ACK: require later telemetry AND caller's mode/position check."""
+        state = state or self.state
+        if token is None or state is None:
+            return False
+        if self.simple:
+            return state.seq >= self.sent_after.get(token, math.inf)+2
+        return state.ack >= token
 
     def receive_command(self, msg):
         values = (msg.linear.x, msg.linear.y, msg.angular.z)
@@ -318,14 +367,14 @@ class Esp32Bridge(Node):
         if not req.data:
             self.explicit_stop(disarm=True)
             res.success = not self.transport_broken and self.state is not None
-            res.message = 'D sent; verify ACK and DISARMED/FAULTED in /esp32/status'
+            res.message = 'Stop sent; verify fresh DISARMED/FAULTED telemetry'
         elif self.armed:
             res.success, res.message = True, 'Already ARMED'
         elif (not self.ready() or not self.handshake or not self.stationary() or
               self.state.mode != 1 or self.reserved or self.arming or
               (self.state.capabilities == 3 and (not self.lift_configured() or
                (self.state.homed and not 0 <= self.height <= self.p['lift_max_height'])))):
-            res.success, res.message = False, 'Need fresh fault-free DISARMED telemetry, disabled ACK and stationary wheels; inspect /esp32/status'
+            res.success, res.message = False, 'Need fresh fault-free DISARMED telemetry and stationary wheels; inspect /esp32/status'
         else:
             self.command = (0., 0., 0.)
             self.hold_height = self.height if self.state.homed else 0.
@@ -333,19 +382,19 @@ class Esp32Bridge(Node):
             self.arming = self.arm_seq is not None
             self.arm_at = time.monotonic()
             res.success = self.arming
-            res.message = 'ARMING sent; wait for /esp32/status ARMED before keyboard input'
+            res.message = 'Arm requested; wait for /esp32/status ARMED before keyboard input'
         return res
 
     def reset(self, req, res):
         if (not self.fresh() or self.transport_broken or self.armed or self.arming or
                 self.reserved or not self.stationary() or self.state.estop or self.software_estop or
                 self.state.mode not in (1, 4) or self.stop_seq is None or
-                self.state.ack < self.stop_seq):
-            res.success, res.message = False, 'Disarm first; wait for stop ACK, fresh stationary feedback and healthy inputs'
+                not self.confirmed(self.stop_seq)):
+            res.success, res.message = False, 'Disarm first; wait for fresh stopped telemetry and healthy inputs'
         else:
             self.reset_seq = self.send('R')
             res.success = self.reset_seq is not None
-            res.message = 'R sent; wait for fault-free DISARMED ACK, then arm explicitly'
+            res.message = 'Reset sent; wait for fault-free DISARMED telemetry, then arm explicitly'
         return res
 
     def estop(self, msg):
@@ -375,7 +424,7 @@ class Esp32Bridge(Node):
     def stop(self, req, res):
         self.explicit_stop()
         res.success = self.state is not None and not self.transport_broken
-        res.message = 'Explicit D sent to ESP32; check ACK in /esp32/status'
+        res.message = 'Stop sent; check fresh stopped telemetry in /esp32/status'
         return res
 
     def accept(self, kind, goal):
@@ -447,7 +496,7 @@ class Esp32Bridge(Node):
     def feedback(self, state):
         old = self.state
         if old is not None and state.boot == old.boot:
-            if state.seq <= old.seq or state.us <= old.us or state.ack < old.ack or state.ack > self.seq:
+            if state.seq <= old.seq or state.us <= old.us or (not self.simple and (state.ack < old.ack or state.ack > self.seq)):
                 self.invalid_frames += 1
                 return
         elif old is not None:
@@ -455,6 +504,7 @@ class Esp32Bridge(Node):
             self.handshake = False
             self.handshake_seq = None
             self.pending_tx.clear()
+            self.sent_after.clear()
         first = old is None or old.boot != state.boot
         if first:
             self.seq = state.ack
@@ -463,20 +513,20 @@ class Esp32Bridge(Node):
         self.pending_tx = [(seq, at) for seq, at in self.pending_tx if seq > state.ack]
         if state.fault or state.estop:
             self.fail(f'MCU_FAULT_{state.fault}' if state.fault else 'MCU_ESTOP')
-        if self.reset_seq is not None and state.ack >= self.reset_seq and not state.fault and state.mode == 1:
+        if self.reset_seq is not None and self.confirmed(self.reset_seq, state) and not state.fault and state.mode == 1:
             self.reset_seq = None
             self.host_fault = ''
             self.handshake = True
-        if self.handshake_seq is not None and state.ack >= self.handshake_seq and state.mode == 1:
+        if self.handshake_seq is not None and self.confirmed(self.handshake_seq, state) and state.mode == 1:
             self.handshake = True
-        if self.arming and state.ack >= self.arm_seq and state.mode == 2 and self.ready():
+        if self.arming and self.confirmed(self.arm_seq, state) and state.mode == 2 and self.ready():
             self.arming, self.armed = False, True
             self.command = (0., 0., 0.)
             self.cmd_at = time.monotonic()
         self.height = state.steps/self.p['lift_steps_per_m'] if self.lift_configured() else 0.
-        if (self.hold_after_stop_seq is not None and state.ack >= self.hold_after_stop_seq
+        if (self.hold_after_stop_seq is not None and self.confirmed(self.hold_after_stop_seq, state)
                 and state.mode in (1, 4)):
-            # Capture position AFTER D is acknowledged, not from lagging
+            # Capture position after fresh stopped telemetry, not from lagging
             # pre-stop telemetry. Never resume toward the old cached position.
             self.hold_height = self.height if state.homed else 0.
             self.hold_after_stop_seq = None
@@ -517,12 +567,12 @@ class Esp32Bridge(Node):
     def advance_operation(self):
         op, s = self.op, self.state
         if op['kind'] == 'home':
-            if op['phase'] == 'disabled' and s.ack >= op['seq'] and s.mode == 1 and self.stationary():
+            if op['phase'] == 'disabled' and self.confirmed(op['seq'], s) and s.mode == 1 and self.stationary():
                 op['seq'] = self.send('H')
                 op['phase'] = 'homing'
-            elif op['phase'] == 'homing' and op['seq'] is not None and s.ack >= op['seq'] and s.homed and s.low and s.mode == 1:
+            elif op['phase'] == 'homing' and op['seq'] is not None and self.confirmed(op['seq'], s) and s.homed and s.low and s.mode == 1:
                 self.finish(True, 'HOMED')
-        elif op['seq'] is not None and s.ack >= op['seq']:
+        elif op['seq'] is not None and self.confirmed(op['seq'], s):
             if self.p['lift_preset_mode']:
                 settled = s.steps == self.p['lift_raise_steps'] and self.lift_velocity == 0.
             else:
@@ -557,8 +607,13 @@ class Esp32Bridge(Node):
                   f'lift_mode={"PULSE_PRESET" if self.p["lift_preset_mode"] else "POSITION"}; '
                   f'lift_calibrated={self.lift_configured() and not self.p["lift_preset_mode"]}; '
                   f'boot={s.boot if s else "?"}')
+        if self.simple:
+            status = (f'{label}; host={fault or "OK"}; mcu={MODES[s.mode] if s else "UNKNOWN"}; '
+                      f'fault={s.fault if s else "?"}; homed={int(s.homed) if s else "?"}; '
+                      f'bottom={int(s.low) if s else "?"}; steps={s.steps if s else "?"}; '
+                      f'rx_bytes={self.serial.rx_bytes}')
         self.status_pub.publish(String(data=status))
-        # ACK changes at 50 Hz; log state transitions rather than every packet.
+        # Log state transitions rather than every telemetry packet.
         signature = (label, fault, s.mode if s else None, s.capabilities if s else None, self.handshake)
         if signature != getattr(self, 'last_signature', None):
             self.get_logger().info(status)
@@ -566,9 +621,11 @@ class Esp32Bridge(Node):
         if now-self.last_diag >= 1.:
             self.last_diag = now
             self.diag_pub.publish(DiagnosticArray(header=header, status=[DiagnosticStatus(
-                name='forklift_hardware/esp32', hardware_id=str(s.boot) if s else 'UNKNOWN',
+                name='forklift_hardware/esp32',
+                hardware_id=self.p['port'] if self.simple else (str(s.boot) if s else 'UNKNOWN'),
                 level=DiagnosticStatus.ERROR if fault else (DiagnosticStatus.OK if self.armed else DiagnosticStatus.WARN), message=status,
-                values=[KeyValue(key='port', value=self.p['port']),
+                values=[KeyValue(key='serial_protocol', value=self.p['serial_protocol']),
+                        KeyValue(key='port', value=self.p['port']),
                         KeyValue(key='baud', value=str(self.p['baud'])),
                         KeyValue(key='rx_bytes', value=str(self.serial.rx_bytes)),
                         KeyValue(key='rx_lines', value=str(self.serial.rx_lines)),
@@ -588,10 +645,17 @@ class Esp32Bridge(Node):
                 lines = []
             for line in lines:
                 try:
-                    state = parse_state(line)
+                    state = parse_simple_state(line) if self.simple else parse_state(line)
                 except (ValueError, UnicodeError):
                     self.invalid_frames += 1
                     continue
+                if self.simple:
+                    self.simple_rx_seq += 1
+                    if self.state is not None and state.us < self.state.us:
+                        self.simple_boot += 1
+                    state = State(self.simple_boot, self.simple_rx_seq, state.us, 0,
+                                  state.ticks, state.steps, state.fault, state.mode,
+                                  state.homed, state.low, state.high, state.estop, state.capabilities)
                 self.feedback(state)
         if (self.armed or self.arming or self.reserved) and not self.fresh():
             self.fail('TELEMETRY_TIMEOUT')

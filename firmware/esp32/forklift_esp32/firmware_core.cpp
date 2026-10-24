@@ -98,6 +98,44 @@ bool Receiver::push(char byte, Command & command) {
   }
   buffer_[used_++] = byte; return false;
 }
+bool parse_simple_command(const char * input, size_t size, double steps_per_m, Command & command) {
+  if (size && input[size-1]=='\n') --size;
+  if (size && input[size-1]=='\r') --size;
+  if (!size || size>=kFrameCapacity || std::memchr(input,'\0',size)) return false;
+  char text[kFrameCapacity];std::memcpy(text,input,size);text[size]='\0';
+  Command next;
+  if (size==1) {
+    if (text[0]=='H') next.operation=Operation::Home;
+    else if (text[0]=='D') next.operation=Operation::Stop;
+    else if (text[0]=='R') next.operation=Operation::Reset;
+    else return false;
+  } else {
+    char * fields[7];size_t count=1;fields[0]=text;
+    for (size_t i=0;i<size;++i) if (text[i]==',') {
+      if (count==7) return false;
+      text[i]='\0';fields[count++]=text+i+1;
+    }
+    if (count!=7 || std::strcmp(fields[0],"C")) return false;
+    next.operation=Operation::Control;
+    for (size_t i=0;i<4;++i) if (!real_value(fields[i+1],next.wheel[i])) return false;
+    uint64_t steps;
+    if (!unsigned_value(fields[5],steps) || steps>INT32_MAX ||
+        (steps && !positive(steps_per_m)) ||
+        (std::strcmp(fields[6],"0") && std::strcmp(fields[6],"1"))) return false;
+    next.lift_m=steps ? double(steps)/steps_per_m : 0.;
+    next.enabled=fields[6][0]=='1';
+  }
+  command=next;return true;
+}
+bool SimpleReceiver::push(char byte, double steps_per_m, Command & command) {
+  if (byte=='\n') {
+    const bool ok=!discard_ && parse_simple_command(buffer_,used_,steps_per_m,command);
+    used_=0;discard_=false;return ok;
+  }
+  if (discard_) return false;
+  if (used_>=sizeof(buffer_)-1 || byte=='\0') {discard_=true;return false;}
+  buffer_[used_++]=byte;return false;
+}
 bool Config::valid() const {
   if (!base_ready || !positive(max_wheel_rad_s) || max_wheel_rad_s > 12. ||
       !positive(wheel_accel) || !positive(max_duty) || max_duty > 1. || watchdog_us < 50000 || watchdog_us > 300000) return false;
@@ -292,5 +330,13 @@ size_t Controller::telemetry(uint64_t now, const Sensors & s, char * output, siz
     faults_, unsigned(mode_), unsigned(homed_), unsigned(s.low), unsigned(s.high), unsigned(s.estop),
     unsigned(config_.valid() ? (config_.lift_ready ? 3 : 1) : 0));
   return n > 0 && size_t(n) < sizeof(payload) ? encode_frame(payload, output, capacity) : 0;
+}
+size_t Controller::simple_telemetry(uint64_t now, const Sensors & s, char * output, size_t capacity) {
+  const int n=std::snprintf(output,capacity,
+    "S,%" PRIu64 ",%" PRId64 ",%" PRId64 ",%" PRId64 ",%" PRId64 ",%" PRId64 ",%u,%u,%u,%" PRIu32 ",%u\n",
+    now/1000,s.ticks[0],s.ticks[1],s.ticks[2],s.ticks[3],s.lift_steps,
+    unsigned(mode_),unsigned(homed_),unsigned(s.low),faults_,
+    unsigned(config_.valid() ? (config_.lift_ready ? 3 : 1) : 0));
+  return n>0 && size_t(n)<capacity ? size_t(n) : 0;
 }
 }  // namespace forklift_mcu

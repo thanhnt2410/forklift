@@ -48,8 +48,9 @@ constexpr bool step_up_level = true;
 // E-stop must also have a physical stop circuit, independent of the MCU.
 constexpr bool estop_active_level = true, limit_active_level = true;
 constexpr uint32_t baud = 230400;
+constexpr bool simple_serial = true;
 constexpr uint32_t control_period_us = 10000;
-constexpr uint32_t telemetry_period_us = 20000;
+constexpr uint32_t telemetry_period_us = 50000;  // 20 Hz, readable Serial Monitor.
 
 // Starting guesses, not gains measured on GA25-370. Duty is normalized [-1,1],
 // velocity rad/s, dt seconds; tune each wheel independently after checking sign.

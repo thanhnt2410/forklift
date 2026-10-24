@@ -33,6 +33,16 @@ class Receiver {
   bool discard_{};
   uint64_t rejected_{};
 };
+// Plain newline-delimited bench protocol; no CRC, boot ID or sequence on wire.
+bool parse_simple_command(const char * data, size_t size, double steps_per_m, Command & command);
+class SimpleReceiver {
+ public:
+  bool push(char byte, double steps_per_m, Command & command);
+ private:
+  char buffer_[kFrameCapacity]{};
+  size_t used_{};
+  bool discard_{};
+};
 
 struct Gains { double kp{}, ki{}, kd{}; };
 struct Config {
@@ -81,6 +91,7 @@ class Controller {
   uint64_t ack() const { return ack_; }
   const std::array<double, 4> & velocity() const { return velocity_; }
   size_t telemetry(uint64_t now_us, const Sensors & sensors, char * output, size_t capacity);
+  size_t simple_telemetry(uint64_t now_us, const Sensors & sensors, char * output, size_t capacity);
  private:
   void stop();
   void stop_for_fault();

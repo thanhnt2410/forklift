@@ -221,14 +221,16 @@ ros2 launch forklift_bringup navigation.launch.py map:=/duong/dan/toi/map.yaml
 Phần cứng dự kiến: ESP32 DevKit WROOM 38 chân, bốn GA25-370 có encoder A/B,
 bốn BTS7960, TB6600/NEMA17 cho nâng và MPU6050 dự kiến nối Raspberry Pi.
 
-Đã có khung firmware đọc encoder, PID bánh, UART v2 và điều khiển nâng. Tuy nhiên,
+Đã có khung firmware đọc encoder, PID bánh, Serial CSV và điều khiển nâng. Tuy nhiên,
 PI khởi đầu **Kp=0,08; Ki=0,12; Kd=0** đã được đặt cho cả bốn bánh để tuning.
 **Firmware hiện bật profile thử bánh**, trần PWM 25%, giới hạn 2 rad/s và boot
 disarm; nâng dùng **một công tắc NC dưới GPIO32**, R tới 2.000 xung từ home,
 F/H hạ về công tắc rồi đặt lại vị trí 0. Bấm R nhiều lần không cộng dồn;
 quãng nâng thực tế sẽ đo và hiệu chỉnh sau. Mức điện, chân boot,
-chiều motor/encoder và PI chưa được kiểm chứng trên xe. Đã bổ sung backend USB/UART v2 và
+chiều motor/encoder và PI chưa được kiểm chứng trên xe. Đã bổ sung backend USB/UART CSV đơn giản và
 `real.launch.py` để dùng cùng bàn phím với ESP32, đọc encoder và điều khiển nâng.
+Serial mặc định 230400 baud, CSV từng dòng không CRC/boot ID/ACK; ESP32 tự phát
+trạng thái 20 Hz. Cần cập nhật firmware và ROS cùng phiên bản giao thức.
 Các tham số thử nằm ở `firmware/esp32/forklift_esp32/board_config.h`.
 
 Sau khi firmware đã được cấu hình đúng và nạp riêng, mở kết nối bằng:
@@ -261,7 +263,7 @@ Xem [hướng dẫn firmware và GPIO](firmware/esp32/README.md),
 | `src/forklift_navigation/` | SLAM, AMCL, Nav2, MPPI và bản đồ |
 | `src/forklift_lift/`, `src/forklift_interfaces/` | Giám sát nâng, message và action |
 | `src/forklift_task_manager/` | Tuyến đã duyệt, docking và nhiệm vụ |
-| `src/forklift_hardware/` | Backend PTY/MCU giả và cầu nối ESP32 USB/UART v2 |
+| `src/forklift_hardware/` | Backend PTY/MCU giả và cầu nối ESP32 USB/UART CSV |
 | `firmware/esp32/` | Mã firmware ESP32 đang phát triển |
 | `docs/` | Tài liệu thiết kế và hướng dẫn chi tiết |
 | `results/final/` | Nơi lưu kết quả cuối được chọn để đưa lên Git |

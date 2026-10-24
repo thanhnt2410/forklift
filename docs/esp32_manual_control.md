@@ -1,6 +1,6 @@
 # Điều khiển bàn phím qua ESP32 USB/UART
 
-Backend này nối ROS với **UART v2 của firmware trong repo**, không cần Gazebo.
+Backend này nối ROS với **Serial CSV đơn giản của firmware trong repo**, không cần Gazebo.
 Đã kiểm tra phần mềm qua PTY với lõi C++ của firmware; chưa nạp firmware hoặc
 kiểm chứng trên xe thật. Firmware hiện bật **profile thử bánh** theo yêu cầu dùng
 PI mặc định để tuning: Kp=0,08, Ki=0,12, Kd=0; PWM tối đa 25%, bánh tối đa 2 rad/s.
@@ -8,17 +8,33 @@ Khởi động vẫn disarm, cần arm từ ROS. Profile không xác nhận mứ
 Nâng hiện dùng **một công tắc NC dưới GPIO32**, điều khiển theo số xung, chưa
 hiệu chuẩn quãng đường thực. Không có công tắc trên hoặc phản hồi E-stop GPIO.
 
+
+## Định dạng Serial hiện tại
+
+Hai phía dùng `serial_protocol: simple` / `simple_serial=true`. Không có CRC,
+boot ID hoặc ACK trên dây. Phản hồi đọc được bằng Monitor 230400:
+
+```text
+S,ms,tFL,tFR,tRL,tRR,lift_steps,mode,homed,lower,fault,capabilities
+S,1200,0,0,0,0,0,1,0,1,0,3
+```
+
+Lệnh `C,wFL,wFR,wRL,wRR,lift_steps,enabled`, `H` home, `D` dừng, `R` reset;
+mỗi lệnh một dòng. Firmware phát trạng thái 20 Hz ngay khi boot, không cần ROS.
+Sau khi pull bản chuyển giao thức, **nạp lại sketch ESP32 và restart ROS**; không
+trộn bản firmware v2 cũ với bridge simple. Giữ 230400 ở cả hai phía.
+
 ## Luồng điều khiển
 
 ```text
 arrow_teleop → /cmd_vel_teleop → command_gate → /cmd_vel
                                              ↓
                                        esp32_bridge
-                                   C / H / D / R UART v2
+                                   C / H / D / R dạng CSV
                                              ↓
                                 ESP32: PID bánh + STEP/DIR
                                              ↓
-                          encoder / trạng thái / ACK → ROS
+                          encoder / trạng thái → ROS
 ```
 
 Bridge tính vận tốc bánh theo thứ tự **FL, FR, RL, RR**, nhận số đếm encoder,
@@ -55,8 +71,7 @@ lại đều bị giới hạn bằng số xung và thời gian trong firmware.
 
 Giá trị `lift_steps_per_m: 200000.0`, `lift_max_height: 0.01` hiện là **quy đổi
 tọa độ UART danh nghĩa**, không xác nhận chiều cao 1 cm. Bridge kiểm tra hoàn tất
-R bằng **đủ đúng 2.000 xung**, F/H bằng xác nhận home và công tắc dưới. Trạng thái
-báo `lift_mode=PULSE_PRESET; lift_calibrated=False`; `/lift/state.height` và
+R bằng **đủ đúng 2.000 xung**, F/H bằng xác nhận home và công tắc dưới. Quãng đường vẫn chưa hiệu chuẩn; `/lift/state.height` và
 `/joint_states` phần nâng vẫn là khoảng cách ước tính từ thang danh nghĩa.
 
 Bridge phát `/lift/preset_target` để bàn phím tự nhận chế độ; không cần đổi lệnh
@@ -102,7 +117,7 @@ ros2 launch forklift_bringup real.launch.py port:=/dev/serial/by-id/TEN_THIET_BI
 Thay tên thiết bị bằng đường dẫn thực; có thể dùng `/dev/ttyUSB0` nếu đó đúng là
 ESP32. Tài khoản cần quyền đọc/ghi cổng serial. Bridge chiếm độc quyền cổng;
 đóng Serial Monitor trước khi launch. Một số board reset khi mở USB serial;
-bridge đợi telemetry chứa boot ID của phiên mới, không gửi lệnh chạy trước đó.
+bridge đợi telemetry mới rồi mới cho arm; uptime giảm sẽ khóa phiên và yêu cầu dừng/arm lại.
 
 Muốn dùng cấu hình hiệu chuẩn riêng:
 
@@ -116,9 +131,9 @@ Mở terminal khác, source workspace như trên rồi xem trạng thái:
 ros2 topic echo /esp32/status
 ```
 
-Chờ `DISARMED; host=OK; mcu=DISARMED`, capability hợp lệ và `handshake=True`.
-Lệnh arm dưới đây gửi yêu cầu; `success: true` nghĩa là **đã gửi ARMING**, phải
-chờ trạng thái **ARMED** xác nhận ACK và mode ACTIVE của MCU trước khi điều khiển:
+Chờ `DISARMED; host=OK; mcu=DISARMED`, firmware không lỗi và có telemetry mới. Lệnh đầu chưa đủ phản hồi có thể bị từ chối; đợi một nhịp rồi gọi lại.
+Lệnh arm dưới đây gửi yêu cầu; `success: true` nghĩa là **đã gửi yêu cầu**, phải
+chờ trạng thái **ARMED** sau khi thấy telemetry mới ở mode ACTIVE của MCU trước khi điều khiển:
 
 ```bash
 ros2 service call /esp32/arm std_srvs/srv/SetBool '{data: true}'
@@ -149,8 +164,8 @@ Disarm chủ động:
 ros2 service call /esp32/arm std_srvs/srv/SetBool '{data: false}'
 ```
 
-Bridge gửi D, trạng thái sau đó cho biết ACK và mode MCU. Khi cần reset, xử lý
-nguyên nhân, đợi bánh dừng và ACK của D rồi gọi:
+Bridge gửi D, trạng thái sau đó cho biết mode MCU và số xung thực tế. Khi cần reset, xử lý
+nguyên nhân, đợi bánh dừng và telemetry dừng sau D rồi gọi:
 
 ```bash
 ros2 service call /esp32/reset std_srvs/srv/Trigger '{}'
@@ -161,7 +176,7 @@ Phản hồi service chỉ xác nhận **đã gửi R**. Chờ telemetry fault=0
 host=OK trước khi arm lại. Reset bị firmware từ chối sẽ không được coi là hoàn tất.
 
 Theo lựa chọn đã có của dự án, **fault/mất liên lạc không tự ngắt PWM bánh**.
-Khi telemetry/ACK/lệnh ROS mất quá hạn hoặc MCU reboot, bridge khóa phiên điều
+Khi telemetry/lệnh ROS mất quá hạn hoặc MCU báo lỗi/khởi động lại, bridge khóa phiên điều
 khiển, ngừng tự gửi frame; không tự gửi D/C-disabled để thay đổi chính sách giữ
 PWM của firmware. PWM thực tế có thể vẫn còn cho đến khi ngắt nguồn hoặc lệnh D
 chủ động được nhận. `DISARMED` phía host khi lỗi **không xác nhận bánh đã dừng**.
@@ -175,8 +190,8 @@ Nối lại telemetry không tự tiếp tục lệnh cũ. Cần dừng chủ đ
 fault rồi arm lại. Nếu USB bị rút, lỗi đọc/ghi hoặc ghi dở frame: khởi động lại
 launch sau khi nối lại. Không tự reconnect hoặc mở khóa firmware.
 
-`/esp32/status` và `/diagnostics` hiển thị boot ID, ACK, capability, fault và lỗi
-host như `ACK_TIMEOUT`, `TELEMETRY_TIMEOUT`, `ROS_COMMAND_TIMEOUT`, `MCU_REBOOT`.
+`/esp32/status` và `/diagnostics` hiển thị trạng thái, số xung, bộ đếm RX và lỗi và lỗi
+host như `TELEMETRY_TIMEOUT`, `ROS_COMMAND_TIMEOUT`, `MCU_REBOOT` (ACK_TIMEOUT chỉ ở v2 cũ).
 Lỗi kết nối không làm bridge phát lại odometry cũ thành dữ liệu mới.
 
 ## Khi báo NO_TELEMETRY trên Linux
@@ -208,4 +223,4 @@ Trong mục `forklift_hardware/esp32`:
 Sau 5 giây chưa có telemetry hợp lệ, terminal launch sẽ báo các bộ đếm này.
 Nếu `rx_bytes` vẫn bằng 0, nhấn EN/RESET một lần (không giữ BOOT), xem bộ đếm
 có tăng không. GPIO12 nối encoder FR vẫn có thể ảnh hưởng boot; chỉ kiểm tra
-thay đổi dây khi nguồn động cơ đã tắt. Bản sửa bridge này không cần nạp lại firmware.
+thay đổi dây khi nguồn động cơ đã tắt. Riêng thay đổi RTS/DTR không cần nạp lại; bản chuyển CSV simple thì cần nạp lại firmware.

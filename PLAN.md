@@ -5,6 +5,18 @@ runner và recorder chuyển sang `controller:=mppi`, RPP giữ làm phương á
 bằng `controller:=rpp`. Lượt demo Gazebo có GUI mới nhất hoàn thành 29/29:
 [video MPPI](results/mppi_trial/visible_demo/mission_demo.mp4).
 Người dùng yêu cầu các lần sau không tự chạy kiểm thử tránh vật cản.
+Theo yêu cầu đơn giản hóa message, Serial mặc định chuyển sang **CSV từng dòng**,
+230400 baud, trạng thái 20 Hz: `S,ms,tFL,tFR,tRL,tRR,lift_steps,mode,homed,lower,fault,cap`.
+Lệnh `C,wFL,wFR,wRL,wRR,lift_steps,enabled`, `H` home, `D` dừng, `R` reset.
+Không CRC, boot ID, sequence hoặc ACK trên dây. Bánh/nâng vẫn kiểm tra giới hạn,
+homing, watchdog và giữ chính sách PWM đã chọn. ROS xác nhận bằng telemetry mới
+và mode/vị trí/công tắc; uptime giảm khóa phiên, không tự chạy lại.
+Đã build WROOM; 39/39 lõi ASan/UBSan, 13/13 parser CSV và 43/43 tích hợp CSV
+qua PTY/lõi firmware thật đạt (gồm reset, reboot, R/F, hủy và công tắc kẹt).
+23 kiểm tra giao thức v2 cũ và 11 mở cổng vẫn đạt. Test không đưa Git.
+**Cần cập nhật ROS và nạp lại firmware cùng bản simple**, không trộn với firmware
+`S,2,...*CRC` cũ. Chưa kiểm chứng USB thật; nếu rx_bytes=0 thì vẫn cần kiểm tra
+cổng/boot/cáp. [Định dạng Serial](firmware/esp32/README.md#serial-csv-đơn-giản--mặc-định).
 Chẩn đoán ESP32 trên Linux: người dùng đã nạp firmware, CP2102 ở ttyUSB0 và
 baud ROS/firmware đều 230400 nhưng NO_TELEMETRY/invalid_frames=0. Đã bổ sung
 nhả DTR rồi RTS khi mở cổng và RX bytes/lines/discard counters trong diagnostics;

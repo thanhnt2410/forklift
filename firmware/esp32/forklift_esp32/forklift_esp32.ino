@@ -7,17 +7,21 @@
 #include "board_hal.h"
 
 forklift_mcu::Receiver receiver;
+forklift_mcu::SimpleReceiver simple_receiver;
 std::optional<forklift_mcu::Controller> controller;
 uint64_t next_control{}, next_state{};
+uint64_t boot_id{}, serial_sequence{};
+double serial_steps_per_m{};
 
 void setup() {
   Serial.setRxBufferSize(1024); Serial.setTxBufferSize(1024);
   Serial.begin(forklift_board::baud);
   auto config=forklift_board::control_config();
+  serial_steps_per_m=config.steps_per_m;
   // Bench profile initializes wheel GPIO at zero duty, then waits for host arm.
   if (config.valid() && !forklift_board::initialize()) config.base_ready=false;
-  const uint64_t boot=(uint64_t(esp_random())<<32)|esp_random();
-  controller.emplace(config,boot);
+  boot_id=(uint64_t(esp_random())<<32)|esp_random();
+  controller.emplace(config,boot_id);
   next_control=next_state=uint64_t(esp_timer_get_time());
   controller->tick(next_control,forklift_board::read_sensors());
 }
@@ -32,7 +36,11 @@ void loop() {
   }
   for (unsigned budget=0;budget<256 && Serial.available();++budget) {
     forklift_mcu::Command command;
-    if (receiver.push(char(Serial.read()),command)) {
+    const char byte=char(Serial.read());
+    const bool valid=forklift_board::simple_serial ?
+      simple_receiver.push(byte,serial_steps_per_m,command) : receiver.push(byte,command);
+    if (valid) {
+      if (forklift_board::simple_serial) {command.boot=boot_id;command.sequence=++serial_sequence;}
       controller->receive(command,uint64_t(esp_timer_get_time()),forklift_board::read_sensors());
       forklift_board::apply(controller->outputs());
       controller->acknowledge_outputs();
@@ -40,7 +48,10 @@ void loop() {
   }
   if (now>=next_state) {
     char frame[forklift_mcu::kFrameCapacity+1];
-    const size_t size=controller->telemetry(now,forklift_board::read_sensors(),frame,sizeof(frame));
+    const auto sensors=forklift_board::read_sensors();
+    const size_t size=forklift_board::simple_serial ?
+      controller->simple_telemetry(now,sensors,frame,sizeof(frame)) :
+      controller->telemetry(now,sensors,frame,sizeof(frame));
     if (size && Serial.availableForWrite()>=int(size)) Serial.write(reinterpret_cast<const uint8_t *>(frame),size);
     next_state=now+forklift_board::telemetry_period_us;
   }
