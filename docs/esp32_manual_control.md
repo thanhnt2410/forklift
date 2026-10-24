@@ -178,3 +178,34 @@ launch sau khi nối lại. Không tự reconnect hoặc mở khóa firmware.
 `/esp32/status` và `/diagnostics` hiển thị boot ID, ACK, capability, fault và lỗi
 host như `ACK_TIMEOUT`, `TELEMETRY_TIMEOUT`, `ROS_COMMAND_TIMEOUT`, `MCU_REBOOT`.
 Lỗi kết nối không làm bridge phát lại odometry cũ thành dữ liệu mới.
+
+## Khi báo NO_TELEMETRY trên Linux
+
+Hai bên mặc định **230400 baud**. `invalid_frames=0` chỉ nói chưa có dòng lỗi được
+đưa vào parser; riêng giá trị này chưa chứng minh cổng có nhận byte hay không.
+Bridge hiện nhả **DTR trước, RTS sau** khi mở CP2102 và tắt RTS/CTS, HUPCL.
+Các chân điều khiển USB có thể nối vào GPIO0/EN, giữ board reset/download trên
+một số mạch; xem [tài liệu Espressif](https://docs.espressif.com/projects/esptool/en/latest/esp32/advanced-topics/boot-mode-selection.html).
+Đây là xử lý một nguyên nhân có thể xảy ra, không thay cho chẩn đoán trên board.
+
+Đóng Arduino Serial Monitor, chạy lại launch với bản bridge mới rồi xem:
+
+```bash
+ros2 topic echo /diagnostics --once
+```
+
+Trong mục `forklift_hardware/esp32`:
+
+- `port`, `baud`: xác nhận đúng thiết bị và 230400.
+- `modem_lines=released`: driver đã chấp nhận lệnh nhả DTR/RTS.
+  `unsupported` dùng cho PTY hoặc thiết bị không hỗ trợ ioctl modem.
+- `rx_bytes=0`: chưa nhận byte; kiểm tra đúng cổng, board boot/EN, cáp USB và
+  Serial Monitor/phần mềm khác đang chiếm hoặc đọc cùng cổng.
+- `rx_bytes` tăng, `rx_lines=0`: có byte nhưng thiếu newline hoàn chỉnh.
+- `rx_lines` và `invalid_frames` tăng: có dòng, cần kiểm tra nội dung/giao thức/CRC.
+- `discarded_frames` tăng: nhận dòng quá dài, bị bỏ đến newline tiếp theo.
+
+Sau 5 giây chưa có telemetry hợp lệ, terminal launch sẽ báo các bộ đếm này.
+Nếu `rx_bytes` vẫn bằng 0, nhấn EN/RESET một lần (không giữ BOOT), xem bộ đếm
+có tăng không. GPIO12 nối encoder FR vẫn có thể ảnh hưởng boot; chỉ kiểm tra
+thay đổi dây khi nguồn động cơ đã tắt. Bản sửa bridge này không cần nạp lại firmware.

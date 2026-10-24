@@ -5,6 +5,12 @@ runner và recorder chuyển sang `controller:=mppi`, RPP giữ làm phương á
 bằng `controller:=rpp`. Lượt demo Gazebo có GUI mới nhất hoàn thành 29/29:
 [video MPPI](results/mppi_trial/visible_demo/mission_demo.mp4).
 Người dùng yêu cầu các lần sau không tự chạy kiểm thử tránh vật cản.
+Chẩn đoán ESP32 trên Linux: người dùng đã nạp firmware, CP2102 ở ttyUSB0 và
+baud ROS/firmware đều 230400 nhưng NO_TELEMETRY/invalid_frames=0. Đã bổ sung
+nhả DTR rồi RTS khi mở cổng và RX bytes/lines/discard counters trong diagnostics;
+chưa xác nhận nguyên nhân hoặc kết quả trên CP2102 thật. 11 kiểm tra mở cổng
+với PTY/ioctl giả và 23 giao thức/transport đạt; không đổi firmware hoặc chính
+sách PWM. [Cách kiểm tra](docs/esp32_manual_control.md#khi-báo-no_telemetry-trên-linux).
 Đã thêm backend USB/UART v2 `forklift_hardware/esp32_bridge.py` và launch
 `ros2 launch forklift_bringup real.launch.py port:=...` cho điều khiển thủ công
 ESP32: động học bốn bánh, encoder/odometry, action nâng/home và dừng/reset.

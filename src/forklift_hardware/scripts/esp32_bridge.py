@@ -8,6 +8,7 @@ import fcntl
 import math
 import os
 import re
+import struct
 import termios
 import time
 
@@ -102,6 +103,8 @@ class SerialPort:
         self.fd = os.open(path, os.O_RDWR | os.O_NOCTTY | os.O_NONBLOCK | os.O_CLOEXEC)
         self.buffer = bytearray()
         self.discard = False
+        self.rx_bytes = self.rx_lines = self.discarded_frames = 0
+        self.modem_lines = 'unsupported'
         try:
             fcntl.flock(self.fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
             fcntl.ioctl(self.fd, termios.TIOCEXCL)
@@ -111,6 +114,17 @@ class SerialPort:
             attrs[4] = attrs[5] = getattr(termios, f'B{baud}')
             attrs[6][termios.VMIN] = attrs[6][termios.VTIME] = 0
             termios.tcsetattr(self.fd, termios.TCSANOW, attrs)
+            # CP210x DTR/RTS can drive GPIO0/EN on ESP32 DevKits. Release
+            # GPIO0 before EN, so an open port cannot hold reset/download mode.
+            # HUPCL and RTS/CTS flow control are already clear in attrs[2].
+            try:
+                for bit in (termios.TIOCM_DTR, termios.TIOCM_RTS):
+                    fcntl.ioctl(self.fd, termios.TIOCMBIC, struct.pack('I', bit))
+                self.modem_lines = 'released'
+            except OSError as error:
+                # PTYs have no modem-control pins; retain virtual-MCU support.
+                if error.errno not in (errno.ENOTTY, errno.EINVAL, errno.EOPNOTSUPP):
+                    raise
             termios.tcflush(self.fd, termios.TCIOFLUSH)
         except Exception:
             self.close()
@@ -126,8 +140,10 @@ class SerialPort:
                 break
             if not data:
                 break
+            self.rx_bytes += len(data)
             for byte in data:
                 if byte == 10:
+                    self.rx_lines += 1
                     if not self.discard:
                         lines.append(bytes(self.buffer) + b'\n')
                     self.buffer.clear()
@@ -135,6 +151,7 @@ class SerialPort:
                 elif not self.discard:
                     self.buffer.append(byte)
                     if len(self.buffer) > 255:
+                        self.discarded_frames += 1
                         self.buffer.clear()
                         self.discard = True
         return lines
@@ -209,6 +226,8 @@ class Esp32Bridge(Node):
         self.software_estop = False
         self.last_status = ''
         self.last_diag = 0.
+        self.started_at = time.monotonic()
+        self.last_rx_warning = -math.inf
         self.pending_tx = []
         latched = QoSProfile(depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL)
         self.joint_pub = self.create_publisher(JointState, '/joint_states', 10)
@@ -236,7 +255,8 @@ class Esp32Bridge(Node):
         # Open last, after ROS construction and parameter validation.
         self.serial = SerialPort(self.p['port'], self.p['baud'])
         self.create_timer(.02, self.tick, clock=Clock())
-        self.get_logger().info(f'UART v2: {self.p["port"]}; DISARMED, waiting for telemetry')
+        self.get_logger().info(f'UART v2: {self.p["port"]}, baud={self.p["baud"]}, '
+                               f'DTR/RTS={self.serial.modem_lines}; DISARMED, waiting for telemetry')
 
     def fresh(self):
         return self.state is not None and time.monotonic()-self.received_at < self.p['state_timeout']
@@ -548,7 +568,13 @@ class Esp32Bridge(Node):
             self.diag_pub.publish(DiagnosticArray(header=header, status=[DiagnosticStatus(
                 name='forklift_hardware/esp32', hardware_id=str(s.boot) if s else 'UNKNOWN',
                 level=DiagnosticStatus.ERROR if fault else (DiagnosticStatus.OK if self.armed else DiagnosticStatus.WARN), message=status,
-                values=[KeyValue(key='invalid_frames', value=str(self.invalid_frames)),
+                values=[KeyValue(key='port', value=self.p['port']),
+                        KeyValue(key='baud', value=str(self.p['baud'])),
+                        KeyValue(key='rx_bytes', value=str(self.serial.rx_bytes)),
+                        KeyValue(key='rx_lines', value=str(self.serial.rx_lines)),
+                        KeyValue(key='discarded_frames', value=str(self.serial.discarded_frames)),
+                        KeyValue(key='modem_lines', value=self.serial.modem_lines),
+                        KeyValue(key='invalid_frames', value=str(self.invalid_frames)),
                         KeyValue(key='wheel_fault_policy', value='manual_power_cutoff')])]))
 
     def tick(self):
@@ -575,6 +601,13 @@ class Esp32Bridge(Node):
             self.fail('ROS_COMMAND_TIMEOUT')
         if self.arming and now-self.arm_at > 1.:
             self.fail('ARM_TIMEOUT')
+        if self.state is None and now-self.started_at >= 5. and now-self.last_rx_warning >= 10.:
+            self.last_rx_warning = now
+            self.get_logger().warning(
+                f'No valid ESP32 telemetry on {self.p["port"]} at {self.p["baud"]}: '
+                f'rx_bytes={self.serial.rx_bytes}, rx_lines={self.serial.rx_lines}, '
+                f'invalid_frames={self.invalid_frames}, discarded_frames={self.serial.discarded_frames}. '
+                'Check /diagnostics; zero RX means port/boot/USB, nonzero RX needs frame validation.')
         if self.op is not None:
             op = self.op
             if op['handle'].is_cancel_requested or now >= op['deadline']:
