@@ -1,0 +1,12 @@
+# Wall-clock seconds; zero selects the configured default.
+float64 timeout
+---
+bool success
+string code
+float64 height
+bool homed
+---
+string state
+float64 height
+bool lower_active
+bool upper_active

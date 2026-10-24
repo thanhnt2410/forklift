@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <xacro:macro name="wheel_interface" params="name">
+    <joint name="${name}_wheel_joint">
+      <command_interface name="velocity"><param name="min">-12</param><param name="max">12</param></command_interface>
+      <state_interface name="position"/><state_interface name="velocity"/>
+    </joint>
+  </xacro:macro>
+  <xacro:macro name="simulation_control" params="controllers_file backend port_file">
+    <ros2_control name="ForkliftSimSystem" type="system">
+      <hardware>
+        <xacro:if value="${backend == 'gazebo'}"><plugin>gz_ros2_control/GazeboSimSystem</plugin></xacro:if>
+        <xacro:if value="${backend == 'mock'}">
+          <plugin>forklift_hardware/PtySystem</plugin>
+          <param name="port_file">${port_file}</param>
+          <param name="encoder_cpr">4096</param><param name="lift_steps_per_m">10000</param>
+        </xacro:if>
+      </hardware>
+      <xacro:wheel_interface name="front_left"/>
+      <xacro:wheel_interface name="front_right"/>
+      <xacro:wheel_interface name="rear_left"/>
+      <xacro:wheel_interface name="rear_right"/>
+      <joint name="lift_joint">
+        <command_interface name="position"><param name="min">0</param><param name="max">${g['lift_travel']}</param></command_interface>
+        <state_interface name="position"><param name="initial_value">0</param></state_interface>
+        <state_interface name="velocity"/>
+      </joint>
+    </ros2_control>
+    <xacro:if value="${backend == 'gazebo'}"><gazebo>
+      <plugin filename="gz_ros2_control-system" name="gz_ros2_control::GazeboSimROS2ControlPlugin">
+        <parameters>${controllers_file}</parameters>
+        <ros>
+          <remapping>/base_controller/reference_unstamped:=/cmd_vel</remapping>
+          <remapping>/base_controller/odometry:=$(arg odometry_topic)</remapping>
+          <remapping>/base_controller/tf_odometry:=/tf</remapping>
+        </ros>
+      </plugin>
+    </gazebo></xacro:if>
+  </xacro:macro>
+</robot>

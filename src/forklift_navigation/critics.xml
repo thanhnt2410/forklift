@@ -1,0 +1,5 @@
+<library path="forklift_goal_critic">
+  <class type="forklift_navigation::ExactGoalCritic" base_class_type="dwb_core::TrajectoryCritic">
+    <description>Continuous goal distance to break costmap grid ties.</description>
+  </class>
+</library>

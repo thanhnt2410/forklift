@@ -1,0 +1,5 @@
+<library path="forklift_mppi_controller">
+  <class name="forklift_navigation/GuardedMPPIController" type="forklift_navigation::GuardedMPPIController" base_class_type="nav2_core::Controller">
+    <description>MPPI trial with fixed-route corridor and footprint validation; stops on a blocked reference.</description>
+  </class>
+</library>

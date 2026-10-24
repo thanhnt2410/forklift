@@ -1,0 +1,524 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This URDF was automatically created by SolidWorks to URDF Exporter! Originally created by Stephen Brawner (brawner@gmail.com) 
+     Commit Version: 1.6.0-4-g7f85cfe  Build Version: 1.6.7995.38578
+     For more information, please see http://wiki.ros.org/sw_urdf_exporter -->
+<robot
+  name="URDF20">
+  <link
+    name="base_link">
+    <inertial>
+      <origin
+        xyz="0.0454952921615985 -0.000900927329499063 0.0860542688791245"
+        rpy="0 0 0" />
+      <mass
+        value="1.50204935172292" />
+      <inertia
+        ixx="0.00206168003342103"
+        ixy="-1.59117018010418E-08"
+        ixz="1.77093405561894E-05"
+        iyy="0.0035065468493987"
+        iyz="-1.88885377627714E-05"
+        izz="0.00404272083711972" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://URDF20/meshes/base_link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="1 0.905882352941176 0.964705882352941 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://URDF20/meshes/base_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <link
+    name="lidar_Link">
+    <inertial>
+      <origin
+        xyz="2.77555756156289E-17 -0.00829730869451539 -0.0212358931355648"
+        rpy="0 0 0" />
+      <mass
+        value="0.146433824458044" />
+      <inertia
+        ixx="0.00010913430892991"
+        ixy="1.50438986236132E-20"
+        ixz="-5.85016366241193E-21"
+        iyy="6.17383101250328E-05"
+        iyz="-1.88823790954E-05"
+        izz="0.000125260405967004" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://URDF20/meshes/lidar_Link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://URDF20/meshes/lidar_Link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="lidar_joint"
+    type="fixed">
+    <origin
+      xyz="0 0 0.2242"
+      rpy="0 0 0" />
+    <parent
+      link="base_link" />
+    <child
+      link="lidar_Link" />
+    <axis
+      xyz="0 0 0" />
+  </joint>
+  <link
+    name="step_Link">
+    <inertial>
+      <origin
+        xyz="0.060865792578273 -3.47071477933836E-06 -0.00399999999999989"
+        rpy="0 0 0" />
+      <mass
+        value="0.0041996196948374" />
+      <inertia
+        ixx="1.55825022287584E-07"
+        ixy="-1.44167485726101E-11"
+        ixz="-8.64628042246671E-23"
+        iyy="3.3027515683611E-06"
+        iyz="-7.24932385022228E-24"
+        izz="3.41915364587448E-06" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://URDF20/meshes/step_Link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://URDF20/meshes/step_Link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="step_joint"
+    type="fixed">
+    <origin
+      xyz="0.0850000000000005 0 0.1811"
+      rpy="0 0 0" />
+    <parent
+      link="base_link" />
+    <child
+      link="step_Link" />
+    <axis
+      xyz="0 0 1" />
+  </joint>
+  <link
+    name="banhrang1_Link">
+    <inertial>
+      <origin
+        xyz="1.38777878078145E-16 1.38777878078145E-17 -0.00400000000000017"
+        rpy="0 0 0" />
+      <mass
+        value="0.00116345796646665" />
+      <inertia
+        ixx="2.4021754545464E-08"
+        ixy="-1.59618115562419E-23"
+        ixz="1.29426240314133E-23"
+        iyy="2.4021754545464E-08"
+        iyz="-5.78303439992141E-24"
+        izz="3.47398949842348E-08" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://URDF20/meshes/banhrang1_Link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://URDF20/meshes/banhrang1_Link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="banhrang1_joint"
+    type="continuous">
+    <origin
+      xyz="0 0 0"
+      rpy="0 0 0" />
+    <parent
+      link="step_Link" />
+    <child
+      link="banhrang1_Link" />
+    <axis
+      xyz="0 0 1" />
+  </joint>
+  <link
+    name="banhrang2_Link">
+    <inertial>
+      <origin
+        xyz="1.10856560374961E-05 1.53458744956009E-05 -0.0768305137670481"
+        rpy="0 0 0" />
+      <mass
+        value="0.00715434820540168" />
+      <inertia
+        ixx="1.40951366176622E-05"
+        ixy="-1.52612901686227E-12"
+        ixz="3.54972094816928E-09"
+        iyy="1.40950391458847E-05"
+        iyz="4.94549534208485E-09"
+        izz="7.42877121443652E-08" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://URDF20/meshes/banhrang2_Link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://URDF20/meshes/banhrang2_Link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="banhrang2_joint"
+    type="continuous">
+    <origin
+      xyz="0.1214903580365 -1.35453982808703E-05 0"
+      rpy="0 0 0" />
+    <parent
+      link="step_Link" />
+    <child
+      link="banhrang2_Link" />
+    <axis
+      xyz="0 0 1" />
+  </joint>
+  <link
+    name="can_Link">
+    <inertial>
+      <origin
+        xyz="-0.00274803221280623 0.0121762358469108 -0.00073575646387801"
+        rpy="0 0 0" />
+      <mass
+        value="0.157799980596413" />
+      <inertia
+        ixx="0.000268473607092226"
+        ixy="-1.77105096465507E-05"
+        ixz="6.33116813839497E-09"
+        iyy="0.000173809400829982"
+        iyz="-2.13785042964922E-09"
+        izz="0.000175435917332108" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://URDF20/meshes/can_Link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.988235294117647 0.984313725490196 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://URDF20/meshes/can_Link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="can_joint"
+    type="planar">
+    <origin
+      xyz="0.1483 -0.00091809 -0.12887"
+      rpy="1.5708 -1.5708 0" />
+    <parent
+      link="step_Link" />
+    <child
+      link="can_Link" />
+    <axis
+      xyz="1 0 0" />
+  </joint>
+  <link
+    name="banh1_Link">
+    <inertial>
+      <origin
+        xyz="9.99200722162641E-15 0.0262589105773256 -1.95121696577871E-14"
+        rpy="0 0 0" />
+      <mass
+        value="0.25157608748246" />
+      <inertia
+        ixx="7.34803994722608E-05"
+        ixy="1.81568834239946E-16"
+        ixz="1.96334627111884E-19"
+        iyy="8.26003194411143E-05"
+        iyz="2.29176217901292E-16"
+        izz="7.34803994721517E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://URDF20/meshes/banh1_Link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.752941176470588 0.752941176470588 0.752941176470588 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://URDF20/meshes/banh1_Link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="banh1_joint"
+    type="continuous">
+    <origin
+      xyz="-0.105 -0.18172 -0.0204"
+      rpy="0 0 0" />
+    <parent
+      link="base_link" />
+    <child
+      link="banh1_Link" />
+    <axis
+      xyz="0 -1 0" />
+  </joint>
+  <link
+    name="banh2_Link">
+    <inertial>
+      <origin
+        xyz="7.31775751106056E-14 0.0262589105772602 4.00235400377369E-14"
+        rpy="0 0 0" />
+      <mass
+        value="0.251576087482482" />
+      <inertia
+        ixx="7.3480399476E-05"
+        ixy="1.7941498041554E-16"
+        ixz="1.42473141309666E-16"
+        iyy="8.26003194456624E-05"
+        iyz="-3.12249407662054E-16"
+        izz="7.34803994761819E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://URDF20/meshes/banh2_Link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.752941176470588 0.752941176470588 0.752941176470588 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://URDF20/meshes/banh2_Link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="banh2_joint"
+    type="continuous">
+    <origin
+      xyz="0.105 -0.18172 -0.0204"
+      rpy="0 0 0" />
+    <parent
+      link="base_link" />
+    <child
+      link="banh2_Link" />
+    <axis
+      xyz="0 -1 0" />
+  </joint>
+  <link
+    name="banh3_Link">
+    <inertial>
+      <origin
+        xyz="4.28823643261467E-15 -0.0262589105772693 1.13797860024079E-15"
+        rpy="0 0 0" />
+      <mass
+        value="0.251576087482469" />
+      <inertia
+        ixx="7.34803994742462E-05"
+        ixy="9.80228760336801E-17"
+        ixz="2.60942928740293E-16"
+        iyy="8.26003194431454E-05"
+        iyz="2.72665511162279E-16"
+        izz="7.34803994737654E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://URDF20/meshes/banh3_Link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.752941176470588 0.752941176470588 0.752941176470588 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://URDF20/meshes/banh3_Link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="banh3_joint"
+    type="continuous">
+    <origin
+      xyz="0.105 0.18172 -0.0204"
+      rpy="0 0 0" />
+    <parent
+      link="base_link" />
+    <child
+      link="banh3_Link" />
+    <axis
+      xyz="0 1 0" />
+  </joint>
+  <link
+    name="banh4_Link">
+    <inertial>
+      <origin
+        xyz="-1.33781874467331E-14 -0.0262589105773342 1.34336985979644E-14"
+        rpy="0 0 0" />
+      <mass
+        value="0.251576087482478" />
+      <inertia
+        ixx="7.34803994760885E-05"
+        ixy="1.51994503989562E-16"
+        ixz="-9.65699392847902E-17"
+        iyy="8.26003194456453E-05"
+        iyz="3.16138249385583E-16"
+        izz="7.34803994759517E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://URDF20/meshes/banh4_Link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.752941176470588 0.752941176470588 0.752941176470588 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://URDF20/meshes/banh4_Link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="banh4_joint"
+    type="continuous">
+    <origin
+      xyz="-0.105000000000018 0.181719615242281 -0.0203999999999891"
+      rpy="0 0 0" />
+    <parent
+      link="base_link" />
+    <child
+      link="banh4_Link" />
+    <axis
+      xyz="0 1 0" />
+  </joint>
+</robot>

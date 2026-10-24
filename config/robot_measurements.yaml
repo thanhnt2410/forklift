@@ -1,0 +1,106 @@
+schema_version: 1
+units: SI
+confirmed_by_user:
+  imu_model: MPU6050
+  esp32_board: ESP32 DevKit 38-pin
+  esp32_module: ESP32-WROOM
+  wheel_motor_model: GA25-370
+  wheel_motor_reported_rpm: 280  # User report; no loaded speed measurement yet.
+  wheel_motor_has_encoder: true
+  encoder_channels: [A, B]
+  encoder_ppr_reported: 11
+  encoder_default_decoding: quadrature_AB_x4
+  motor_gear_ratio_reported: 21.3  # Nominal ratio; measured CPR still pending.
+  physical_estop_installed: false
+  driver_cutoff_circuit_installed: false
+  wheel_driver_enable_choice: R_EN and L_EN tied HIGH externally
+  wheel_fault_response_choice: Hold last PWM on fault or communication loss; manual power cutoff
+  wheel_driver_model: BTS7960
+  wheel_driver_count: 4
+  lift_motor_model: NEMA17
+  lift_driver_model: TB6600
+  wheel_diameter: 0.100
+  wheel_separation_y: 0.260
+  wheel_separation_x: 0.195
+interpretation:
+  diameter_not_radius: true
+  spacing_is_center_to_center: true
+  note: User accepted the interpretation; verify physically before REAL.
+  encoder_ppr_definition: Assume 11 cycles per channel per motor-shaft revolution; verify physically.
+  pin_labels: Interpret user RHW/LPW as RPWM/LPWM and DTR+ as DIR+.
+derived:
+  wheel_radius: 0.050
+  lx: 0.0975
+  ly: 0.1300
+  lx_plus_ly: 0.2275
+  encoder_counts_per_wheel_revolution_nominal: 937.2  # 11 * 4 * 21.3, direct wheel drive.
+pending_physical_measurements:
+  wheel_width: null
+  chassis_dimensions: null
+  chassis_mass: null
+  wheel_mass: null
+  motor_gear_ratio: null  # Exact ratio not verified; nominal user value above.
+  motor_rated_voltage_v: null
+  motor_max_rpm: null  # 280 RPM is reported above; loaded usable limit not measured.
+  encoder_counts_per_wheel_revolution: null
+  encoder_output_voltage_v: null
+  encoder_ab_channels_verified: null  # A/B reported by user; electrical test pending.
+  lift_motor_rated_current_a: null
+  lift_screw_lead_m: null
+  lift_microsteps_per_revolution: null
+  lift_travel_m: null
+  lift_payload_kg: null
+  lift_limit_switches: null
+  estop_circuit: null  # User confirms no E-stop or driver cutoff installed yet.
+  pi_ram_gb: null
+  imu_mount_xyz_rpy: null
+  imu_gyro_bias_rad_s: null
+  imu_covariance: null
+  deadline: null
+simulation_geometry_file: src/forklift_description/config/robot.yaml
+
+planned_hardware_architecture:
+  imu_connection: Raspberry Pi I2C
+  imu_connection_reason: Keep ESP32 GPIO for four encoders, four bridges and lift.
+  lower_limit_switch: NC, homing plus lower travel stop
+  upper_limit_switch: NC, upper travel stop
+  limit_switch_count: 2
+  note: Switch count is selected; installation and wiring are not verified.
+  firmware_profile: firmware/esp32/forklift_esp32/board_config.h
+  actuation_enabled: false
+  wheel_driver_enable_mode: hardwired_HIGH
+  wheel_autostop_on_fault: false
+  wheel_manual_power_cutoff: true
+  lift_fault_response: Stop STEP; retain homing and travel limits
+  lift_microstep_divisor_proposed: 8  # Design choice only; actual DIP not set/verified.
+
+user_reported_motor_table:
+  reduction_ratio: 21.3
+  speed_values_rpm: [280, 220]
+  torque_value: 0.5
+  torque_unit: null
+  gearbox_length_value: 19
+  note: Column headers, units, motor supply voltage and exact supplier sheet not supplied.
+  interpretation_file: docs/hardware_parameter_notes.md
+
+user_reported_esp32_gpio:
+  # RPWM, LPWM, encoder A, encoder B; internal firmware order remains FL FR RL RR.
+  FR: {rpwm: 18, lpwm: 19, encoder_a: 12, encoder_b: 14}
+  RR: {rpwm: 21, lpwm: 27, encoder_a: 16, encoder_b: 4}
+  FL: {rpwm: 23, lpwm: 22, encoder_a: 34, encoder_b: 35}
+  RL: {rpwm: 25, lpwm: 26, encoder_a: 5, encoder_b: 17}
+  lift: {pul_plus: 13, pul_minus: GND, dir_plus: 33, dir_minus: GND, ena: null}
+  base_enable: null
+  base_enable_mode: hardwired_HIGH_no_GPIO
+  estop: null
+  lower_limit: null
+  upper_limit: null
+  electrical_validation_complete: false
+  boot_strapping_reviewed: false
+
+simulation_override:
+  source: src/forklift_description/cad_source/forklift.original.urdf
+  reason: User requests CAD dimensions for SIM until physical calibration.
+  wheel_separation_x: 0.210
+  wheel_separation_y: 0.31029
+  note: Earlier user measurements above are retained; do not overwrite REAL calibration with CAD.

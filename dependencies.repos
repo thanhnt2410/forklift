@@ -1,0 +1,7 @@
+# Upstream baseline only; local P1 modifications are the workspace source files.
+# Import into a separate reference directory, not over the modified src/ tree.
+repositories:
+  ros2_amr_mecanumbot:
+    type: git
+    url: https://github.com/Trkkhrmn/ros2_amr_mecanumbot.git
+    version: 385b761c8c96757d2cade890c105f1dbfe187ed4

@@ -1,0 +1,66 @@
+# ROS 2 / colcon output (including nested workspaces)
+build/
+install/
+log/
+
+# Python environments, bytecode and tool caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+.coverage
+.coverage.*
+htmlcov/
+
+# Machine-specific editor settings, indexes and temporary files
+.vscode/
+.idea/
+.cache/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Local tooling and credentials; keep project AGENTS.md files trackable
+/.aws/
+/.codex/
+
+# C/C++, CMake and embedded build artifacts
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+CTestTestfile.cmake
+compile_commands.json
+*.o
+*.a
+*.so
+*.so.*
+*.elf
+*.bin
+*.hex
+.pio/
+/hardware/stm32/main_host
+/src/forklift_description/cad_source/export.log
+
+# ROS bag recordings and database sidecars
+*.bag
+*.db3
+*.db3-shm
+*.db3-wal
+*.mcap
+rosbag2_*/
+
+# Only curated final results are versioned; other results stay local.
+/results/*
+!/results/final/
+
+# Upstream MP4 duplicates; GIFs used by the documentation remain tracked.
+/docs/images/*.mp4
+docker/
+# Test sources and fixtures stay local (user preference).
+test/
+tests/

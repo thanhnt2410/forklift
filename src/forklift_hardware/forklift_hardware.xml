@@ -1,0 +1,5 @@
+<library path="forklift_pty_system">
+  <class name="forklift_hardware/PtySystem" type="forklift_hardware::PtySystem" base_class_type="hardware_interface::SystemInterface">
+    <description>PTY-only virtual MCU interface; rejects physical serial ports.</description>
+  </class>
+</library>

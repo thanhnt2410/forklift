@@ -1,0 +1,97 @@
+<?xml version="1.0"?>
+<!-- SPDX-License-Identifier: Apache-2.0
+     Wheel contact model adapted from OSRF gz_ros2_control_demos (2024).
+     Forklift layout developed from Trkkhrmn/ros2_amr_mecanumbot (MIT).
+     See THIRD_PARTY_NOTICES.md in the workspace. -->
+<robot name="forklift" xmlns:xacro="http://www.ros.org/wiki/xacro"
+       xmlns:ignition="http://ignitionrobotics.org/schema">
+  <xacro:arg name="controllers_file" default="$(find forklift_control)/config/controllers.yaml"/>
+  <xacro:arg name="geometry_file" default="$(find forklift_description)/config/robot.yaml"/>
+  <xacro:arg name="backend" default="gazebo"/>
+  <xacro:arg name="port_file" default=""/>
+  <xacro:arg name="odometry_topic" default="/odom"/>
+  <xacro:arg name="p6" default="false"/>
+  <xacro:arg name="lift_test_mass" default="0.0"/>
+  <xacro:property name="g" value="${xacro.load_yaml('$(arg geometry_file)')}"/>
+  <xacro:property name="r" value="${g['wheel_radius']}"/>
+  <xacro:property name="lx" value="${g['wheel_separation_x']/2}"/>
+  <xacro:property name="ly" value="${g['wheel_separation_y']/2}"/>
+  <material name="body_blue"><color rgba="0.06 0.25 0.55 1"/></material>
+  <material name="steel"><color rgba="0.3 0.34 0.38 1"/></material>
+  <material name="rubber"><color rgba="0.06 0.06 0.07 1"/></material>
+  <material name="yellow"><color rgba="0.95 0.65 0.04 1"/></material>
+
+  <xacro:macro name="box_inertia" params="m x y z ox:=0 oy:=0 oz:=0">
+    <inertial>
+      <origin xyz="${ox} ${oy} ${oz}"/>
+      <mass value="${m}"/>
+      <inertia ixx="${m*(y*y+z*z)/12}" iyy="${m*(x*x+z*z)/12}"
+               izz="${m*(x*x+y*y)/12}" ixy="0" ixz="0" iyz="0"/>
+    </inertial>
+  </xacro:macro>
+  <xacro:macro name="box" params="name parent x y z ox oy oz mass color">
+    <joint name="${name}_fixed" type="fixed">
+      <parent link="${parent}"/><child link="${name}"/>
+      <origin xyz="${ox} ${oy} ${oz}"/>
+    </joint>
+    <link name="${name}">
+      <visual><geometry><box size="${x} ${y} ${z}"/></geometry><material name="${color}"/></visual>
+      <collision><geometry><box size="${x} ${y} ${z}"/></geometry></collision>
+      <xacro:box_inertia m="${mass}" x="${x}" y="${y}" z="${z}"/>
+    </link>
+  </xacro:macro>
+
+  <!-- CAD dimensions, meshes and inertias from cad_source; ground-normalized root. -->
+  <xacro:include filename="forklift_cad.urdf.xacro"/>
+  <!-- Optional rigid SIM proof mass, not a pallet grasp or a REAL load rating. -->
+  <xacro:if value="${float('$(arg lift_test_mass)') > 0}">
+    <xacro:box name="sim_test_load" parent="lift_carriage" x="0.08" y="0.10" z="0.06"
+      ox="0.10" oy="0" oz="0.025" mass="${float('$(arg lift_test_mass)')}" color="steel"/>
+  </xacro:if>
+
+  <joint name="laser_joint" type="fixed">
+    <parent link="base_link"/><child link="laser_frame"/>
+    <origin xyz="${g['laser_xyz'][0]} ${g['laser_xyz'][1]} ${g['laser_xyz'][2]}"/>
+  </joint>
+  <link name="laser_frame"/>
+  <gazebo reference="laser_frame">
+    <sensor name="lidar" type="gpu_lidar">
+      <topic>/scan</topic>
+      <ignition_frame_id>laser_frame</ignition_frame_id>
+      <update_rate>10</update_rate><always_on>true</always_on><visualize>true</visualize>
+      <lidar><scan><horizontal>
+        <samples>${g['lidar_samples']}</samples><resolution>1</resolution>
+        <min_angle>-${pi}</min_angle><max_angle>${pi}</max_angle>
+      </horizontal></scan><range><min>0.12</min><max>10</max><resolution>0.01</resolution></range></lidar>
+    </sensor>
+  </gazebo>
+
+  <!-- MPU6050-like six-axis sensor; no absolute yaw enters the estimator. -->
+  <joint name="imu_joint" type="fixed">
+    <parent link="base_link"/><child link="imu_link"/>
+    <origin xyz="${g['imu_xyz'][0]} ${g['imu_xyz'][1]} ${g['imu_xyz'][2]}"
+            rpy="${g['imu_rpy'][0]} ${g['imu_rpy'][1]} ${g['imu_rpy'][2]}"/>
+  </joint>
+  <link name="imu_link"/>
+  <gazebo reference="imu_link">
+    <sensor name="mpu6050_sim" type="imu">
+      <topic>/imu/sim</topic><ignition_frame_id>imu_link</ignition_frame_id>
+      <always_on>true</always_on><update_rate>100</update_rate>
+      <imu>
+        <angular_velocity>
+          <x><noise type="gaussian"><mean>0</mean><stddev>0.005</stddev></noise></x>
+          <y><noise type="gaussian"><mean>0</mean><stddev>0.005</stddev></noise></y>
+          <z><noise type="gaussian"><mean>0</mean><stddev>0.005</stddev></noise></z>
+        </angular_velocity>
+        <linear_acceleration>
+          <x><noise type="gaussian"><mean>0</mean><stddev>0.03</stddev></noise></x>
+          <y><noise type="gaussian"><mean>0</mean><stddev>0.03</stddev></noise></y>
+          <z><noise type="gaussian"><mean>0</mean><stddev>0.03</stddev></noise></z>
+        </linear_acceleration>
+      </imu>
+    </sensor>
+  </gazebo>
+
+  <xacro:include filename="ros2_control.xacro"/>
+  <xacro:simulation_control controllers_file="$(arg controllers_file)" backend="$(arg backend)" port_file="$(arg port_file)"/>
+</robot>

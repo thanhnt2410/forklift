@@ -1,0 +1,5 @@
+<library path="forklift_stable_controller">
+  <class name="forklift_navigation/StableReversingController" type="forklift_navigation::StableReversingController" base_class_type="nav2_core::Controller">
+    <description>Reverse-capable RPP with stopped, footprint-checked heading recovery and final orientation.</description>
+  </class>
+</library>

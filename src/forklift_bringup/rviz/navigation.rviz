@@ -1,0 +1,124 @@
+Panels:
+- Class: rviz_common/Displays
+  Name: Displays
+- Class: nav2_rviz_plugins/Navigation 2
+  Name: Navigation 2
+Visualization Manager:
+  Class: ''
+  Global Options:
+    Fixed Frame: map
+    Background Color: 35; 38; 45
+    Frame Rate: 30
+  Displays:
+  - Class: rviz_default_plugins/Grid
+    Name: Grid
+    Enabled: true
+    Cell Size: 0.5
+  - Class: rviz_default_plugins/RobotModel
+    Name: Robot
+    Enabled: true
+    Description Source: Topic
+    Description Topic:
+      Value: /robot_description
+      Durability Policy: Transient Local
+  - Class: rviz_default_plugins/TF
+    Name: TF
+    Enabled: false
+    Marker Scale: 0.1
+  - Class: rviz_default_plugins/LaserScan
+    Name: LiDAR
+    Enabled: true
+    Topic:
+      Value: /scan
+      Reliability Policy: Best Effort
+    Size (m): 0.02
+    Style: Points
+    Color Transformer: FlatColor
+    Color: 80; 220; 160
+  - Class: rviz_default_plugins/Odometry
+    Name: Odometry
+    Enabled: true
+    Topic:
+      Value: /odom
+    Keep: 30
+    Covariance:
+      Value: false
+      Position:
+        Value: false
+      Orientation:
+        Value: false
+    Shape:
+      Value: Arrow
+      Color: 240; 120; 40
+      Shaft Length: 0.08
+      Shaft Radius: 0.005
+      Head Length: 0.03
+      Head Radius: 0.015
+    Position Tolerance: 0.04
+    Angle Tolerance: 0.15
+  - Class: rviz_default_plugins/Map
+    Name: Map
+    Enabled: true
+    Topic:
+      Value: /map
+      Durability Policy: Transient Local
+    Alpha: 0.6
+  - Class: rviz_default_plugins/Path
+    Name: Global path
+    Enabled: true
+    Topic:
+      Value: /plan
+    Color: 255; 140; 50
+    Line Style: Lines
+    Line Width: 0.025
+  - Class: rviz_default_plugins/Path
+    Name: Approved active path
+    Enabled: true
+    Topic:
+      Value: /mission/active_path
+      Durability Policy: Transient Local
+    Color: 255; 140; 50
+    Line Style: Lines
+    Line Width: 0.03
+  - Class: rviz_default_plugins/MarkerArray
+    Name: Complete mission route
+    Enabled: true
+    Topic:
+      Value: /mission/route_markers
+      Durability Policy: Transient Local
+  - Class: rviz_default_plugins/Map
+    Name: Local costmap
+    Enabled: false
+    Topic:
+      Value: /local_costmap/costmap
+    Alpha: 0.4
+    Color Scheme: costmap
+  - Class: rviz_default_plugins/Marker
+    Name: Lift status
+    Enabled: true
+    Topic:
+      Value: /lift/marker
+      Durability Policy: Transient Local
+  Tools:
+  - Class: rviz_default_plugins/MoveCamera
+  - Class: rviz_default_plugins/Select
+  - Class: rviz_default_plugins/FocusCamera
+  - Class: rviz_default_plugins/SetInitialPose
+    Topic:
+      Value: /initialpose
+  - Class: nav2_rviz_plugins/GoalTool
+  Views:
+    Current:
+      Class: rviz_default_plugins/Orbit
+      Distance: 8.0
+      Pitch: 0.6
+      Yaw: 0.8
+      Focal Point:
+        X: 0.0
+        Y: 0.0
+        Z: 0.1
+      Target Frame: <Fixed Frame>
+      Near Clip Distance: 0.01
+Window Geometry:
+  Height: 800
+  Width: 1100

@@ -1,0 +1,41 @@
+controller_manager:
+  ros__parameters:
+    update_rate: 100
+    use_sim_time: true
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+    base_controller:
+      type: mecanum_drive_controller/MecanumDriveController
+    lift_controller:
+      type: joint_trajectory_controller/JointTrajectoryController
+
+base_controller:
+  ros__parameters:
+    use_stamped_vel: false
+    reference_timeout: 0.3
+    front_left_wheel_command_joint_name: front_left_wheel_joint
+    front_right_wheel_command_joint_name: front_right_wheel_joint
+    rear_left_wheel_command_joint_name: rear_left_wheel_joint
+    rear_right_wheel_command_joint_name: rear_right_wheel_joint
+    # Geometry is injected from forklift_description/config/robot.yaml at launch.
+    kinematics:
+      base_frame_offset: {x: 0.0, y: 0.0, theta: 0.0}
+    base_frame_id: base_link
+    odom_frame_id: odom
+    enable_odom_tf: true
+    pose_covariance_diagonal: [0.01, 0.01, 1000.0, 1000.0, 1000.0, 0.02]
+    twist_covariance_diagonal: [0.02, 0.02, 1000.0, 1000.0, 1000.0, 0.04]
+
+lift_controller:
+  ros__parameters:
+    joints: [lift_joint]
+    command_interfaces: [position]
+    state_interfaces: [position, velocity]
+    state_publish_rate: 50.0
+    action_monitor_rate: 20.0
+    allow_partial_joints_goal: false
+    allow_nonzero_velocity_at_trajectory_end: false
+    constraints:
+      goal_time: 2.0
+      stopped_velocity_tolerance: 0.01
+      lift_joint: {trajectory: 0.02, goal: 0.005}

@@ -1,0 +1,77 @@
+# Opt-in experiment for Nav2 Humble 1.1.20. AMCL, map, approved path,
+# goal checker, footprint updates and downstream smoother/gates stay unchanged.
+controller_server:
+  ros__parameters:
+    controller_frequency: 20.0
+    FollowPath:
+      plugin: forklift_navigation/GuardedMPPIController
+      motion_model: DiffDrive
+      model_dt: 0.05
+      time_steps: 40
+      batch_size: 1000
+      iteration_count: 1
+      vx_max: 0.25
+      vx_min: -0.16
+      vy_max: 0.0
+      wz_max: 0.6
+      vx_std: 0.12
+      vy_std: 0.1
+      wz_std: 0.25
+      temperature: 0.15
+      gamma: 0.015
+      visualize: false
+      regenerate_noises: false
+      retry_attempt_limit: 1
+      transform_tolerance: 0.2
+      max_robot_pose_search_dist: 0.25
+      prune_distance: 1.2
+      enforce_path_inversion: true
+      inversion_xy_tolerance: 0.08
+      inversion_yaw_tolerance: 0.15
+      critics: [ConstraintCritic, CostCritic, GoalCritic, GoalAngleCritic, PathAlignCritic, PathFollowCritic, PathAngleCritic]
+      ConstraintCritic:
+        enabled: true
+        cost_power: 1
+        cost_weight: 4.0
+      CostCritic:
+        enabled: true
+        cost_power: 1
+        cost_weight: 3.81
+        consider_footprint: true
+        collision_cost: 1000000.0
+        critical_cost: 300.0
+        near_goal_distance: 0.25
+      GoalCritic:
+        enabled: true
+        cost_power: 1
+        cost_weight: 8.0
+        threshold_to_consider: 0.5
+      GoalAngleCritic:
+        enabled: true
+        cost_power: 1
+        cost_weight: 3.0
+        threshold_to_consider: 0.035
+      PathAlignCritic:
+        enabled: true
+        cost_power: 1
+        cost_weight: 10.0
+        max_path_occupancy_ratio: 0.0
+        offset_from_furthest: 2
+        trajectory_point_step: 2
+        threshold_to_consider: 0.15
+        use_path_orientations: true
+      PathFollowCritic:
+        enabled: true
+        cost_power: 1
+        cost_weight: 8.0
+        offset_from_furthest: 6
+        threshold_to_consider: 0.05
+      PathAngleCritic:
+        enabled: true
+        cost_power: 1
+        cost_weight: 3.0
+        offset_from_furthest: 3
+        threshold_to_consider: 0.15
+        max_angle_to_furthest: 0.6
+        # This Humble release uses forward_preference, not the newer mode enum.
+        forward_preference: false

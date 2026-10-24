@@ -1,0 +1,7 @@
+cmake_minimum_required(VERSION 3.8)
+project(forklift_control)
+find_package(ament_cmake REQUIRED)
+install(DIRECTORY config DESTINATION share/${PROJECT_NAME})
+install(PROGRAMS scripts/command_gate.py scripts/lift_sim.py scripts/imu_adapter.py DESTINATION lib/${PROJECT_NAME})
+install(FILES LICENSE DESTINATION share/${PROJECT_NAME})
+ament_package()

@@ -1,0 +1,39 @@
+# SI units. CAD geometry supersedes initial user dimensions for SIM.
+# Original wheel meshes are NOT scaled; 50 mm is nominal contact radius.
+wheel_radius: 0.05
+wheel_separation_x: 0.210
+wheel_separation_y: 0.31029
+wheel_width: 0.05685
+wheel_mass: 0.25157608748247
+# CAD fixed-assembly envelope excludes moving forks.
+body_length: 0.3102
+body_width: 0.269439
+body_height: 0.2596
+body_mass: 1.50204935172292
+body_center_z: 0.1648
+cad_ground_offset: 0.0704
+lidar_samples: 720
+laser_xyz: [0.0, 0.0, 0.2946]
+# MPU6050 mount remains provisional: no IMU component supplied in CAD.
+imu_xyz: [0.0, 0.0, 0.12]
+imu_rpy: [0.0, 0.0, 0.0]
+# Conservative operational range inferred from CAD screw/mast clearance.
+# CAD export contains no travel limits; verify against actual hard stops.
+lift_travel: 0.12
+lift_sim_limit_margin: 0.005
+lift_velocity: 0.04
+lift_sim_velocity_limit: 0.10
+lift_mass: 0.157799980596413
+fork_length: 0.20
+fork_width: 0.015
+fork_thickness: 0.002
+fork_spacing: 0.145
+fork_root_x: 0.2313
+fork_tip_x: 0.4313
+fork_top_z: 0.09613
+footprint_xmin: -0.1751
+footprint_xmax: 0.4513
+footprint_halfwidth: 0.225145
+loaded_xmin: 0.28
+loaded_xmax: 0.52
+loaded_halfwidth: 0.17

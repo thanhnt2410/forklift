@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<!-- Copyright 2024 Open Source Robotics Foundation, Inc.
+     SPDX-License-Identifier: Apache-2.0
+     Adapted spherical anisotropic contact model for Fortress.
+     ignition:expressed_in is required by the installed Gazebo 6 Physics system. -->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro"
+       xmlns:ignition="http://ignitionrobotics.org/schema">
+  <xacro:macro name="wheel" params="name x y direction">
+    <joint name="${name}_wheel_joint" type="continuous">
+      <parent link="base_link"/><child link="${name}_wheel"/>
+      <origin xyz="${x} ${y} ${r}" rpy="${-pi/2} 0 0"/>
+      <axis xyz="0 0 1"/><dynamics damping="0.001" friction="0"/>
+    </joint>
+    <link name="${name}_wheel">
+      <visual><geometry><cylinder radius="${r}" length="${g['wheel_width']}"/></geometry><material name="rubber"/></visual>
+      <!-- Contact sphere + anisotropic friction approximates free rollers;
+           visuals are cylinders, not a detailed roller/contact simulation. -->
+      <collision><geometry><sphere radius="${r}"/></geometry></collision>
+      <inertial><mass value="${g['wheel_mass']}"/>
+        <inertia ixx="${g['wheel_mass']*(3*r*r+g['wheel_width']**2)/12}"
+          iyy="${g['wheel_mass']*(3*r*r+g['wheel_width']**2)/12}"
+          izz="${g['wheel_mass']*r*r/2}" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+    </link>
+    <gazebo reference="${name}_wheel">
+      <collision><surface><friction><ode>
+        <mu>1</mu><mu2>0</mu2>
+        <fdir1 ignition:expressed_in="base_link">${direction}</fdir1>
+      </ode></friction></surface></collision>
+    </gazebo>
+  </xacro:macro>
+</robot>

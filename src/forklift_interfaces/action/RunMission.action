@@ -1,0 +1,11 @@
+# SIM fixed-station mission. a_to_b; no hardware operations.
+string mission
+float64 timeout
+---
+bool success
+string code
+string final_state
+---
+string state
+bool load_detected
+float64 lift_height

@@ -1,0 +1,22 @@
+lift_supervisor:
+  ros__parameters:
+    # All values SIM-only, not measured screw/stepper specifications.
+    max_height: 0.115
+    move_velocity: 0.04
+    home_fast_velocity: 0.02
+    home_slow_velocity: 0.006
+    home_backoff: 0.008
+    position_tolerance: 0.002
+    state_timeout: 0.4
+    home_timeout: 60.0
+    auto_home: false
+lift_sim_io:
+  ros__parameters:
+    lower_position: 0.0015
+    upper_position: 0.12
+    switch_hysteresis: 0.0005
+    command_timeout: 0.3
+    lower_mode: normal
+    upper_mode: normal
+    drop_feedback: false
+    jammed: false

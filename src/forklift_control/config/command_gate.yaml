@@ -1,0 +1,14 @@
+command_gate:
+  ros__parameters:
+    use_sim_time: true
+    command_timeout: 0.3
+    state_timeout: 0.5
+    max_vx: 0.25
+    max_vy: 0.20
+    max_wz: 0.6
+    max_ax: 0.5
+    max_ay: 0.5
+    max_aw: 1.5
+    # Keep sum(|vx|+|vy|+k*|wz|)/r <= 12 rad/s for every wheel.
+    max_wheel_speed: 12.0
+    transport_height: 0.02

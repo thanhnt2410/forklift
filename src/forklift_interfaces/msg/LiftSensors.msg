@@ -1,0 +1,11 @@
+std_msgs/Header header
+float64 position
+float64 velocity
+bool feedback_valid
+bool lower_active
+bool upper_active
+bool lower_valid
+bool upper_valid
+bool controller_ok
+bool base_stationary
+bool watchdog_latched

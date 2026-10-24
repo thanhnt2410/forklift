@@ -1,0 +1,23 @@
+# SIM only. Nav goals are standoff poses aligned with the pallet entry axis.
+# Approved profile: A final straight 1.3m, B 0.9m; Home may arrive reversing.
+# Faces x=1.0; parcel fixed on pallet at +0.05m from pallet entry.
+mission:
+  home: [0.0, 0.0, -1.3089969389957472]
+  a: {approach: [0.35, 0.65, 0.0], face: [1.0, 0.65], marker_offset_y: 0.0, marker_offset_x: 0.0, marker_yaw: 0.0, width: 0.24}
+  b: {approach: [0.35, -0.60, 0.0], face: [1.0, -0.60], marker_offset_y: 1.40, marker_offset_x: 0.45, marker_yaw: 1.5707963267948966, width: 0.40, lateral_tolerance: 0.012, distance_tolerance: 0.008}
+  laser_x: 0.0
+  preinsert_distance: 0.55
+  inserted_distance: 0.28
+  carry_joint_position: 0.016
+  withdrawal_policy: clearance
+  retreat_distance: 0.35
+  terminal_distance: 0.9
+  turn_setup_distance: 0.5
+  # These are controller tolerances, verified independently against physics.
+  lateral_tolerance: 0.008
+  yaw_tolerance: 0.035
+  face_width: 0.24
+
+  retreat_speed: 0.08
+  approach_speed: 0.035
+  insertion_speed: 0.015

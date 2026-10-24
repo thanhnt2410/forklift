@@ -1,0 +1,5 @@
+<library path="forklift_terminal_planner">
+  <class name="forklift_navigation/TerminalApproachPlanner" type="forklift_navigation::TerminalApproachPlanner" base_class_type="nav2_core::GlobalPlanner">
+    <description>Smac Hybrid-A* curve followed by a collision-checked straight goal-aligned terminal corridor.</description>
+  </class>
+</library>

@@ -1,0 +1,12 @@
+std_msgs/Header header
+string state
+string fault_code
+bool homed
+bool moving
+bool inhibited
+bool estopped
+float64 height
+float64 target
+float64 home_offset
+bool lower_active
+bool upper_active

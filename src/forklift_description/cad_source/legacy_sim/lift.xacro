@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <xacro:macro name="lift">
+    <!-- All lift geometry/mass/travel is provisional for P1, not a REAL rating. -->
+    <xacro:box name="mast" parent="base_link" x="0.025" y="0.09" z="0.32"
+      ox="0.15" oy="0" oz="0.22" mass="0.4" color="steel"/>
+    <joint name="lift_joint" type="prismatic">
+      <parent link="base_link"/><child link="lift_carriage"/>
+      <origin xyz="0.177 0 0.055"/><axis xyz="0 0 1"/>
+      <!-- Fortress/DART can lock a velocity-driven joint after crossing a hard
+           limit under gravity at startup (gz_ros2_control issue #192).
+           Operating/command bounds remain [0, lift_travel]; these SIM-only
+           physical stops include a 5mm numerical margin at both ends. -->
+      <limit lower="${-g['lift_sim_limit_margin']}" upper="${g['lift_travel']+g['lift_sim_limit_margin']}"
+             velocity="${g['lift_sim_velocity_limit']}" effort="100"/>
+      <!-- Ideal position actuator in P1; screw friction is not calibrated yet. -->
+      <dynamics damping="0" friction="0"/>
+    </joint>
+    <link name="lift_carriage">
+      <visual><geometry><box size="0.02 0.18 0.05"/></geometry><material name="yellow"/></visual>
+      <collision><geometry><box size="0.02 0.18 0.05"/></geometry></collision>
+      <xacro:box_inertia m="${g['lift_mass']}" x="0.02" y="0.18" z="0.05"/>
+    </link>
+    <xacro:box name="fork_left" parent="lift_carriage" x="${g['fork_length']}"
+      y="${g['fork_width']}" z="${g['fork_thickness']}" ox="${g['fork_length']/2}"
+      oy="${g['fork_spacing']/2}" oz="-0.019" mass="0.05" color="yellow"/>
+    <xacro:box name="fork_right" parent="lift_carriage" x="${g['fork_length']}"
+      y="${g['fork_width']}" z="${g['fork_thickness']}" ox="${g['fork_length']/2}"
+      oy="${-g['fork_spacing']/2}" oz="-0.019" mass="0.05" color="yellow"/>
+  </xacro:macro>
+</robot>

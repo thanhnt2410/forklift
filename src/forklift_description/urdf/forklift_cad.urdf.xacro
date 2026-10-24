@@ -1,0 +1,333 @@
+<robot name="forklift_cad" xmlns:xacro="http://www.ros.org/wiki/xacro" xmlns:ignition="http://ignitionrobotics.org/schema">
+  <!--Generated from cad_source/forklift.original.urdf. Unscaled CAD; see docs/forklift_model.md.-->
+  <link name="base_link" />
+  <joint name="chassis_fixed" type="fixed">
+    <parent link="base_link" />
+    <child link="chassis" />
+    <origin xyz="0 0 0.0704" rpy="0 0 0" />
+  </joint>
+  <link name="chassis">
+    <inertial>
+      <origin xyz="0.0454952921615985 -0.000900927329499063 0.0860542688791245" rpy="0 0 0" />
+      <mass value="1.50204935172292" />
+      <inertia ixx="0.00206168003342103" ixy="-1.59117018010418E-08" ixz="1.77093405561894E-05" iyy="0.0035065468493987" iyz="-1.88885377627714E-05" izz="0.00404272083711972" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://forklift_description/meshes/chassis.stl" />
+      </geometry>
+      <material name="">
+        <color rgba="1 0.905882352941176 0.964705882352941 1" />
+      </material>
+    </visual>
+    <collision name="chassis_collision">
+      <origin xyz="0 0 -0.01" />
+      <geometry>
+        <box size="0.3102 0.269439 0.05" />
+      </geometry>
+    </collision>
+    <collision name="upper_deck_collision">
+      <origin xyz="0 0 0.155" />
+      <geometry>
+        <box size="0.3102 0.269439 0.015" />
+      </geometry>
+    </collision>
+    <collision name="mast_collision">
+      <origin xyz="0.20649 0 0.09" />
+      <geometry>
+        <box size="0.02 0.09 0.175" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="lidar_housing_fixed" type="fixed">
+    <parent link="chassis" />
+    <child link="lidar_housing" />
+    <origin xyz="0 0 0.2242" rpy="0 0 0" />
+  </joint>
+  <link name="lidar_housing">
+    <inertial>
+      <origin xyz="2.77555756156289E-17 -0.00829730869451539 -0.0212358931355648" rpy="0 0 0" />
+      <mass value="0.146433824458044" />
+      <inertia ixx="0.00010913430892991" ixy="1.50438986236132E-20" ixz="-5.85016366241193E-21" iyy="6.17383101250328E-05" iyz="-1.88823790954E-05" izz="0.000125260405967004" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://forklift_description/meshes/lidar_housing.stl" />
+      </geometry>
+      <material name="">
+        <color rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+  </link>
+  <joint name="lift_transmission_fixed" type="fixed">
+    <parent link="chassis" />
+    <child link="lift_transmission" />
+    <origin xyz="0.0850000000000005 0 0.1811" rpy="0 0 0" />
+  </joint>
+  <link name="lift_transmission">
+    <inertial>
+      <origin xyz="0.060865792578273 -3.47071477933836E-06 -0.00399999999999989" rpy="0 0 0" />
+      <mass value="0.0041996196948374" />
+      <inertia ixx="1.55825022287584E-07" ixy="-1.44167485726101E-11" ixz="-8.64628042246671E-23" iyy="3.3027515683611E-06" iyz="-7.24932385022228E-24" izz="3.41915364587448E-06" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://forklift_description/meshes/lift_transmission.stl" />
+      </geometry>
+      <material name="">
+        <color rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+  </link>
+  <joint name="lift_drive_gear_fixed" type="fixed">
+    <parent link="lift_transmission" />
+    <child link="lift_drive_gear" />
+    <origin xyz="0 0 0" rpy="0 0 0" />
+  </joint>
+  <link name="lift_drive_gear">
+    <inertial>
+      <origin xyz="1.38777878078145E-16 1.38777878078145E-17 -0.00400000000000017" rpy="0 0 0" />
+      <mass value="0.00116345796646665" />
+      <inertia ixx="2.4021754545464E-08" ixy="-1.59618115562419E-23" ixz="1.29426240314133E-23" iyy="2.4021754545464E-08" iyz="-5.78303439992141E-24" izz="3.47398949842348E-08" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://forklift_description/meshes/lift_drive_gear.stl" />
+      </geometry>
+      <material name="">
+        <color rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+  </link>
+  <joint name="lift_screw_fixed" type="fixed">
+    <parent link="lift_transmission" />
+    <child link="lift_screw" />
+    <origin xyz="0.1214903580365 -1.35453982808703E-05 0" rpy="0 0 0" />
+  </joint>
+  <link name="lift_screw">
+    <inertial>
+      <origin xyz="1.10856560374961E-05 1.53458744956009E-05 -0.0768305137670481" rpy="0 0 0" />
+      <mass value="0.00715434820540168" />
+      <inertia ixx="1.40951366176622E-05" ixy="-1.52612901686227E-12" ixz="3.54972094816928E-09" iyy="1.40950391458847E-05" iyz="4.94549534208485E-09" izz="7.42877121443652E-08" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://forklift_description/meshes/lift_screw.stl" />
+      </geometry>
+      <material name="">
+        <color rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+  </link>
+  <joint name="lift_joint" type="prismatic">
+    <parent link="base_link" />
+    <child link="lift_carriage" />
+    <origin xyz="0.2333000000000005 -0.00091809 0.12263" rpy="0 0 0" />
+    <axis xyz="0 0 1" />
+    <limit lower="${-g['lift_sim_limit_margin']}" upper="${g['lift_travel']+g['lift_sim_limit_margin']}" velocity="${g['lift_sim_velocity_limit']}" effort="100" />
+    <dynamics damping="0" friction="0" />
+  </joint>
+  <link name="lift_carriage">
+    <inertial>
+      <origin xyz="-0.01217622845524496 0.0007357117380613939 -0.00274807693860927" rpy="0 0 0" />
+      <mass value="0.157799980596413" />
+      <inertia ixx="0.0001738092707383177" ixy="-2.1438019415721113e-09" ixz="1.77101619481635e-05" iyy="0.0001754359173163805" iyz="-6.266121678602184e-09" izz="0.0002684737371996178" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="1.5708 -1.5708 0" />
+      <geometry>
+        <mesh filename="package://forklift_description/meshes/lift_carriage.stl" />
+      </geometry>
+      <material name="">
+        <color rgba="0.988235294117647 0.984313725490196 1 1" />
+      </material>
+    </visual>
+    <collision name="carriage_collision">
+      <origin xyz="-0.025 0 0.005" />
+      <geometry>
+        <box size="0.025 0.10 0.05" />
+      </geometry>
+    </collision>
+    <collision name="fork_right_collision">
+      <origin xyz="0.098 -0.07250000000000001 -0.0275" />
+      <geometry>
+        <box size="0.20 0.015 0.002" />
+      </geometry>
+    </collision>
+    <collision name="fork_left_collision">
+      <origin xyz="0.098 0.0725 -0.0275" />
+      <geometry>
+        <box size="0.20 0.015 0.002" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="rear_right_wheel_joint" type="continuous">
+    <parent link="chassis" />
+    <child link="rear_right_wheel" />
+    <origin xyz="-0.105 -0.15514499999999998 -0.0204" rpy="0 0 0" />
+    <axis xyz="0 1 0" />
+    <dynamics damping="0.001" friction="0" />
+  </joint>
+  <gazebo reference="rear_right_wheel">
+    <collision>
+      <surface>
+        <friction>
+          <ode>
+            <mu>1</mu>
+            <mu2>0</mu2>
+            <fdir1 ignition:expressed_in="base_link">1 -1 0</fdir1>
+          </ode>
+        </friction>
+      </surface>
+    </collision>
+  </gazebo>
+  <link name="rear_right_wheel">
+    <inertial>
+      <origin xyz="9.99200722162641e-15 -0.000316089422674401 -1.95121696577871e-14" rpy="0 0 0" />
+      <mass value="0.25157608748246" />
+      <inertia ixx="7.34803994722608E-05" ixy="1.81568834239946E-16" ixz="1.96334627111884E-19" iyy="8.26003194411143E-05" iyz="2.29176217901292E-16" izz="7.34803994721517E-05" />
+    </inertial>
+    <visual>
+      <origin xyz="0.0 -0.026575 0.0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://forklift_description/meshes/rear_right_wheel.stl" />
+      </geometry>
+      <material name="">
+        <color rgba="0.752941176470588 0.752941176470588 0.752941176470588 1" />
+      </material>
+    </visual>
+    <collision>
+      <geometry>
+        <sphere radius="0.05" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="front_right_wheel_joint" type="continuous">
+    <parent link="chassis" />
+    <child link="front_right_wheel" />
+    <origin xyz="0.105 -0.15514499999999998 -0.0204" rpy="0 0 0" />
+    <axis xyz="0 1 0" />
+    <dynamics damping="0.001" friction="0" />
+  </joint>
+  <gazebo reference="front_right_wheel">
+    <collision>
+      <surface>
+        <friction>
+          <ode>
+            <mu>1</mu>
+            <mu2>0</mu2>
+            <fdir1 ignition:expressed_in="base_link">1 1 0</fdir1>
+          </ode>
+        </friction>
+      </surface>
+    </collision>
+  </gazebo>
+  <link name="front_right_wheel">
+    <inertial>
+      <origin xyz="7.31775751106056e-14 -0.00031608942273980006 4.00235400377369e-14" rpy="0 0 0" />
+      <mass value="0.251576087482482" />
+      <inertia ixx="7.3480399476E-05" ixy="1.7941498041554E-16" ixz="1.42473141309666E-16" iyy="8.26003194456624E-05" iyz="-3.12249407662054E-16" izz="7.34803994761819E-05" />
+    </inertial>
+    <visual>
+      <origin xyz="0.0 -0.026575 0.0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://forklift_description/meshes/front_right_wheel.stl" />
+      </geometry>
+      <material name="">
+        <color rgba="0.752941176470588 0.752941176470588 0.752941176470588 1" />
+      </material>
+    </visual>
+    <collision>
+      <geometry>
+        <sphere radius="0.05" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="front_left_wheel_joint" type="continuous">
+    <parent link="chassis" />
+    <child link="front_left_wheel" />
+    <origin xyz="0.105 0.15514499999999998 -0.0204" rpy="0 0 0" />
+    <axis xyz="0 1 0" />
+    <dynamics damping="0.001" friction="0" />
+  </joint>
+  <gazebo reference="front_left_wheel">
+    <collision>
+      <surface>
+        <friction>
+          <ode>
+            <mu>1</mu>
+            <mu2>0</mu2>
+            <fdir1 ignition:expressed_in="base_link">1 -1 0</fdir1>
+          </ode>
+        </friction>
+      </surface>
+    </collision>
+  </gazebo>
+  <link name="front_left_wheel">
+    <inertial>
+      <origin xyz="4.28823643261467e-15 0.0003160894227306997 1.13797860024079e-15" rpy="0 0 0" />
+      <mass value="0.251576087482469" />
+      <inertia ixx="7.34803994742462E-05" ixy="9.80228760336801E-17" ixz="2.60942928740293E-16" iyy="8.26003194431454E-05" iyz="2.72665511162279E-16" izz="7.34803994737654E-05" />
+    </inertial>
+    <visual>
+      <origin xyz="0.0 0.026575 0.0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://forklift_description/meshes/front_left_wheel.stl" />
+      </geometry>
+      <material name="">
+        <color rgba="0.752941176470588 0.752941176470588 0.752941176470588 1" />
+      </material>
+    </visual>
+    <collision>
+      <geometry>
+        <sphere radius="0.05" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="rear_left_wheel_joint" type="continuous">
+    <parent link="chassis" />
+    <child link="rear_left_wheel" />
+    <origin xyz="-0.105000000000018 0.15514461524228101 -0.0203999999999891" rpy="0 0 0" />
+    <axis xyz="0 1 0" />
+    <dynamics damping="0.001" friction="0" />
+  </joint>
+  <gazebo reference="rear_left_wheel">
+    <collision>
+      <surface>
+        <friction>
+          <ode>
+            <mu>1</mu>
+            <mu2>0</mu2>
+            <fdir1 ignition:expressed_in="base_link">1 1 0</fdir1>
+          </ode>
+        </friction>
+      </surface>
+    </collision>
+  </gazebo>
+  <link name="rear_left_wheel">
+    <inertial>
+      <origin xyz="-1.33781874467331e-14 0.00031608942266580023 1.34336985979644e-14" rpy="0 0 0" />
+      <mass value="0.251576087482478" />
+      <inertia ixx="7.34803994760885E-05" ixy="1.51994503989562E-16" ixz="-9.65699392847902E-17" iyy="8.26003194456453E-05" iyz="3.16138249385583E-16" izz="7.34803994759517E-05" />
+    </inertial>
+    <visual>
+      <origin xyz="0.0 0.026575 0.0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://forklift_description/meshes/rear_left_wheel.stl" />
+      </geometry>
+      <material name="">
+        <color rgba="0.752941176470588 0.752941176470588 0.752941176470588 1" />
+      </material>
+    </visual>
+    <collision>
+      <geometry>
+        <sphere radius="0.05" />
+      </geometry>
+    </collision>
+  </link>
+</robot>
