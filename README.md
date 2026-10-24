@@ -1,223 +1,227 @@
-# Xe nâng AMR mecanum — ROS 2 Humble / Gazebo Fortress
+# Xe nâng AMR mecanum
 
-> Điều hướng hiện tại chạy **path đã duyệt**, cho phép lùi theo cung trên toàn hành trình.
-> Đoạn cuối thẳng vào trục pallet: A 1,30 m, B 0,90 m; rút tối thiểu 0,35 m để thoát trạm,
-> sau đó tiếp tục lùi theo tuyến. Giới hạn tiến/lùi giữ 0,25/0,16 m/s.
-> [Cấu hình và luồng nhiệm vụ](docs/curved_navigation.md),
-> [path và quỹ đạo Gazebo](results/approved_route_sim/verified_demo_v2/route_simulation.png),
-> [video](results/approved_route_sim/verified_demo_v2/mission_demo.mp4).
+Đồ án xe nâng tự hành dùng **ROS 2 Humble** và **Gazebo Fortress**, phát triển từ
+[Trkkhrmn/ros2_amr_mecanumbot](https://github.com/Trkkhrmn/ros2_amr_mecanumbot).
+Robot sử dụng bốn bánh mecanum, LiDAR, IMU và cơ cấu nâng vít me.
 
-**Triển khai sau phê duyệt — 24/10/2026 (SIM):** chu trình lấy → mang A–B → thả → Home
-đạt [29/29 kiểm tra](results/approved_route_sim/verified_demo_v2/summary.json).
-Ba tuyến Nav2 dùng FollowPath với các đỉnh đã duyệt, kiểm tra costmap trước mỗi chặng;
-LiDAR vẫn căn chỉnh/chèn càng. Nav2 cập nhật footprint khi mang/thả tải.
-Thời gian khoảng 186 giây, RTF 98,9%; Home hướng -75° như bản xem trước.
-60 unit Python và 5 kiểm tra C++ đạt. [Bằng chứng và giới hạn](results/approved_route_sim/README.md).
-Hồi quy dừng: [hủy khi đang lùi 9/9](results/approved_route_sim/cancel_reverse/summary.json),
-[mất LiDAR 10/10](results/approved_route_sim/scan_loss/summary.json); cả ba lượt cuối đã dọn sạch tiến trình.
-Kết quả các cấu hình cũ bên dưới được giữ làm lịch sử, không cộng gộp thành nghiệm thu nhiều chu trình.
+Hiện có thể chạy mô phỏng lấy hàng tại A → vận chuyển sang B → thả hàng → về Home.
+Firmware ESP32 đang được phát triển; **chưa nạp board hoặc chạy xe thật**.
 
-> Cập nhật CAD URDF20: mô hình mặc định đã đổi sang kích thước CAD.
-> Xem [tích hợp URDF20](docs/forklift_model.md). Kết quả kiểm thử cũ bên dưới thuộc mô hình trước khi đổi CAD.
+## Chức năng hiện tại
 
-Đồ án phát triển từ [Trkkhrmn/ros2_amr_mecanumbot](https://github.com/Trkkhrmn/ros2_amr_mecanumbot), baseline commit `385b761c8c96757d2cade890c105f1dbfe187ed4`.
+- Mô hình CAD URDF20 được tích hợp trong `forklift_description`.
+- Điều khiển bốn bánh mecanum, nâng/hạ và homing càng trong mô phỏng.
+- SLAM, định vị AMCL và điều hướng Nav2; EKF kết hợp odometry bánh với IMU mô phỏng.
+- Bộ bám đường mặc định **MPPI**, cho phép tiến/lùi theo đường cong.
+- Nhiệm vụ dùng Nav2 FollowPath theo các điểm đã duyệt; LiDAR căn chỉnh và chèn càng.
+- Khi chạy Nav2 dùng vận tốc tiến/lùi và quay; đi ngang dùng cho teleop hoặc docking.
 
-Nội dung repo đã được chuyển ra thư mục gốc workspace theo thao tác của người dùng. Các package nằm trực tiếp tại `src/forklift_*`. Package `mecanum_*` gốc được giữ đối chiếu và có `COLCON_IGNORE`, tránh build/chạy nhầm plugin Classic. [README gốc](docs/upstream_README.md).
+Đường nhiệm vụ được công bố đầy đủ trước khi xe di chuyển. Nếu tuyến không hợp lệ,
+xe dừng/báo lỗi thay vì tự chọn tuyến khác. Giới hạn vận tốc nhiệm vụ hiện tại:
+**tiến 0,25 m/s, lùi 0,16 m/s**; docking và chèn càng chạy chậm hơn.
 
-Mô hình CAD, mesh và thông số xe được quản lý thống nhất trong
-[`forklift_description`](src/forklift_description); không cần package `urdf20` riêng.
+## Môi trường cần có
 
-**Phạm vi hiện tại chỉ mô phỏng:** P3 có hardware interface + MCU giả qua PTY;
-P4 có SLAM, bản đồ lưu, AMCL omni và Nav2. Không nạp firmware hoặc mở cổng xe thật.
-[Hướng dẫn P3/P4](docs/p3_p4_simulation.md), [báo cáo kiểm thử](docs/p3_p4_status.md).
+- Ubuntu **22.04**, ROS 2 **Humble** đã được cài và cấu hình.
+- Gazebo **Fortress**; executable là `ign gazebo`.
+- `colcon`, `rosdep` và các dependency ROS trong `src/*/package.xml`.
+- Các thành phần chính: `gz_ros2_control`, `ros_gz_bridge`, `ros_gz_sim`,
+  `ros2_controllers`, Nav2/MPPI, SLAM Toolbox, `robot_localization` và RViz2.
+- OpenGL/EGL hoạt động để mô phỏng GPU LiDAR, kể cả khi không mở Gazebo GUI.
 
-**Đã bổ sung EKF + IMU theo giao diện MPU6050 trong Gazebo:** `/wheel/odometry` +
-`/imu/data_raw` → EKF → `/odom`. Mặc định bật, chỉ EKF phát `odom → base_link`.
-[Thiết kế, kiểm thử và giới hạn MPU6050](docs/ekf_mpu6050.md).
-Nav2 với EKF đạt 38/38 kiểm tra, gồm 10/10 đích và dừng khi mất IMU.
+Các package gốc `mecanum_*` được giữ để đối chiếu và có `COLCON_IGNORE`.
+Giữ các file này khi build hệ thống Fortress; các package đang sử dụng mang tên `forklift_*`.
 
-## P5 — nâng có giám sát (SIM)
+## Tải mã nguồn và build
 
-Đã có homing dò chậm, action move/home, feedback/cancel/timeout, công tắc ảo,
-watchdog và E-stop. Chưa homing/fault/đang nâng hoặc càng cao thì xe bị khóa.
-[Hướng dẫn P5 và kết quả kiểm tra](docs/p5_lift.md).
+Ví dụ đặt dự án tại `~/ros_ws/forklift`:
 
 ```bash
-ros2 launch forklift_bringup p5.launch.py
-# Terminal khác đã source workspace:
-ros2 action send_goal /lift/home forklift_interfaces/action/HomeLift '{}' --feedback
-ros2 action send_goal /lift/move forklift_interfaces/action/MoveLift '{height: 0.10}' --feedback
-```
-
-Navigation/mapping mặc định dùng supervisor mới, auto-home một lần trong SIM.
-`/lift/target` thuộc helper P1 cũ; trong P5 dùng action `/lift/move`.
-Đã bổ sung P6-SIM lấy/giao pallet mẫu bằng tiếp xúc vật lý; chưa thử nâng thật.
-
-## P6 — lấy/giao pallet tại trạm cố định (SIM)
-
-Kiện cao 30 cm để LiDAR quét mặt hàng; docking đưa càng vào pallet động riêng,
-nâng thấp bằng tiếp xúc vật lý rồi vận chuyển A→B→Home. Task manager có
-cancel/fault, xác nhận tiếp xúc tải và mux Nav2/docking qua các khóa P4/P5.
-[Hướng dẫn, kiểm thử và giới hạn P6](docs/p6_simulation.md).
-Đã đạt **10/10 chu trình** và **11/11 tình huống lỗi** trong SIM.
-[Video P6](results/p6/demo/mission_demo.mp4), [kết quả tổng hợp](results/p6/summary.json).
-
-```bash
-ros2 launch forklift_bringup p6.launch.py
-# Terminal khác đã source workspace, chờ home/navigation ready:
-ros2 action send_goal /mission/run forklift_interfaces/action/RunMission \
-  '{mission: a_to_b, timeout: 300.0}' --feedback
-```
-
-## Phạm vi P1
-
-- Bánh đường kính **100 mm**, khoảng cách tâm–tâm ngang **260 mm**, dọc **195 mm**.
-- Mô hình xe, hai càng và joint nâng; khung, khối lượng và hành trình dùng giá trị tạm cho SIM.
-- gz_ros2_control, mecanum controller, joint state broadcaster và trajectory controller.
-- Di chuyển tiến/lùi/ngang/xoay/kết hợp; chọn nguồn teleop/Nav2, giới hạn và timeout.
-- LiDAR GPU 360 tia, `/scan`, `/clock`, `/odom`, joint states và TF.
-- World `minimal` và `warehouse` tự chứa, không tải asset mạng khi chạy.
-- Nâng theo mét, hủy nâng, khóa di chuyển khi nâng/hạ hoặc càng cao.
-
-Chưa có firmware ESP32, triển khai REAL hoặc homing thực. P6 chỉ dùng pallet/kiện mẫu ở trạm cố định; chưa tự nhận dạng/lấy hàng bất kỳ.
-
-## Build
-
-Đã thử trên Ubuntu 22.04.5, ROS 2 Humble, Fortress 6.17.1. [Môi trường](docs/environment.md), [phiên bản package](results/p0/packages.tsv).
-
-```bash
-cd /home/thanh/ros_ws/forklift
+mkdir -p ~/ros_ws
+cd ~/ros_ws
+git clone https://github.com/thanhnt2410/forklift.git
+cd forklift
 source /opt/ros/humble/setup.bash
+```
+
+Nếu đã có workspace, vào thư mục dự án hiện tại, không cần clone lại.
+Cài công cụ nếu máy chưa có:
+
+```bash
+sudo apt update
+sudo apt install python3-colcon-common-extensions python3-rosdep ros-humble-teleop-twist-keyboard
+```
+
+Khởi tạo `rosdep` một lần bằng `sudo rosdep init` nếu máy chưa được khởi tạo, sau đó:
+
+```bash
+rosdep update
+rosdep install --from-paths src --ignore-src --rosdistro humble -r -y
 colcon build --symlink-install
 source install/setup.bash
 ```
 
-Khi chuyển máy, kiểm tra dependency bằng rosdep; giữ `COLCON_IGNORE` của các package Classic khi build Fortress.
+ROS 2 Humble và Gazebo Fortress cần được cài trước bước này. Không dùng Gazebo
+Classic thay cho Fortress. `dependencies.repos` chỉ lưu baseline upstream để tham khảo;
+không import đè lên mã nguồn `src/` đã chỉnh sửa.
 
-## Chạy P3/P4
-
-MCU giả độc lập, SLAM hoặc tự hành trên map kho đã lưu:
-
-```bash
-# Chọn một chế độ trong cùng ROS domain:
-ros2 launch forklift_hardware mock_hardware.launch.py
-ros2 launch forklift_bringup mapping.launch.py
-ros2 launch forklift_bringup navigation.launch.py
-```
-
-Hai lệnh bringup P4 mở Gazebo + RViz. Khi navigation đã active và
-`/navigation/status` báo `READY`, chọn **Nav2 Goal** trên RViz.
-Map tạo từ LiDAR SLAM tại `src/forklift_navigation/maps/warehouse.yaml`.
-Chi tiết lưu map, gửi goal, khôi phục lỗi scan/TF và các giới hạn ở
-[hướng dẫn P3/P4](docs/p3_p4_simulation.md).
-
-## Chạy mô phỏng
+**Trong mỗi terminal mới**, nạp môi trường trước khi chạy lệnh ROS:
 
 ```bash
+cd ~/ros_ws/forklift
 source /opt/ros/humble/setup.bash
 source install/setup.bash
-ros2 launch forklift_bringup sim.launch.py
 ```
 
-Mặc định world `minimal`, có Gazebo GUI và RViz2. Chạy kho hoặc tắt cửa sổ:
+## Chạy nhiệm vụ lấy–giao hàng
+
+Terminal 1 — mở thế giới có pallet, Gazebo, RViz, Nav2 và bộ quản lý nhiệm vụ:
 
 ```bash
-ros2 launch forklift_bringup sim.launch.py world:=warehouse
-# Hoặc:
-ros2 launch forklift_bringup sim.launch.py gui:=false rviz:=false
+ros2 launch forklift_bringup p6.launch.py controller:=mppi
 ```
 
-GPU LiDAR vẫn cần renderer OpenGL/EGL hoặc display phù hợp khi tắt GUI. Không chạy hai bringup trong cùng ROS domain/Gazebo partition. Ctrl+C tại terminal launch để dừng phiên.
-
-## Điều khiển di chuyển
-
-Với `sim.launch.py` mặc định, homing càng trước khi lái (xe bị khóa khi UNHOMED):
+Launch tự homing càng trong SIM. Chờ `/navigation/status` báo `READY` và
+`/lift/state` có `homed: true`, không có lỗi. Có thể xem trong terminal đã source:
 
 ```bash
-ros2 action send_goal /lift/home forklift_interfaces/action/HomeLift '{}'
+ros2 topic echo /navigation/status --once
+ros2 topic echo /lift/state --once
 ```
 
-Mở terminal thứ hai, source lại môi trường và chạy:
+Terminal 2 — gửi nhiệm vụ:
 
 ```bash
-source /opt/ros/humble/setup.bash
-source install/setup.bash
-ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args \
-  -r cmd_vel:=/cmd_vel_teleop -p speed:=0.15 -p turn:=0.4
+ros2 action send_goal /mission/run forklift_interfaces/action/RunMission '{mission: a_to_b, timeout: 300.0}' --feedback
 ```
 
-Theo bảng phím trên terminal: phím thường để tiến/lùi/quay, giữ **Shift** để dùng nhóm phím holonomic đi ngang. Mặc định chỉ nhận teleop. Lệnh không cập nhật quá 0,3 giây được đưa về zero; giữ phím hoặc tăng tốc độ lặp bàn phím nếu xe ngắt quãng.
+Chu trình: **Home → tới A → căn chỉnh/chèn càng → nâng → vận chuyển tới B →
+thả hàng → rút càng → về Home**. Theo dõi tiến trình bằng feedback của action,
+RViz hoặc topic `/mission/status`.
 
-Ví dụ đi ngang trái; Ctrl+C để ngừng phát:
+Một số tùy chọn:
 
 ```bash
-ros2 topic pub -r 20 /cmd_vel_teleop geometry_msgs/msg/Twist '{linear: {y: 0.08}}'
+# Tắt hai cửa sổ, vẫn chạy mô phỏng và cần renderer cho LiDAR:
+ros2 launch forklift_bringup p6.launch.py gui:=false rviz:=false
+
+# Dùng bộ RPP để đối chiếu thay cho MPPI:
+ros2 launch forklift_bringup p6.launch.py controller:=rpp
 ```
 
-`/cmd_vel` là đầu ra của command gate. Gửi vào `/cmd_vel_teleop` hoặc `/cmd_vel_nav`, tránh tạo publisher thứ hai trên đầu ra.
+Chọn một lệnh launch cho mỗi phiên. Dừng phiên bằng **Ctrl+C tại terminal launch**
+và chờ tiến trình thoát trước khi mở phiên mới. Không chạy đồng thời nhiều bringup
+trong cùng ROS domain/Gazebo partition.
 
-Cho phép nhận nguồn Nav2 khi tích hợp sau này; teleop có ưu tiên khi đang phát:
+## Chạy thủ công trong mô phỏng
+
+Dừng phiên nhiệm vụ trước khi chuyển sang chế độ này.
+
+Terminal 1 — mở mô phỏng cơ bản và tự homing càng:
 
 ```bash
-ros2 service call /command_gate/set_autonomous std_srvs/srv/SetBool '{data: true}'
+ros2 launch forklift_bringup sim.launch.py auto_home:=true
 ```
 
-Lệnh này không khởi chạy Nav2. Đổi lại thủ công bằng `{data: false}`. Đổi chế độ xóa lệnh cũ và yêu cầu lệnh mới.
-
-## Càng nâng SIM
-
-Nâng 10 cm, hạ về mốc vận chuyển hoặc hủy nâng:
+Terminal 2 — sau khi càng đã homing, chạy điều khiển bàn phím:
 
 ```bash
-ros2 action send_goal /lift/home forklift_interfaces/action/HomeLift '{}'
+ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args -r cmd_vel:=/cmd_vel_teleop -p speed:=0.15 -p turn:=0.4
+```
+
+Làm theo bảng phím hiển thị trong terminal. Nhóm phím holonomic có **Shift** dùng
+để đi ngang. Có thể chọn thế giới kho bằng `world:=warehouse` khi launch mô phỏng.
+Nếu không bật `auto_home`, gọi homing trước khi lái:
+
+```bash
+ros2 action send_goal /lift/home forklift_interfaces/action/HomeLift '{}' --feedback
+```
+
+Nâng 10 cm, hạ về mốc homing hoặc dừng nâng, mỗi lần chọn một lệnh:
+
+```bash
 ros2 action send_goal /lift/move forklift_interfaces/action/MoveLift '{height: 0.10}' --feedback
 ros2 action send_goal /lift/move forklift_interfaces/action/MoveLift '{height: 0.0}' --feedback
 ros2 service call /lift/stop std_srvs/srv/Trigger '{}'
-ros2 topic echo /lift/status
 ```
 
-P5 dùng hành trình **0–0,24 m từ mốc homing**. Xe bị khóa khi chưa home, đang nâng/hạ, fault, phản hồi quá hạn hoặc càng raw cao hơn 0,02 m. Chỉ dùng action supervisor; `/lift_controller/*` là giao diện nội bộ. Miền 0–0,25 m và `/lift/target` chỉ còn ở helper P1 khi chạy `lift_mode:=legacy`. Xem [P5](docs/p5_lift.md).
+Trong SIM, xe bị khóa khi chưa homing, đang nâng/hạ hoặc trạng thái càng không cho
+phép di chuyển. Gửi vận tốc teleop vào `/cmd_vel_teleop`; `/cmd_vel` là đầu ra nội bộ.
 
-## Dừng phần mềm trong SIM
+## SLAM và điều hướng riêng
+
+Các chế độ dưới đây đã bao gồm Gazebo và RViz. Chạy từng chế độ riêng, không mở
+chồng với `p6.launch.py` hoặc `sim.launch.py`:
 
 ```bash
-ros2 service call /command_gate/estop std_srvs/srv/SetBool '{data: true}'
+# Lập bản đồ bằng LiDAR; dùng teleop để di chuyển:
+ros2 launch forklift_bringup mapping.launch.py
+
+# Định vị và điều hướng trên bản đồ kho đã có, mặc định MPPI:
+ros2 launch forklift_bringup navigation.launch.py
 ```
 
-Nhả bằng `{data: false}`. Với P5, reset I/O và supervisor rồi homing lại theo [hướng dẫn phục hồi](docs/p5_lift.md); sau đó mới phát lệnh mới. Xe không phát lại lệnh cũ. Chức năng SIM này không thay thế nút E-stop và mạch giữ tải trên robot thật.
-
-## Kiểm thử
-
-Các bài thử tạo ROS domain/partition riêng, kiểm tra rồi tự dọn tiến trình:
+Trong chế độ navigation, chờ trạng thái `READY` rồi dùng **Nav2 Goal** trên RViz.
+Nếu pose ban đầu sai, đặt lại bằng **2D Pose Estimate**. Bản đồ mặc định ở
+`src/forklift_navigation/maps/warehouse.yaml`; dùng bản đồ khác bằng tham số `map`:
 
 ```bash
-source /opt/ros/humble/setup.bash
-source install/setup.bash
-python3 scripts/run_checks.py baseline
-python3 scripts/run_checks.py p1 --output results/p1_final
-python3 scripts/run_checks.py p1 --world warehouse --output results/p1_warehouse
-MPLCONFIGDIR=/tmp/forklift-matplotlib python3 -s scripts/plot_results.py results/p1_final
-# P3 và P4:
-python3 scripts/run_mock_checks.py
-python3 scripts/run_p4_checks.py navigation --output results/p4_final
-python3 -s -m pytest -q tests/test_navigation_guard.py
+ros2 launch forklift_bringup navigation.launch.py map:=/duong/dan/toi/map.yaml
 ```
 
-Đòi hỏi DDS/Gazebo mở được socket cục bộ; nếu sandbox chặn socket, chạy terminal ROS thông thường. Không kết nối MCU.
+## Phần cứng và firmware ESP32
 
-Kết quả: `checks.json`, `test.log`, `telemetry.csv` và `simulation_results.png`. Vị trí vật lý Gazebo chỉ vào `/test/poses` khi thử; không cấp vào `/odom` hoặc TF điều khiển.
+Phần cứng dự kiến: ESP32 DevKit WROOM 38 chân, bốn GA25-370 có encoder A/B,
+bốn BTS7960, TB6600/NEMA17 cho nâng và MPU6050 dự kiến nối Raspberry Pi.
 
-Hai điểm tương thích đã xử lý: dùng `ignition:expressed_in` cho hướng ma sát Fortress; thêm khoảng đệm 5 mm ở giới hạn cơ học nâng SIM để tránh DART khóa joint khi trọng lực làm vượt giới hạn. Miền lệnh vẫn 0–0,25 m.
+Đã có khung firmware đọc encoder, PID bánh, UART v2 và điều khiển nâng. Tuy nhiên,
+PID, mức điện, trạng thái chân lúc boot và thông số vít me vẫn cần xác minh;
+**bản build hiện tại khóa đầu ra**. Chưa có backend serial REAL/bringup xe thật.
 
-[Báo cáo P0/P1](docs/p0_p1_status.md) ghi kết quả và phần chưa xác minh.
-Kết quả P3 ở `results/p3/`; bản đồ và khảo sát ở `results/p4/`;
-nghiệm thu Nav2 ở `results/p4_final/`.
+Theo lựa chọn phần cứng hiện tại, R_EN/L_EN kéo HIGH ngoài và khi lỗi/mất liên lạc,
+firmware giữ PWM cuối của bánh để người vận hành ngắt nguồn thủ công; lệnh dừng
+chủ động vẫn có hiệu lực. Cơ cấu nâng giữ homing/giới hạn và dừng khi lỗi.
+Đây là cấu hình firmware phần cứng, **không thay đổi cơ chế dừng của mô phỏng ROS**.
 
-## Tài liệu
+Xem [hướng dẫn firmware và GPIO](firmware/esp32/README.md),
+[cấu hình ESP32/PID](firmware/esp32/forklift_esp32/board_config.h) và
+[thông số phần cứng](config/robot_measurements.yaml).
 
-- [PLAN.md](PLAN.md): kế hoạch và trạng thái các giai đoạn.
-- [Khảo sát upstream](docs/upstream_audit.md), [ma trận kế thừa](docs/reuse_matrix.md).
-- [Thông số đo/còn thiếu](config/robot_measurements.yaml).
-- [Hình học](src/forklift_description/config/robot.yaml): dùng chung cho URDF, động học và command gate khi launch; thông số tạm được đánh dấu.
-- [Controller](src/forklift_control/config/controllers.yaml), [giới hạn lệnh](src/forklift_control/config/command_gate.yaml).
-- [Nguồn và license](THIRD_PARTY_NOTICES.md): MIT cho phần upstream; Apache-2.0 cho package mới, license đi kèm từng package.
+## Cấu trúc và cấu hình chính
+
+| Đường dẫn | Nội dung |
+|---|---|
+| `src/forklift_bringup/` | Launch và cấu hình hiển thị RViz |
+| `src/forklift_description/` | URDF, CAD, mesh và hình học xe |
+| `src/forklift_control/` | Điều khiển mecanum, command gate và EKF |
+| `src/forklift_gazebo/` | World và bridge ROS–Gazebo |
+| `src/forklift_navigation/` | SLAM, AMCL, Nav2, MPPI và bản đồ |
+| `src/forklift_lift/`, `src/forklift_interfaces/` | Giám sát nâng, message và action |
+| `src/forklift_task_manager/` | Tuyến đã duyệt, docking và nhiệm vụ |
+| `src/forklift_hardware/` | Backend PTY/MCU giả cho mô phỏng giao tiếp |
+| `firmware/esp32/` | Mã firmware ESP32 đang phát triển |
+| `docs/` | Tài liệu thiết kế và hướng dẫn chi tiết |
+| `results/final/` | Nơi lưu kết quả cuối được chọn để đưa lên Git |
+
+Các file thường cần chỉnh:
+
+- [Hình học CAD dùng trong SIM](src/forklift_description/config/robot.yaml).
+- [Cấu hình MPPI](src/forklift_navigation/config/nav2_mppi.yaml).
+- [Các điểm path đã duyệt](src/forklift_task_manager/config/approved_route.json).
+- [Trạm và docking](src/forklift_task_manager/config/stations.yaml).
+- [Cấu hình nâng SIM](src/forklift_lift/config/lift.yaml).
+
+Thư mục test và các kết quả ngoài `results/final/` chỉ giữ trên máy phát triển,
+không có trong bản clone Git. README này không yêu cầu các file đó để chạy mô phỏng.
+
+## Khi gặp vấn đề
+
+- **Không tìm thấy package:** source lại ROS/workspace, kiểm tra dependency và build.
+- **Xe không chạy:** kiểm tra homing càng, `/lift/state` và `/navigation/status`.
+- **Mô phỏng chậm hoặc trùng xe:** dừng các phiên launch cũ trước khi mở phiên mới.
+- **Không có LiDAR khi tắt GUI:** kiểm tra renderer OpenGL/EGL; tắt GUI không bỏ nhu cầu GPU.
+
+Thiết kế và tiến độ chi tiết ở [PLAN.md](PLAN.md),
+[điều hướng theo tuyến](docs/curved_navigation.md) và
+[tích hợp CAD](docs/forklift_model.md).
+Nguồn kế thừa và giấy phép được ghi tại [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
