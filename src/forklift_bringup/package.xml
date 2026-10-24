@@ -15,6 +15,7 @@
   <exec_depend>forklift_description</exec_depend>
   <exec_depend>forklift_gazebo</exec_depend>
   <exec_depend>forklift_control</exec_depend>
+  <exec_depend>forklift_hardware</exec_depend>
   <exec_depend>forklift_lift</exec_depend><exec_depend>forklift_task_manager</exec_depend>
   <exec_depend>ros_gz_bridge</exec_depend><exec_depend>ros_gz_interfaces</exec_depend>
   <exec_depend>forklift_navigation</exec_depend>

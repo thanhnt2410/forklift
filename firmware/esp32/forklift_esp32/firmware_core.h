@@ -38,6 +38,8 @@ struct Gains { double kp{}, ki{}, kd{}; };
 struct Config {
   bool base_ready{false}, lift_ready{false};
   bool stop_base_on_fault{true};
+  bool lower_only_lift{false};
+  int64_t home_seek_max_steps{}, home_release_max_steps{};
   std::array<double, 4> encoder_cpr{};  // Actual x4 counts / output shaft revolution.
   std::array<Gains, 4> gains{};
   double max_wheel_rad_s{2.0}, wheel_accel{2.0}, max_duty{0.25};
@@ -97,6 +99,7 @@ class Controller {
   double lift_target_{}, lift_rate_{};
   enum class HomePhase { Seek, Backoff, Approach } home_phase_{HomePhase::Seek};
   int64_t release_step_{};
+  int64_t home_phase_start_step_{};
   bool released_{};
   Outputs output_;
 };

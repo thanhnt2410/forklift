@@ -14,7 +14,7 @@ void setup() {
   Serial.setRxBufferSize(1024); Serial.setTxBufferSize(1024);
   Serial.begin(forklift_board::baud);
   auto config=forklift_board::control_config();
-  // No actuator/encoder GPIO is configured in the distributed, locked build.
+  // Bench profile initializes wheel GPIO at zero duty, then waits for host arm.
   if (config.valid() && !forklift_board::initialize()) config.base_ready=false;
   const uint64_t boot=(uint64_t(esp_random())<<32)|esp_random();
   controller.emplace(config,boot);

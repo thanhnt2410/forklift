@@ -3,13 +3,54 @@
 Bản khung cho **ESP32 DevKit 38 chân, WROOM**, 4 GA25-370 có encoder,
 4 BTS7960 và TB6600/NEMA17. MPU6050 được chọn nối **Raspberry Pi qua I2C**
 để dành GPIO ESP32 cho encoder và cơ cấu chấp hành. Chưa triển khai driver MPU6050
-thật hoặc backend ROS serial thật trong bước này.
+thật. Backend ROS USB/UART v2 đã có ở `forklift_hardware`, xem
+[hướng dẫn điều khiển ESP32](../../docs/esp32_manual_control.md).
 
-**Bản phân phối khóa đầu ra. Chưa nạp firmware, chưa thử bàn hoặc chạy xe thật.**
-`board_config.h` dùng CPR danh nghĩa 937,2; PID và thông số nâng còn bằng 0; các cờ
-xác nhận đấu dây/mức logic/strapping đều `false`. Firmware vẫn có thể phát chẩn đoán UART, nhưng không khởi tạo
-GPIO chấp hành, báo `Configuration`, capability 0. Đây là bản để hoàn thiện và
-kiểm thử phần mềm; không phải bản hiệu chuẩn cho xe hiện tại.
+**Mặc định bật profile thử bánh + nâng một công tắc dưới. Chưa nạp hoặc thử xe thật.**
+Theo yêu cầu dùng giá trị khởi đầu để tuning sau, `base_bench_profile=true`
+cho phép khởi tạo GPIO bánh với PI dự kiến. Các cờ xác nhận điện vẫn `false`;
+profile thử không có nghĩa đã kiểm chứng đấu dây/mức logic/strapping.
+Khởi động PWM=0, STEP=0, chưa homed, mode `Disarmed`, capability **3** nếu HAL thành công;
+chỉ nhận chạy sau handshake disabled và arm chủ động từ ROS. Nếu khởi tạo lỗi,
+firmware vẫn khóa/capability 0. Đặt `base_bench_profile=false` để trở về yêu cầu
+đủ ba cờ xác nhận trước khi khởi tạo bánh.
+
+| Thông số khởi đầu | Giá trị |
+|---|---|
+| PI FL/FR/RL/RR | Kp=0,08; Ki=0,12; Kd=0 |
+| Đơn vị | Đầu vào rad/s, đầu ra duty −1…1, dt giây |
+| Tần số vòng điều khiển | 100 Hz |
+| Trần PWM | 25% |
+| Vận tốc / gia tốc bánh | 2 rad/s / 2 rad/s² |
+| CPR | 937,2 danh nghĩa |
+
+Tuning tại `wheel_pi[4]` trong `board_config.h`, theo thứ tự **FL, FR, RL, RR**.
+Đây là lựa chọn khởi đầu của dự án, không phải bộ GA25-370 đã được đo. Ví dụ
+[PID motor chính thức của Espressif](https://github.com/espressif/esp-idf/blob/master/examples/peripherals/mcpwm/mcpwm_bdc_speed_control/main/mcpwm_bdc_control_example_main.c)
+dùng thang đo encoder/PWM riêng, không sao chép trực tiếp hệ số sang rad/s/duty.
+Kd=0 để bắt đầu bằng PI và tránh khuếch đại nhiễu tốc độ encoder.
+
+`enable_lift=true`, `single_lower_bench_profile=true`: dùng một công tắc NC,
+**COM → GND, NC → GPIO32**, `INPUT_PULLUP`, không nối tín hiệu lên 5 V.
+Bình thường LOW; chạm đáy/hở mạch HIGH. Không có công tắc trên, `upper_pin=-1`;
+không đọc GPIO âm. Phản hồi E-stop chưa gán trong profile thử thủ công này.
+
+- F/H sau arm: tìm đáy → nhả công tắc → đi thêm 100 xung → chạm lại chậm,
+  xác nhận home và đặt bộ đếm về 0. Không tự chuyển động khi vừa bật nguồn.
+- R: tới **2.000 xung tuyệt đối từ home**, không cộng thêm khi bấm/giữ R nhiều lần.
+- Giới hạn trên phần mềm 2.000 xung, có kiểm tra trong timer tạo STEP.
+- Tốc độ nâng 1000 xung/s, gia tốc 4000 xung/s²; home 400 xung/s và chạm lại
+  200 xung/s. Home tối đa 30 s; tìm đáy tối đa 6.000 xung, tìm nhả tối đa
+  200 xung, pha chạm lại cũng có giới hạn xung. Kẹt/hở NC không làm đi lên mãi.
+- Space dừng STEP/hủy action. Lỗi/watchdog vẫn dừng STEP; giữ chính sách PWM bánh.
+
+Quãng đường vật lý chưa biết. Giả định 200 bước/vòng, vi bước 1/8, lead 8 mm/vòng
+chỉ tạo **thang tọa độ UART danh nghĩa 200000 step/m**. Giá trị 0,01 trong goal
+hiện nghĩa là 2.000 xung, **chưa xác nhận nâng 1 cm**. ROS dùng cùng thang để đổi
+tọa độ ra xung, báo `PULSE_PRESET`, `lift_calibrated=False`. Chưa chọn dòng DIP
+TB6600 khi không biết dòng pha NEMA17; cần chọn dòng phù hợp động cơ thật.
+Xem [cách đo và hiệu chỉnh](../../docs/esp32_manual_control.md#đo-quãng-nâng-và-hiệu-chỉnh).
+Đặt `enable_lift=false` và cấu hình ROS phù hợp nếu chỉ thử bánh.
 
 **Lựa chọn mới của người dùng — ngắt nguồn thủ công cho bánh:**
 `base_enable_hardwired_high=true`, `stop_base_on_fault=false` trong `board_config.h`.
@@ -33,7 +74,7 @@ STEP khi lỗi và giữ homing/giới hạn. Chưa nạp hoặc kiểm chứng 
   thử bàn dự kiến. 280 RPM do người dùng cung cấp không được coi là vận tốc tải đo được.
 - Xung STEP/DIR qua timer, giới hạn 5000 xung/s; giữ dòng nâng sau khi dừng.
   Biên dạng tốc độ/giảm tốc và chặn nâng đồng thời với chạy bánh.
-- Hai công tắc NC dự kiến: **dưới để homing và giới hạn dưới**, **trên giới hạn trên**.
+- Profile hiện tại dùng **một công tắc NC dưới**, không yêu cầu công tắc trên.
   Homing tìm dưới → đi lên cho công tắc nhả → đi thêm khoảng backoff → chạm lại chậm.
   Không nhả công tắc hoặc không hoàn tất đúng thời gian sẽ lỗi.
 - CRC32, ID phiên boot, số thứ tự tăng, handshake vô hiệu hóa trước khi cho phép
@@ -62,8 +103,8 @@ Thứ tự bánh: FL, FR, RL, RR nhìn theo hướng tiến của xe.
 | RL encoder A / B | 5 / 17 |
 | RR encoder A / B | 16 / 4 |
 | R_EN và L_EN của mỗi BTS7960 | Kéo HIGH ngoài theo user, không dùng GPIO; EN pin `-1` |
-| Phản hồi E-stop | Chưa có; `-1`, được bỏ qua ở chế độ base-only ngắt nguồn thủ công |
-| Limit dưới / trên | Chưa cung cấp; `-1` / `-1` |
+| Phản hồi E-stop | Chưa có; `-1`, bỏ qua trong profile thử thủ công |
+| Limit dưới / trên | GPIO32 (COM–GND, NC–GPIO32) / không có (`-1`) |
 | TB6600 PUL+ / DIR+ | 13 / 33 |
 | TB6600 PUL− / DIR− | GND / GND |
 | TB6600 ENA | Chưa gán; phải xác minh cực tính và cách giữ dòng của module |
@@ -77,9 +118,10 @@ GPIO34/35 chỉ vào và không có pull-up/pull-down nội, cần mạch ngoài
 yêu cầu kéo mức. GPIO12 (FR A) và GPIO5 (RL A) là chân strapping. GPIO12 HIGH lúc
 reset có thể chọn VDD_SDIO 1,8 V thay vì 3,3 V và làm WROOM không boot.
 [Giải thích boot của Espressif](https://docs.espressif.com/projects/esptool/en/latest/esp32/advanced-topics/boot-mode-selection.html).
-Nên chuyển FR A từ GPIO12 sang GPIO32 đang trống nếu có thể đổi dây; code vẫn
-ghi GPIO12 đúng sơ đồ user, chưa tự đổi chân. `strapping_levels_reviewed=false`
-chặn cho phép chạy; chỉ xác nhận sau khi xử lý mức boot thực tế.
+GPIO32 hiện dành cho công tắc dưới; không dùng đồng thời làm FR encoder A.
+Code vẫn giữ FR A ở GPIO12 theo dây user. `strapping_levels_reviewed=false`
+vẫn ghi nhận chưa kiểm chứng; profile thử bánh hiện bỏ qua khóa xác nhận này,
+không xử lý được mức điện lúc boot. Chỉ đặt cờ `true` sau khi kiểm chứng thực tế.
 Firmware không thể ngăn tín hiệu của boot ROM trước `setup()`. Với EN kéo HIGH,
 cần giữ RPWM/LPWM ở LOW bằng mạch phù hợp lúc boot/reset, không để ngõ vào trôi;
 khóa phần mềm không cách ly được driver đã được bật bằng dây ngoài.
@@ -110,10 +152,15 @@ dội tiếp điểm và thời gian dừng khi thử bàn. Chưa có lọc dộ
 3. Hành trình hữu dụng, backoff homing, tốc độ/gia tốc nâng và timeout đo được.
    Không lấy 10000 step/m hoặc hành trình CAD làm hiệu chuẩn thật.
 4. Mạch nguồn, tầng đệm, HIGH cho EN và ngắt nguồn thủ công; PID và dấu từng bánh.
-   Nâng vẫn cần E-stop và 2 limit được gán/xác minh trước khi bật.
+   Profile thử hiện chỉ dùng limit dưới GPIO32 và giới hạn xung, chưa có E-stop GPIO.
 
-Chỉ bật `base_ready` khi wiring/mức logic, CPR và PID đã có; cơ cấu nâng có cờ riêng.
-Không bật nâng bằng cách chỉ đổi `enable_lift` khi các trường nâng còn 0.
+Profile thử bánh bỏ qua yêu cầu xác nhận điện theo lựa chọn người dùng, giữ bảng
+chân đã cung cấp. Khi thử, kê bánh khỏi mặt đất, chưa mang tải; kiểm tra chiều
+motor/encoder rồi mới tuning PI. Nếu đếm ngược, sửa `encoder_sign`/`motor_sign`,
+không tăng gain để bù sai dấu. GPIO12/5 và mức điện vẫn cần xử lý như mục trên.
+Profile nâng một công tắc dùng giả định số xung theo yêu cầu; đấu công tắc dưới,
+kiểm tra chiều nâng/hạ, mức điện và dòng DIP trước khi thử không tải. Các bảo vệ
+phần mềm và công tắc dưới không thay cho công tắc trên hoặc mạch dừng vật lý.
 
 ## UART v2
 
@@ -131,6 +178,7 @@ S,2,boot,state_seq,time_us,ack,tFL,tFR,tRL,tRR,lift_steps,fault,mode,homed,low,h
 CRC32/ISO-HDLC tính trên PAYLOAD, không gồm `*`, CRC, newline. Không có CR.
 Tối đa 256 byte/frame kể cả LF. Vận tốc bánh rad/s, vị trí nâng m, timestamp µs
 64 bit từ MCU; tick encoder là số đếm x4 có dấu, không phải vị trí mô phỏng.
+Trong profile `PULSE_PRESET`, lift_m là tọa độ danh nghĩa đổi ra xung; chưa là mét đo thực.
 `boot` là ID boot 64 bit ngẫu nhiên phát trong S, host phải đọc trước khi gửi lệnh.
 `seq` > 0 và tăng nghiêm ngặt; frame sai boot/lặp/cũ không ACK, không nuôi watchdog.
 Đây là chống nhầm phiên/lệnh cũ, không phải cơ chế xác thực bảo mật.
@@ -155,8 +203,11 @@ bánh khi chưa homing với lift target = 0. Giá trị setpoint vượt khả 
 không được tự hiệu chỉnh bằng thông số 280 RPM.
 
 **Không tương thích trực tiếp với UART v1 của `PtySystem`/MCU giả.** Backend đó
-vẫn chỉ mở `/dev/pts/*`, được giữ nguyên cho SIM. Cần backend serial v2 và bringup
-REAL riêng trước khi kết nối ros2_control; chưa có trong thay đổi này.
+vẫn chỉ mở `/dev/pts/*`, được giữ nguyên cho SIM. Backend v2 riêng
+`forklift_hardware/esp32_bridge.py` và `forklift_bringup/real.launch.py` mở USB/UART,
+tính động học và đọc encoder trực tiếp, không chạy ros2_control hoặc supervisor
+nâng SIM. Backend có cùng action nâng cho bàn phím. Kết nối không tự mở khóa
+`board_config.h`; đã kiểm tra phần mềm qua PTY, chưa thử ESP32 hoặc xe thật.
 
 ## Build và kiểm thử
 

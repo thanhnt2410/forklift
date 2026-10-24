@@ -107,6 +107,7 @@ bool Config::valid() const {
         !std::isfinite(g.kd) || g.kd < 0.) return false;
   }
   return !lift_ready || (positive(steps_per_m) && positive(travel_m) && positive(lift_max_steps_s) &&
+    (!lower_only_lift || (home_seek_max_steps > 0 && home_release_max_steps > 0)) &&
     steps_per_m * travel_m <= double(INT32_MAX) &&
     lift_max_steps_s <= 5000. && positive(lift_accel_steps_s2) && positive(home_steps_s) &&
     home_steps_s <= lift_max_steps_s && positive(backoff_m) && backoff_m < travel_m && positive(home_timeout_s));
@@ -168,6 +169,7 @@ bool Controller::receive(const Command & c, uint64_t now, const Sensors & s) {
     if (faults_ || !config_.lift_ready || !disabled_seen_ || mode_ != Mode::Disarmed || !stopped() || s.estop || s.emergency_event || !s.io_ok) return false;
     stop(); homed_ = false; output_.lift_hold = true; mode_ = Mode::Homing;
     home_started_ = now; home_phase_ = s.low ? HomePhase::Backoff : HomePhase::Seek; released_ = false;
+    home_phase_start_step_ = s.lift_steps;
   } else {
     if (!std::isfinite(c.lift_m) || c.lift_m < 0. ||
         c.lift_m > (config_.lift_ready ? config_.travel_m : 0.)) return false;
@@ -194,8 +196,20 @@ void Controller::lift_tick(double dt, uint64_t now, const Sensors & s) {
   double requested = 0.;
   if (mode_ == Mode::Homing) {
     if (double(now - home_started_) / 1e6 > config_.home_timeout_s) { trip(HomeTimeout); return; }
+    if (config_.lower_only_lift) {
+      const double distance = std::abs(double(s.lift_steps) - double(home_phase_start_step_));
+      double bound = double(config_.home_seek_max_steps);
+      if (home_phase_ == HomePhase::Backoff)
+        bound = double(config_.home_release_max_steps) + (released_ ? config_.backoff_m * config_.steps_per_m : 0.);
+      if (home_phase_ == HomePhase::Approach)
+        bound = double(config_.home_release_max_steps) + config_.backoff_m * config_.steps_per_m + 8.;
+      if (distance >= bound) { trip(HomeTimeout); return; }
+    }
     if (home_phase_ == HomePhase::Seek) {
-      if (s.low) { home_phase_ = HomePhase::Backoff; lift_rate_ = 0.; released_ = false; }
+      if (s.low) {
+        home_phase_ = HomePhase::Backoff; lift_rate_ = 0.; released_ = false;
+        home_phase_start_step_ = s.lift_steps;
+      }
       else requested = -config_.home_steps_s;
     }
     if (home_phase_ == HomePhase::Backoff) {
@@ -203,6 +217,7 @@ void Controller::lift_tick(double dt, uint64_t now, const Sensors & s) {
       if (!s.low && !released_) { released_ = true; release_step_ = s.lift_steps; }
       if (released_ && double(s.lift_steps - release_step_) >= config_.backoff_m * config_.steps_per_m) {
         home_phase_ = HomePhase::Approach; lift_rate_ = 0.; requested = 0.;
+        home_phase_start_step_ = s.lift_steps;
       }
     } else if (home_phase_ == HomePhase::Approach) {
       if (s.low) {

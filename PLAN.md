@@ -5,6 +5,40 @@ runner và recorder chuyển sang `controller:=mppi`, RPP giữ làm phương á
 bằng `controller:=rpp`. Lượt demo Gazebo có GUI mới nhất hoàn thành 29/29:
 [video MPPI](results/mppi_trial/visible_demo/mission_demo.mp4).
 Người dùng yêu cầu các lần sau không tự chạy kiểm thử tránh vật cản.
+Đã thêm backend USB/UART v2 `forklift_hardware/esp32_bridge.py` và launch
+`ros2 launch forklift_bringup real.launch.py port:=...` cho điều khiển thủ công
+ESP32: động học bốn bánh, encoder/odometry, action nâng/home và dừng/reset.
+Mặc định disarm, xác nhận handshake/ACK trước arm; giới hạn bánh 2 rad/s khớp
+firmware. Khi lỗi giữ chính sách ngắt nguồn thủ công đã chọn, không tự gửi D;
+Space/disarm/Ctrl+C vẫn là lệnh dừng chủ động. Bước backend ban đầu đạt **96/96 kiểm tra phần mềm**:
+23 giao thức/transport/động học, 56 tích hợp launch + bàn phím qua PTY với lõi
+firmware C++ thực, 17 profile base-only/khóa/thiếu hiệu chuẩn nâng và mất kết nối.
+Test nằm ngoài Git ở `/tmp`; không chạy Gazebo hoặc tránh vật cản trong bước này.
+Theo yêu cầu mới dùng tham số khởi đầu để tuning, firmware bật profile thử bánh
+`base_bench_profile=true`, PI FL/FR/RL/RR = (0,08; 0,12; 0), trần PWM 25%,
+2 rad/s, boot disarm/cần arm. Không coi các cờ điện chưa xác nhận là đã xác nhận.
+Theo phương án mới đã duyệt, bật nâng một công tắc NC dưới **GPIO32** (COM–GND,
+NC–GPIO32), không có công tắc trên. F/H tìm đáy, kiểm tra nhả/chạm lại rồi đặt 0;
+R tới **2.000 xung từ home**, bấm nhiều lần không cộng dồn. Trần STEP 2.000,
+home 30 s và budget riêng cho tìm đáy/nhả/chạm lại. Thang 200000 step/m trong
+firmware/ROS là quy đổi danh nghĩa để truyền UART, **chưa đo quãng nâng thực**.
+Backend báo PULSE_PRESET/chưa hiệu chuẩn; bàn phím tự nhận chế độ qua topic latched.
+Space chờ ACK dừng rồi giữ vị trí đếm thực, không quay lại vị trí telemetry cũ.
+Đã build WROOM (Arduino ESP32 3.3.8), **33/33** kiểm tra lõi ASan/UBSan và **33/33**
+kiểm tra launch/bàn phím/firmware C++ qua PTY cho cấu hình một công tắc đạt;
+25/25 phím và 17/17 nâng bằng ROS giả xác nhận chế độ SIM giữ hành vi cũ.
+Test không đẩy Git; chưa nạp/thử ESP32 thật, chưa có driver MPU6050 thật/EKF trên xe.
+[Hướng dẫn USB/UART và bàn phím](docs/esp32_manual_control.md).
+Hiện chưa có tay cầm, dùng phím mũi tên qua `ros2 run forklift_control arrow_teleop.py`:
+↑/↓ tiến/lùi, ←/→ quay, A/D hoặc Shift+mũi tên để đi ngang; R/F hoặc Page Up/Down
+nâng/hạ từng 1 cm trong SIM; ESP32 pulse mode dùng R nâng preset, F/H về đáy.
+Space dừng cả bánh và nâng.
+Phím chữ nhận cả chữ hoa/thường; thông báo nâng nêu rõ lý do bị chặn.
+Đã build và đạt 25/25 kiểm tra pseudo-terminal/di chuyển, 17/17 kiểm tra nâng với
+action/service ROS giả: giới hạn chiều cao, xe dừng, homing, hủy goal muộn và
+không phát lại lệnh lái sau nâng; khôi phục terminal khi thoát. Thêm 18/18 kiểm tra
+từ phím terminal tới Twist/action ROS giả cho a/A, d/D, r/R, f/F, h/H. Chưa chạy
+thêm chu trình Gazebo trong bước bàn phím. [Cách chạy](README.md#chạy-thủ-công-trong-mô-phỏng).
 Đã tích hợp điều khiển PS4 cho SIM bằng `ps4.launch.py`: SDL game controller,
 L1 cho phép lái mecanum, D-pad nâng/hạ 1 cm, Triangle home, Circle dừng.
 Đã build hai package và đạt 18/18 kiểm tra bằng Joy/action/service ROS giả;
@@ -12,27 +46,27 @@ chưa có tay cầm thật kết nối để xác nhận USB/Bluetooth và ánh 
 [Cách chạy và bảng nút](docs/ps4_teleop.md). Không chạy thêm bài tránh vật cản.
 Đã bắt đầu P2 phần mềm theo phần cứng người dùng xác nhận: ESP32 DevKit 38 chân
 WROOM, 4 GA25-370 encoder khoảng 280 RPM, 4 BTS7960, TB6600/NEMA17.
-Chọn MPU6050 nối Pi và 2 limit NC dưới/trên. Đã tạo
+Chọn MPU6050 nối Pi; phương án đầu 2 limit đã đổi sang một NC dưới GPIO32. Đã tạo
 [khung firmware ESP32](firmware/esp32/README.md): PCNT, PID bốn bánh, STEP/DIR,
 homing, chẩn đoán watchdog, UART v2; build cho WROOM thành công và **28/28 kiểm thử
 lõi native** với ASan/UBSan đạt. [Bằng chứng và giới hạn](results/esp32_firmware/README.md).
-Bản build khóa đầu ra; CPR, PID, lead/dòng/vi bước nâng và mạch điện còn cần xác minh.
-Chưa có backend serial REAL hoặc real.launch.py của `forklift_*`; UART v1 PTY giữ
-nguyên, không tương thích trực tiếp v2. Chưa nạp firmware, thử bàn hay chạy xe thật;
+Bản build ban đầu khóa đầu ra; bản mới bật profile thử bánh với PI dự kiến.
+Backend REAL và `real.launch.py` đã được bổ sung như phần cập nhật trên; UART v1
+PTY giữ nguyên, không tương thích trực tiếp v2. Chưa nạp firmware, thử bàn hay chạy xe thật;
 các gate nghiệm thu phần cứng vẫn mở. Không chạy thêm kiểm thử tránh vật cản.
 Thông tin bổ sung: user xác nhận encoder A/B, tỉ số truyền danh nghĩa 21,3;
 PPR = 11, chọn mặc định A/B x4; đã đặt CPR danh nghĩa **937,2** với giả định
 11 chu kỳ/kênh/vòng motor và bánh nối trực tiếp trục ra, chờ đo xác nhận.
-chưa có E-stop/mạch ngắt. Chọn vi bước dự kiến 1/8, chưa đặt DIP hoặc suy ra
-step/m. [Diễn giải bảng motor và cách xác định thông số còn thiếu](docs/hardware_parameter_notes.md).
+chưa có E-stop/mạch ngắt. Chọn vi bước dự kiến 1/8, chưa đặt DIP; 200000 step/m hiện chỉ là giả định với lead 8 mm/vòng, chưa đo. [Diễn giải bảng motor và cách xác định thông số còn thiếu](docs/hardware_parameter_notes.md).
 GPIO đã cập nhật theo dây user: FR PWM18/19 AB12/14, RR PWM21/27 AB16/4,
 FL PWM23/22 AB34/35, RL PWM25/26 AB5/17; STEP13 DIR33, hai chân âm GND.
 GPIO12/5 cần rà soát strapping, đặc biệt GPIO12 chọn điện áp flash lúc boot.
 User chọn R_EN/L_EN kéo HIGH ngoài, không có GPIO EN. User tiếp tục chọn không
 tự dừng bánh khi lỗi/mất Pi: giữ PWM cuối, ngắt nguồn thủ công; lệnh D/C-disabled
-vẫn dừng được và nâng giữ bảo vệ homing/limit. E-stop/limit chưa gán, đặt `-1`;
-base-only chế độ thủ công cho phép không có E-stop GPIO. PID/wiring/strapping
-chưa xác minh nên bản build vẫn khóa đầu ra và chưa nạp.
+vẫn dừng được và nâng giữ bảo vệ homing/limit. E-stop/trên chưa gán (`-1`),
+limit dưới đã chọn GPIO32; profile một công tắc cho phép chưa có E-stop GPIO.
+PID/wiring/strapping
+chưa xác minh; profile thử bánh mới dùng PI mặc định theo yêu cầu, chưa nạp.
 
 **Thử MPPI trước quyết định chốt — 24/10/2026 (SIM):** đã giữ RPP mặc định ở thời điểm thử.
 MPPI hoàn thành hai lượt độc lập lấy → mang → thả → Home, mỗi lượt 29/29.

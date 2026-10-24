@@ -51,9 +51,10 @@ void ARDUINO_ISR_ATTR pulse_tick() {
   const bool inhibited = emergency_latched || deadline_latched ||
     (lift_position_limit && ((direction < 0 && lift_count <= lift_goal) ||
                              (direction > 0 && lift_count >= lift_goal))) ||
-    gpio_get_level(gpio_num_t(estop_pin)) == int(estop_active_level) ||
+    (estop_pin >= 0 && gpio_get_level(gpio_num_t(estop_pin)) == int(estop_active_level)) ||
     (direction < 0 && gpio_get_level(gpio_num_t(lower_pin)) == int(limit_active_level)) ||
-    (direction > 0 && gpio_get_level(gpio_num_t(upper_pin)) == int(limit_active_level));
+    (direction > 0 && upper_pin >= 0 && gpio_get_level(gpio_num_t(upper_pin)) == int(limit_active_level)) ||
+    (single_lower_bench_profile && direction > 0 && lift_count >= lift_max_steps);
   if (!direction || inhibited) {
     gpio_set_level(gpio_num_t(step_pin), 0); step_high = false; phase = 0;
     portEXIT_CRITICAL_ISR(&pulse_lock); return;
@@ -77,7 +78,8 @@ bool pin_plan_valid() {
   bool used[40]{};
   const auto claim = [&](int pin, bool output) {
     if (pin < 0 || pin >= 40 || used[pin] || (pin >= 6 && pin <= 11) ||
-        ((pin == 0 || pin == 2 || pin == 5 || pin == 12 || pin == 15) && !strapping_levels_reviewed) ||
+        ((pin == 0 || pin == 2 || pin == 5 || pin == 12 || pin == 15) &&
+          !strapping_levels_reviewed && !base_bench_profile) ||
         !GPIO_IS_VALID_GPIO(pin) || (output && !GPIO_IS_VALID_OUTPUT_GPIO(pin))) return false;
     used[pin] = true; return true;
   };
@@ -90,9 +92,11 @@ bool pin_plan_valid() {
     if (base_enable_pin != -1) return false;
   } else if (!claim(base_enable_pin,true)) return false;
   if (estop_pin>=0) { if (!claim(estop_pin,false)) return false; }
-  else if (stop_base_on_fault || enable_lift) return false;
+  else if (stop_base_on_fault || (enable_lift && !single_lower_bench_profile)) return false;
   if (enable_lift) {
-    if (!claim(step_pin,true) || !claim(direction_pin,true) || !claim(lower_pin,false) || !claim(upper_pin,false)) return false;
+    if (!claim(step_pin,true) || !claim(direction_pin,true) || !claim(lower_pin,false)) return false;
+    if (upper_pin >= 0) { if (!claim(upper_pin,false)) return false; }
+    else if (!single_lower_bench_profile) return false;
     if (lift_enable_pin >= 0 && !claim(lift_enable_pin,true)) return false;
   }
   return true;
@@ -104,7 +108,7 @@ void all_off() {
 }
 }
 bool initialize() {
-  if (!wiring_reviewed || !signal_levels_reviewed || !strapping_levels_reviewed || !pin_plan_valid()) return false;
+  if (!base_initialization_allowed() || !pin_plan_valid()) return false;
   if (!base_enable_hardwired_high) {
     pinMode(base_enable_pin,OUTPUT);digitalWrite(base_enable_pin,LOW);
   }
@@ -112,7 +116,8 @@ bool initialize() {
     pinMode(estop_pin,INPUT_PULLUP);attachInterrupt(estop_pin,emergency_interrupt,CHANGE);
   }
   if (enable_lift) {
-    pinMode(lower_pin,INPUT_PULLUP); pinMode(upper_pin,INPUT_PULLUP);
+    pinMode(lower_pin,INPUT_PULLUP);
+    if (upper_pin >= 0) pinMode(upper_pin,INPUT_PULLUP);
     pinMode(step_pin,OUTPUT); digitalWrite(step_pin,LOW);
     pinMode(direction_pin,OUTPUT); digitalWrite(direction_pin,LOW);
     if (lift_enable_pin >= 0) {

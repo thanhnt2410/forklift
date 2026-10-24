@@ -1,0 +1,25 @@
+esp32_bridge:
+  ros__parameters:
+    use_sim_time: false
+    baud: 230400
+    # Nominal encoder calibration: 11 PPR * x4 * 21.3, verify on output shaft.
+    encoder_cpr: 937.2
+    # CAD geometry remains provisional on hardware; overrides injected into gate.
+    wheel_radius: 0.05
+    kinematic_sum: 0.260145
+    # Match firmware board_config.h, not the SIM controller's 12 rad/s.
+    max_wheel_speed: 2.0
+    state_timeout: 0.25
+    command_timeout: 0.3
+    ack_timeout: 0.25
+    # Pulse preset profile: NOT calibrated metres. Must match board_config.h.
+    # R reaches 2000 pulses from home; F/H seeks the physical bottom switch.
+    lift_preset_mode: true
+    lift_raise_steps: 2000
+    lift_max_steps: 2000
+    # Provisional UART coordinate conversion only; measure travel and revise later.
+    lift_steps_per_m: 200000.0
+    lift_max_height: 0.01
+    lift_tolerance: 0.002
+    # Disable when a future real IMU/EKF node owns odom -> base_link.
+    publish_odom_tf: true

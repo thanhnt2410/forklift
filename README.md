@@ -49,7 +49,7 @@ Cài công cụ nếu máy chưa có:
 
 ```bash
 sudo apt update
-sudo apt install python3-colcon-common-extensions python3-rosdep ros-humble-teleop-twist-keyboard
+sudo apt install python3-colcon-common-extensions python3-rosdep
 ```
 
 Khởi tạo `rosdep` một lần bằng `sudo rosdep init` nếu máy chưa được khởi tạo, sau đó:
@@ -123,14 +123,41 @@ Terminal 1 — mở mô phỏng cơ bản và tự homing càng:
 ros2 launch forklift_bringup sim.launch.py auto_home:=true
 ```
 
-Terminal 2 — sau khi càng đã homing, chạy điều khiển bàn phím:
+Terminal 2 — sau khi càng đã homing, chạy điều khiển bằng phím mũi tên:
 
 ```bash
-ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args -r cmd_vel:=/cmd_vel_teleop -p speed:=0.15 -p turn:=0.4
+ros2 run forklift_control arrow_teleop.py
 ```
 
-Làm theo bảng phím hiển thị trong terminal. Nhóm phím holonomic có **Shift** dùng
-để đi ngang. Có thể chọn thế giới kho bằng `world:=warehouse` khi launch mô phỏng.
+Click vào terminal điều khiển để nhận phím:
+
+| Phím | Chức năng |
+|---|---|
+| ↑ / ↓ | Tiến 0,15 m/s / lùi 0,12 m/s |
+| ← / → | Quay trái / phải, 0,4 rad/s |
+| A / D hoặc Shift + ← / → | Đi ngang trái / phải, 0,12 m/s |
+| R hoặc Page Up | Nâng càng thêm 1 cm |
+| F hoặc Page Down | Hạ càng 1 cm |
+| H hoặc Home | Homing càng |
+| Space hoặc S | Dừng bánh và càng nâng |
+| Q hoặc Ctrl+C | Dừng và thoát điều khiển |
+
+Các phím chữ nhận cả chữ thường và chữ hoa (Shift/Caps Lock). Chọn bộ gõ tiếng Anh
+để terminal gửi đúng phím A/D/R/F/H. Sau khi cập nhật code, thoát node bàn phím
+cũ rồi chạy lại lệnh trên để nạp bản mới.
+
+Giữ phím để lặp lệnh. Terminal không cung cấp sự kiện nhả phím: sau khoảng
+0,35 s không nhận phím mới, node gửi zero qua command gate. Tốc độ dừng còn chịu
+giới hạn gia tốc của gate. Lần giữ phím đầu có thể ngắt ngắn trước khi hệ điều hành
+bắt đầu lặp phím; Space dùng để gửi dừng chủ động.
+Không chạy cùng bàn phím khác, node tay cầm hoặc nhiệm vụ tự động.
+
+Nhả phím di chuyển và chờ xe dừng trước khi bấm R/F/H. Lệnh nâng/hạ chạy tới
+đích mỗi nấc 1 cm, không cần giữ phím; Space dừng giữa chừng. Khi đang nâng/home,
+lệnh lái bị bỏ qua, không được xếp hàng để chạy lại sau đó. Cần homing trước
+khi nâng/hạ; chiều cao được giới hạn 0–0,115 m trong SIM.
+
+Có thể chọn thế giới kho bằng `world:=warehouse` khi launch mô phỏng.
 Nếu không bật `auto_home`, gọi homing trước khi lái:
 
 ```bash
@@ -149,6 +176,9 @@ Trong SIM, xe bị khóa khi chưa homing, đang nâng/hạ hoặc trạng thái
 phép di chuyển. Gửi vận tốc teleop vào `/cmd_vel_teleop`; `/cmd_vel` là đầu ra nội bộ.
 
 ## Tay cầm PS4 trong mô phỏng
+
+Đây là cấu hình SDL chuẩn để dùng khi có tay cầm; hiện có thể dùng phím mũi tên
+như trên. Tay cầm USB 2,4 GHz chưa rõ model cần enumerate và kiểm tra ánh xạ trước.
 
 Cài `ros-humble-joy`, build lại workspace và kết nối tay cầm PS4 qua USB hoặc
 Bluetooth. Chạy mô phỏng thủ công như trên, rồi ở terminal đã source khác:
@@ -192,8 +222,24 @@ Phần cứng dự kiến: ESP32 DevKit WROOM 38 chân, bốn GA25-370 có encod
 bốn BTS7960, TB6600/NEMA17 cho nâng và MPU6050 dự kiến nối Raspberry Pi.
 
 Đã có khung firmware đọc encoder, PID bánh, UART v2 và điều khiển nâng. Tuy nhiên,
-PID, mức điện, trạng thái chân lúc boot và thông số vít me vẫn cần xác minh;
-**bản build hiện tại khóa đầu ra**. Chưa có backend serial REAL/bringup xe thật.
+PI khởi đầu **Kp=0,08; Ki=0,12; Kd=0** đã được đặt cho cả bốn bánh để tuning.
+**Firmware hiện bật profile thử bánh**, trần PWM 25%, giới hạn 2 rad/s và boot
+disarm; nâng dùng **một công tắc NC dưới GPIO32**, R tới 2.000 xung từ home,
+F/H hạ về công tắc rồi đặt lại vị trí 0. Bấm R nhiều lần không cộng dồn;
+quãng nâng thực tế sẽ đo và hiệu chỉnh sau. Mức điện, chân boot,
+chiều motor/encoder và PI chưa được kiểm chứng trên xe. Đã bổ sung backend USB/UART v2 và
+`real.launch.py` để dùng cùng bàn phím với ESP32, đọc encoder và điều khiển nâng.
+Các tham số thử nằm ở `firmware/esp32/forklift_esp32/board_config.h`.
+
+Sau khi firmware đã được cấu hình đúng và nạp riêng, mở kết nối bằng:
+
+```bash
+ros2 launch forklift_bringup real.launch.py port:=/dev/serial/by-id/TEN_THIET_BI_ESP32
+```
+
+Launch mặc định disarm; cần kiểm tra telemetry và arm chủ động trước khi dùng
+bàn phím. Xem [hướng dẫn ESP32: cấu hình, arm, bàn phím và reset](docs/esp32_manual_control.md).
+Đã kiểm tra qua PTY với lõi firmware C++; chưa kiểm chứng kết nối USB hoặc xe thật.
 
 Theo lựa chọn phần cứng hiện tại, R_EN/L_EN kéo HIGH ngoài và khi lỗi/mất liên lạc,
 firmware giữ PWM cuối của bánh để người vận hành ngắt nguồn thủ công; lệnh dừng
@@ -215,7 +261,7 @@ Xem [hướng dẫn firmware và GPIO](firmware/esp32/README.md),
 | `src/forklift_navigation/` | SLAM, AMCL, Nav2, MPPI và bản đồ |
 | `src/forklift_lift/`, `src/forklift_interfaces/` | Giám sát nâng, message và action |
 | `src/forklift_task_manager/` | Tuyến đã duyệt, docking và nhiệm vụ |
-| `src/forklift_hardware/` | Backend PTY/MCU giả cho mô phỏng giao tiếp |
+| `src/forklift_hardware/` | Backend PTY/MCU giả và cầu nối ESP32 USB/UART v2 |
 | `firmware/esp32/` | Mã firmware ESP32 đang phát triển |
 | `docs/` | Tài liệu thiết kế và hướng dẫn chi tiết |
 | `results/final/` | Nơi lưu kết quả cuối được chọn để đưa lên Git |
