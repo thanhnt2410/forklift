@@ -17,11 +17,12 @@ firmware vẫn khóa/capability 0. Đặt `base_bench_profile=false` để trở
 
 | Thông số khởi đầu | Giá trị |
 |---|---|
-| PI FL/FR/RL/RR | Kp=0,08; Ki=0,12; Kd=0 |
+| PID FL/FR/RL/RR | Kp=0,08; Ki=0,12; Kd=0,05 |
 | Đơn vị | Đầu vào rad/s, đầu ra duty −1…1, dt giây |
 | Tần số vòng điều khiển | 100 Hz |
-| Trần PWM | 25% |
-| Vận tốc / gia tốc bánh | 2 rad/s / 2 rad/s² |
+| Trần PWM | 50% |
+| Vận tốc MCU / gia tốc bánh | 10 rad/s / 2 rad/s² |
+| Giới hạn bánh phía ROS | 6 rad/s (0,30 m/s với bán kính 0,05 m) |
 | CPR | 937,2 danh nghĩa |
 
 Tuning tại `wheel_pi[4]` trong `board_config.h`, theo thứ tự **FL, FR, RL, RR**.
@@ -72,7 +73,7 @@ STEP khi lỗi và giữ homing/giới hạn. Chưa nạp hoặc kiểm chứng 
   dừng khi đổi chiều. Khi vượt vận tốc đặt, PWM về 0; không đảo cực để phanh.
   Với EN kéo HIGH, PWM=0 không tương đương vô hiệu hóa cầu H; trạng thái phanh/thả
   phụ thuộc mạch driver, không coi đây là cách ly nguồn.
-- PWM BTS7960 20 kHz, 10 bit; giới hạn ban đầu 25% duty, 2 rad/s, chỉ là phạm vi
+- PWM BTS7960 20 kHz, 10 bit; giới hạn 50% duty, MCU 10 rad/s, ROS 6 rad/s, chỉ là phạm vi
   thử bàn dự kiến. 280 RPM do người dùng cung cấp không được coi là vận tốc tải đo được.
 - Xung STEP/DIR qua timer, giới hạn 5000 xung/s; giữ dòng nâng sau khi dừng.
   Biên dạng tốc độ/giảm tốc và chặn nâng đồng thời với chạy bánh.
@@ -179,8 +180,8 @@ không boot ID, không sequence hoặc ACK trên dây. Serial Monitor chọn 115
 New Line (Both NL & CR cũng được). ESP32 tự phát trạng thái **20 lần/giây**:
 
 ```text
-S,ms,tFL,tFR,tRL,tRR,lift_steps,mode,homed,lower,fault,capabilities
-S,1200,0,0,0,0,0,1,0,1,0,3
+S,ms,tFL,tFR,tRL,tRR,lift_steps,mode,homed,lower,fault,capabilities,warnings
+S,1200,0,0,0,0,0,1,0,1,0,3,0
 ```
 
 - `ms`: thời gian ESP32 chạy, ms, dùng tính vận tốc từ số đếm encoder.
@@ -192,6 +193,15 @@ S,1200,0,0,0,0,0,1,0,1,0,3
   32 home timeout, 64 deadline, 128 peripheral.
   Bit 4 của watchdog Serial cũ được để trống, không còn phát sinh.
 - `capabilities`: 0 cấu hình lỗi, 1 bánh, 3 bánh+nâng.
+- `warnings`: bitmask FL=1, FR=2, RL=4, RR=8. Bánh không quay dù PWM cao hoặc
+  encoder ngược chiều lệnh trên 0,5 s chỉ phát warning, không latch fault hay
+  chặn điều khiển. Warning tự hết khi điều kiện hết hoặc nhận D. Các lỗi encoder
+  nhảy số phi lý và bánh còn chạy khi nâng vẫn là fault 8.
+
+Trường `warnings` cũng được thêm cuối telemetry UART v2 trước checksum.
+Bridge ROS mới đọc được bản tin cũ lẫn mới; cập nhật/build bridge trên Pi trước
+khi dùng firmware mới. Phải nạp lại sketch chính để đổi stall từ fault sang
+warning; chỉ cập nhật Python không đủ.
 
 Các lệnh ROS gửi xuống:
 

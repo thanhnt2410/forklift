@@ -59,17 +59,18 @@ class State:
     high: bool
     estop: bool
     capabilities: int
+    warnings: int = 0
 
 
 def parse_state(line):
-    """Validate the firmware's exact 18-field telemetry, including integer ranges."""
+    """Validate UART v2 telemetry, accepting an optional wheel warning mask."""
     if not 10 <= len(line) <= 256 or not line.endswith(b'\n'):
         raise ValueError('invalid frame length/terminator')
     payload, checksum = line[:-1].rsplit(b'*', 1)
     if not re.fullmatch(rb'[0-9a-fA-F]{8}', checksum) or binascii.crc32(payload) != int(checksum, 16):
         raise ValueError('CRC mismatch')
     fields = payload.decode('ascii').split(',')
-    if len(fields) != 18 or fields[:2] != ['S', '2']:
+    if len(fields) not in (18, 19) or fields[:2] != ['S', '2']:
         raise ValueError('not UART v2 telemetry')
     nums = []
     for i, value in enumerate(fields[2:], 2):
@@ -81,19 +82,22 @@ def parse_state(line):
             raise ValueError('integer overflow')
         nums.append(n)
     boot, seq, us, ack, *rest = nums
-    ticks, steps, fault, mode, homed, low, high, estop, caps = tuple(rest[:4]), *rest[4:]
+    ticks, steps, fault, mode, homed, low, high, estop, caps = tuple(rest[:4]), *rest[4:12]
+    warnings = rest[12] if len(rest) == 13 else 0
     if not seq or fault > 255 or mode > 4 or caps not in (0, 1, 3) or any(v not in (0, 1) for v in (homed, low, high, estop)):
         raise ValueError('invalid state enumeration')
+    if warnings > 15:
+        raise ValueError('invalid wheel warning mask')
     return State(boot, seq, us, ack, ticks, steps, fault, mode,
-                 bool(homed), bool(low), bool(high), bool(estop), caps)
+                 bool(homed), bool(low), bool(high), bool(estop), caps, warnings)
 
 
 def parse_simple_state(line):
-    """S,ms,tFL,tFR,tRL,tRR,lift_steps,mode,homed,lower,fault,capabilities."""
+    """S,ms,tFL,tFR,tRL,tRR,lift_steps,mode,homed,lower,fault,capabilities[,warnings]."""
     if not 1 <= len(line) <= 256 or not line.endswith(b'\n'):
         raise ValueError('invalid CSV line')
     fields = line.rstrip(b'\r\n').decode('ascii').split(',')
-    if len(fields) != 12 or fields[0] != 'S':
+    if len(fields) not in (12, 13) or fields[0] != 'S':
         raise ValueError('expected plain S CSV')
     values = []
     for index, field in enumerate(fields[1:], 1):
@@ -104,11 +108,14 @@ def parse_simple_state(line):
         if not (-(2**63) <= value < 2**63 if signed else 0 <= value < 2**64):
             raise ValueError('CSV integer overflow')
         values.append(value)
-    ms, fl, fr, rl, rr, steps, mode, homed, low, fault, caps = values
+    ms, fl, fr, rl, rr, steps, mode, homed, low, fault, caps = values[:11]
+    warnings = values[11] if len(values) == 12 else 0
     if ms >= 2**64//1000 or mode > 4 or homed not in (0, 1) or low not in (0, 1) or fault > 255 or caps not in (0, 1, 3):
         raise ValueError('invalid CSV state values')
+    if warnings > 15:
+        raise ValueError('invalid wheel warning mask')
     return State(0, 0, ms*1000, 0, (fl, fr, rl, rr), steps, fault, mode,
-                 bool(homed), bool(low), False, bool(fault & 2), caps)
+                 bool(homed), bool(low), False, bool(fault & 2), caps, warnings)
 
 
 def inverse(vx, vy, wz, radius, k):
@@ -204,7 +211,7 @@ class Esp32Bridge(Node):
                         wheel_radius=.05, kinematic_sum=.260145, encoder_cpr=937.2,
                         max_wheel_speed=2., state_timeout=.25, command_timeout=.3,
                         ack_timeout=.25, lift_steps_per_m=0., lift_max_height=0.,
-                        lift_tolerance=.002, publish_odom_tf=True,
+                        lift_tolerance=.002, publish_odom_tf=True, auto_arm=False,
                         lift_preset_mode=False, lift_raise_steps=2000, lift_max_steps=2000)
         for key, value in defaults.items():
             self.declare_parameter(key, value)
@@ -236,6 +243,7 @@ class Esp32Bridge(Node):
         self.handshake_seq = None
         self.handshake = False
         self.armed = self.arming = False
+        self.auto_arm_pending = self.p['auto_arm']
         self.arm_seq = self.reset_seq = None
         self.stop_seq = None
         self.hold_after_stop_seq = None
@@ -245,6 +253,7 @@ class Esp32Bridge(Node):
         self.invalid_frames = 0
         self.command = (0., 0., 0.)
         self.await_command_zero = True
+        self.input_zero = False
         self.wheel_velocity = (0.,)*4
         self.height = self.lift_velocity = 0.
         self.hold_height = 0.
@@ -310,6 +319,7 @@ class Esp32Bridge(Node):
                 bool(self.state.capabilities & 1))
 
     def fail(self, reason):
+        self.auto_arm_pending = False
         if not self.host_fault:
             self.get_logger().error(reason + '; no automatic wheel stop (manual-cutoff profile)')
             self.host_fault = reason
@@ -366,32 +376,48 @@ class Esp32Bridge(Node):
         if not all(math.isfinite(v) for v in values+extra) or any(extra):
             values = (0., 0., 0.)
         # Commands arriving during lift/arming cannot be replayed afterward.
+        self.input_zero = not any(values)
         if not any(values):
             self.await_command_zero = False
         self.command = values if self.armed and not self.reserved and not self.await_command_zero else (0., 0., 0.)
         self.cmd_at = time.monotonic()
 
+    def request_arm(self):
+        if (not self.ready() or not self.handshake or not self.stationary() or
+              self.state.mode != 1 or self.reserved or self.arming or
+              (self.state.capabilities == 3 and (not self.lift_configured() or
+               (not self.p['lift_preset_mode'] and self.state.homed and
+                not 0 <= self.height <= self.p['lift_max_height'])))):
+            return False
+        self.command = (0., 0., 0.)
+        self.await_command_zero = True
+        self.hold_height = self.height if self.state.homed else 0.
+        target = 0. if self.p['lift_preset_mode'] else self.hold_height
+        self.arm_seq = self.send('C', ((0.,)*4, target, True))
+        self.arming = self.arm_seq is not None
+        self.arm_at = time.monotonic()
+        return self.arming
+
+    def maybe_auto_arm(self, now):
+        # Startup only. A fault, operator stop or disarm cancels this request.
+        # Wait for the command gate's fresh zero output before enabling the MCU.
+        if (self.auto_arm_pending and self.input_zero and
+                now-self.cmd_at <= self.p['command_timeout'] and self.request_arm()):
+            self.auto_arm_pending = False
+            self.get_logger().info('Auto arm requested with zero wheels; waiting for ACTIVE telemetry')
+
     def arm(self, req, res):
+        self.auto_arm_pending = False
         if not req.data:
             self.explicit_stop(disarm=True)
             res.success = not self.transport_broken and self.state is not None
             res.message = 'Stop sent; verify fresh DISARMED/FAULTED telemetry'
         elif self.armed:
             res.success, res.message = True, 'Already ARMED'
-        elif (not self.ready() or not self.handshake or not self.stationary() or
-              self.state.mode != 1 or self.reserved or self.arming or
-              (self.state.capabilities == 3 and (not self.lift_configured() or
-               (not self.p['lift_preset_mode'] and self.state.homed and
-                not 0 <= self.height <= self.p['lift_max_height'])))):
-            res.success, res.message = False, 'Need fresh fault-free DISARMED telemetry and stationary wheels; inspect /esp32/status'
         else:
-            self.command = (0., 0., 0.)
-            self.hold_height = self.height if self.state.homed else 0.
-            target = 0. if self.p['lift_preset_mode'] else self.hold_height
-            self.arm_seq = self.send('C', ((0.,)*4, target, True))
-            self.arming = self.arm_seq is not None
-            self.arm_at = time.monotonic()
-            res.success = self.arming
+            res.success = self.request_arm()
+            res.message = 'Need fresh fault-free DISARMED telemetry and stationary wheels; inspect /esp32/status'
+        if req.data and res.success and not self.armed:
             res.message = 'Arm requested; wait for /esp32/status ARMED before keyboard input'
         return res
 
@@ -413,6 +439,7 @@ class Esp32Bridge(Node):
             self.explicit_stop(disarm=True)
 
     def explicit_stop(self, disarm=False):
+        self.auto_arm_pending = False
         self.stop_generation += 1
         self.command = (0., 0., 0.)
         self.await_command_zero = True
@@ -525,6 +552,16 @@ class Esp32Bridge(Node):
             self.seq = state.ack
             self.wheel_velocity = (0.,)*4
         self.state, self.received_at = state, time.monotonic()
+        previous_warnings = old.warnings if old is not None else 0
+        if state.warnings != previous_warnings:
+            if state.warnings:
+                wheels = ', '.join(name for i, name in enumerate(('FL', 'FR', 'RL', 'RR'))
+                                   if state.warnings & (1 << i))
+                self.get_logger().warning(
+                    f'WHEEL_TRACKING_WARNING [{wheels}]: stalled/low-speed or opposite '
+                    'encoder feedback; control remains enabled, check motor torque and encoder')
+            else:
+                self.get_logger().info('Wheel tracking warning cleared')
         self.pending_tx = [(seq, at) for seq, at in self.pending_tx if seq > state.ack]
         if state.fault or state.estop:
             self.fail(f'MCU_FAULT_{state.fault}' if state.fault else 'MCU_ESTOP')
@@ -536,6 +573,7 @@ class Esp32Bridge(Node):
             self.handshake = True
         if self.arming and self.confirmed(self.arm_seq, state) and state.mode == 2 and self.ready():
             self.arming, self.armed = False, True
+            self.await_command_zero = True
             self.command = (0., 0., 0.)
             self.cmd_at = time.monotonic()
         self.height = state.steps/self.p['lift_steps_per_m'] if self.lift_configured() else 0.
@@ -619,6 +657,7 @@ class Esp32Bridge(Node):
             height=self.height, target=self.op['target'] if self.op else self.hold_height,
             lower_active=bool(s and s.low), upper_active=bool(s and s.high)))
         label = 'ARMED' if self.armed else ('ARMING' if self.arming else 'DISARMED')
+        warning = s.warnings if s else 0
         status = (f'{label}; host={fault or "OK"}; mcu={MODES[s.mode] if s else "UNKNOWN"}; '
                   f'fault={s.fault if s else "?"}; capabilities={s.capabilities if s else "?"}; '
                   f'handshake={self.handshake}; ack={s.ack if s else "?"}/{self.seq}; '
@@ -630,6 +669,7 @@ class Esp32Bridge(Node):
                       f'fault={s.fault if s else "?"}; homed={int(s.homed) if s else "?"}; '
                       f'bottom={int(s.low) if s else "?"}; steps={s.steps if s else "?"}; '
                       f'rx_bytes={self.serial.rx_bytes}')
+        status += f'; wheel_warning={warning}'
         self.status_pub.publish(String(data=status))
         # Log state transitions rather than every telemetry packet.
         signature = (label, fault, s.mode if s else None, s.capabilities if s else None, self.handshake)
@@ -641,7 +681,8 @@ class Esp32Bridge(Node):
             self.diag_pub.publish(DiagnosticArray(header=header, status=[DiagnosticStatus(
                 name='forklift_hardware/esp32',
                 hardware_id=self.p['port'] if self.simple else (str(s.boot) if s else 'UNKNOWN'),
-                level=DiagnosticStatus.ERROR if fault else (DiagnosticStatus.OK if self.armed else DiagnosticStatus.WARN), message=status,
+                level=DiagnosticStatus.ERROR if fault else (
+                    DiagnosticStatus.WARN if warning or not self.armed else DiagnosticStatus.OK), message=status,
                 values=[KeyValue(key='serial_protocol', value=self.p['serial_protocol']),
                         KeyValue(key='port', value=self.p['port']),
                         KeyValue(key='baud', value=str(self.p['baud'])),
@@ -650,6 +691,7 @@ class Esp32Bridge(Node):
                         KeyValue(key='discarded_frames', value=str(self.serial.discarded_frames)),
                         KeyValue(key='modem_lines', value=self.serial.modem_lines),
                         KeyValue(key='invalid_frames', value=str(self.invalid_frames)),
+                        KeyValue(key='wheel_warning_mask', value=str(warning)),
                         KeyValue(key='wheel_fault_policy', value='manual_power_cutoff')])]))
 
     def tick(self):
@@ -673,7 +715,8 @@ class Esp32Bridge(Node):
                         self.simple_boot += 1
                     state = State(self.simple_boot, self.simple_rx_seq, state.us, 0,
                                   state.ticks, state.steps, state.fault, state.mode,
-                                  state.homed, state.low, state.high, state.estop, state.capabilities)
+                                  state.homed, state.low, state.high, state.estop, state.capabilities,
+                                  state.warnings)
                 self.feedback(state)
         if (self.armed or self.arming or self.reserved) and not self.fresh():
             self.fail('TELEMETRY_TIMEOUT')
@@ -701,6 +744,7 @@ class Esp32Bridge(Node):
                 if cls == MoveLift:
                     values['target'] = op['target']
                 op['handle'].publish_feedback(cls.Feedback(**values))
+        self.maybe_auto_arm(now)
         if self.ready() and self.hold_after_stop_seq is None:
             if self.op is not None and self.op['kind'] in ('home', 'raise'):
                 seq = self.send('C', ((0.,)*4, 0., False))

@@ -88,6 +88,8 @@ class Controller {
   const Outputs & outputs() const { return output_; }
   void acknowledge_outputs() { output_.zero_lift = output_.clear_emergency = false; }
   uint32_t faults() const { return faults_; }
+  // Bits 0..3: FL/FR/RL/RR stalled or tracking the commanded direction poorly.
+  uint32_t warnings() const { return warnings_; }
   bool homed() const { return homed_; }
   Mode mode() const { return mode_; }
   uint64_t ack() const { return ack_; }
@@ -106,6 +108,7 @@ class Controller {
   bool primed_{}, homed_{};
   Mode mode_{Mode::Locked};
   uint32_t faults_{};
+  uint32_t warnings_{};
   std::array<Pid, 4> pid_;
   std::array<double, 4> target_{}, ramp_{}, velocity_{}, stationary_s_{}, stall_s_{};
   std::array<int, 4> direction_{};

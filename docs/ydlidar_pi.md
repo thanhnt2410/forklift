@@ -30,8 +30,14 @@ ros2 launch forklift_bringup lidar.launch.py
 ```
 
 Giữ terminal chạy. Không chạy thêm driver hoặc SDK test trên cùng cổng Serial.
-Cổng mặc định là `/dev/serial/by-id/usb-Silicon_Labs_CP2102_USB_to_UART_Bridge_Controller_0001-if00-port0`.
-Nếu thiết bị khác, xem `ls -l /dev/serial/by-id/` rồi sửa `port` trong YAML.
+Cổng mặc định là
+`/dev/serial/by-path/platform-fd500000.pcie-pci-0000:01:00.0-usb-0:1.4:1.0-port0`,
+ứng với ổ USB vật lý trên Pi đang nối LiDAR. Giữ LiDAR cắm đúng ổ này.
+ESP32 và LiDAR hiện cùng báo CP2102 serial `0001`, nên liên kết `by-id` trùng
+nhau và có thể trỏ nhầm sang ESP32. Dùng `by-path` để phân biệt theo ổ USB,
+không phụ thuộc thiết bị được gán `ttyUSB0` hay `ttyUSB1` sau khi cắm lại.
+Nếu đổi ổ USB, xem `ls -l /dev/serial/by-path/`, đối chiếu thiết bị thực rồi
+sửa `port` trong YAML. Không chọn liên kết `by-id` trùng `0001` cho LiDAR.
 
 Có thể dùng cấu hình khác mà không sửa launch:
 

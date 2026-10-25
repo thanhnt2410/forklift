@@ -3,8 +3,10 @@
 Backend này nối ROS với **Serial CSV đơn giản của firmware trong repo**, không cần Gazebo.
 Đã kiểm tra phần mềm qua PTY với lõi C++ của firmware; chưa nạp firmware hoặc
 kiểm chứng trên xe thật. Firmware hiện bật **profile thử bánh** theo yêu cầu dùng
-PI mặc định để tuning: Kp=0,08, Ki=0,12, Kd=0; PWM tối đa 25%, bánh tối đa 2 rad/s.
-Khởi động vẫn disarm, cần arm khi dùng ROS. Serial Monitor có thể gửi thẳng
+PID hiện tại để tuning: Kp=0,08, Ki=0,12, Kd=0,05; PWM tối đa 50%, MCU tối đa
+10 rad/s, phía ROS giới hạn 6 rad/s cho lệnh tịnh tiến 0,30 m/s.
+Firmware khởi động disarm; ROS launch mặc định tự arm sau khi kiểm tra telemetry
+và nhận zero từ command gate, không cần gọi service. Serial Monitor có thể gửi thẳng
 `C,...,1`, không cần gửi `D` trước hoặc gửi lệnh lặp. Profile không xác nhận mức điện/đấu dây.
 Nâng hiện dùng **một công tắc NC dưới GPIO32**, điều khiển theo số xung, chưa
 hiệu chuẩn quãng đường thực. Không có công tắc trên hoặc phản hồi E-stop GPIO.
@@ -16,8 +18,8 @@ Hai phía dùng `serial_protocol: simple` / `simple_serial=true`. Không có CRC
 boot ID hoặc ACK trên dây. Phản hồi đọc được bằng Monitor 115200:
 
 ```text
-S,ms,tFL,tFR,tRL,tRR,lift_steps,mode,homed,lower,fault,capabilities
-S,1200,0,0,0,0,0,1,0,1,0,3
+S,ms,tFL,tFR,tRL,tRR,lift_steps,mode,homed,lower,fault,capabilities,warnings
+S,1200,0,0,0,0,0,1,0,1,0,3,0
 ```
 
 Lệnh `C,wFL,wFR,wRL,wRR,0,enabled`, `H` hạ tối đa 3 s/công tắc,
@@ -48,6 +50,30 @@ Telemetry giữ nguyên: tính cả chữ S, trường thứ 8 là mode (1 dừn
 Serial cũ không còn dùng. Khi có lỗi phần cứng, gửi D, đợi bánh dừng, xử lý
 nguyên nhân rồi R; các kiểm tra encoder/công tắc/giới hạn nâng vẫn hoạt động.
 
+### Cảnh báo bánh không quay ở tốc độ thấp
+
+Bánh có lệnh trên 0,5 rad/s, PWM trên 20% nhưng encoder dưới 0,05 rad/s, hoặc
+encoder ngược chiều lệnh, kéo dài trên 0,5 giây sẽ tạo **warning**, không còn
+chuyển MCU sang FAULTED hay tự disarm. PI tiếp tục chạy và nhận lệnh mới, nên có
+thể tăng/giảm tốc hoặc gửi dừng mà không reset. Warning tự hết khi điều kiện
+không còn hoặc nhận lệnh dừng chủ động.
+
+Trường cuối `warnings` là bitmask bánh: FL=1, FR=2, RL=4, RR=8; cộng các bit nếu
+nhiều bánh cùng cảnh báo. Bridge in `WHEEL_TRACKING_WARNING [tên bánh]`, thêm
+`wheel_warning=...` vào `/esp32/status`, và đặt `/diagnostics` mức WARN.
+Warning không khóa command gate và không được đưa vào `fault`.
+
+`MCU_FAULT_8` vẫn được dùng cho số đếm encoder nhảy tới vận tốc phi lý hoặc
+phát hiện bánh còn chạy khi đang nâng; đây là các điều kiện khác với thiếu
+mô-men khởi động. Không bỏ qua bit lỗi 8 từ firmware cũ ở phía ROS vì MCU cũ
+đã tự khóa nhận lệnh.
+
+Để áp dụng: cập nhật/build bridge trên Pi **và nạp lại firmware chính**
+`firmware/esp32/forklift_esp32/forklift_esp32.ino` lên ESP32. Chỉ restart ROS
+không thay đổi logic MCU. Bridge mới đọc được cả telemetry cũ (không có trường
+warning) và mới; firmware mới cần bridge mới. Thay đổi này không tăng trần PWM
+hoặc tự bù mô-men khởi động; tốc độ rất thấp vẫn cần tuning PID/phần cứng.
+
 ## Luồng điều khiển
 
 ```text
@@ -73,8 +99,11 @@ Không chạy launch SIM, node tay cầm hay backend khác cùng ROS domain vớ
 
 [esp32.yaml](../src/forklift_hardware/config/esp32.yaml) dùng baud **115200, 8N1**.
 Hình học CAD và CPR **937,2** là giá trị ban đầu, chưa phải hiệu chuẩn xe thật.
-`max_wheel_speed: 2.0` phải khớp hoặc thấp hơn giới hạn trong firmware.
-Với bánh bán kính 0,05 m, chuyển động thẳng bị giới hạn khoảng **0,10 m/s**;
+`max_wheel_speed: 6.0` phải khớp hoặc thấp hơn giới hạn trong firmware (10 rad/s).
+Bàn phím mặc định tiến/lùi/đi ngang 0,30 m/s; bánh bán kính 0,05 m cần 6 rad/s
+để nhận đủ lệnh này khi tịnh tiến. Cần cập nhật YAML, nạp firmware và khởi động
+lại bridge lẫn bàn phím để áp dụng; tốc độ thực còn phụ thuộc PI, tải và trần PWM.
+Với bánh bán kính 0,05 m, chuyển động thẳng bị giới hạn khoảng **0,30 m/s**;
 chuyển động kết hợp được scale chung bốn bánh để giữ hướng vận tốc.
 
 Firmware dùng dấu `motor_sign` và `encoder_sign` trong
@@ -162,7 +191,8 @@ launch để dò tên cổng mới. Không tự arm lại sau khi nối USB.
 Chế độ auto cần `fuser` từ gói `psmisc` (`sudo apt install psmisc` nếu thiếu).
 Đóng launch bridge cũ và Serial Monitor trước khi chạy; nên giữ driver LiDAR
 chạy để cổng của nó được bỏ qua. Mở cổng USB có thể reset một số board như khi
-chỉ định cổng thủ công. Việc nhận diện không tự arm motor.
+chỉ định cổng thủ công. Sau nhận diện, bước auto arm riêng của bridge chờ
+telemetry hợp lệ, bánh đứng yên, handshake và lệnh zero mới từ command gate.
 
 Muốn chỉ định thủ công, dùng
 `ros2 launch forklift_bringup real.launch.py port:=/dev/serial/by-id/TEN_THIET_BI_ESP32`,
@@ -183,14 +213,31 @@ Mở terminal khác, source workspace như trên rồi xem trạng thái:
 ros2 topic echo /esp32/status
 ```
 
-Chờ `DISARMED; host=OK; mcu=DISARMED`, firmware không lỗi và có telemetry mới. Lệnh đầu chưa đủ phản hồi có thể bị từ chối; đợi một nhịp rồi gọi lại.
-Lệnh arm dưới đây gửi yêu cầu; `success: true` nghĩa là **đã gửi yêu cầu**, phải
-chờ trạng thái **ARMED** sau khi thấy telemetry mới ở mode ACTIVE của MCU trước khi điều khiển:
+Launch mặc định `auto_arm:=true`: tự chuyển từ DISARMED sang ARMING rồi ARMED,
+không cần gọi service. Chờ `ARMED; host=OK; mcu=ACTIVE; fault=0`, rồi chạy:
 
 ```bash
-ros2 service call /esp32/arm std_srvs/srv/SetBool '{data: true}'
 ros2 run forklift_control arrow_teleop.py
 ```
+
+Auto arm chỉ chạy một lần lúc khởi động, gửi vận tốc bánh bằng 0 và chờ telemetry
+ACTIVE xác nhận. Lệnh di chuyển trong lúc arm không được phát lại; bridge cần
+một lệnh zero mới sau khi ARMED trước khi nhận chuyển động. Command gate trong
+launch phát zero khi chưa có đầu vào điều khiển.
+
+Disarm chủ động, lỗi hoặc E-stop hủy auto arm đang chờ. Auto arm không tự bật
+lại sau disarm hoặc lỗi. Sau khi xử lý nguyên nhân, khởi động lại launch để
+dùng auto arm ở phiên mới, hoặc arm thủ công bằng service hiện có.
+
+Muốn giữ quy trình arm thủ công, chạy Pi với:
+
+```bash
+ros2 launch forklift_bringup real.launch.py auto_arm:=false
+```
+
+Sau khi có telemetry DISARMED hợp lệ, có thể gọi
+`ros2 service call /esp32/arm std_srvs/srv/SetBool '{data: true}'`.
+`success: true` chỉ xác nhận đã gửi yêu cầu; vẫn chờ ARMED trước khi điều khiển.
 
 Chọn bộ gõ tiếng Anh, focus terminal bàn phím và chờ `Manual mode ready`.
 

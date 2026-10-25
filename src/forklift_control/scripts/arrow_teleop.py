@@ -68,10 +68,10 @@ def read_key(fd, timeout=.02):
 class ArrowTeleop(Node):
     def __init__(self):
         super().__init__('arrow_teleop')
-        defaults = dict(speed=.15, reverse_speed=.12, strafe_speed=.12,
+        defaults = dict(speed=.3, reverse_speed=.3, strafe_speed=.3,
                         turn=.4, key_timeout=.35, state_timeout=.5,
                         lift_step=.01, lift_max_height=.115)
-        limits = dict(speed=.25, reverse_speed=.16, strafe_speed=.2,
+        limits = dict(speed=.3, reverse_speed=.3, strafe_speed=.3,
                       turn=.6, key_timeout=1., state_timeout=1.,
                       lift_step=.115, lift_max_height=.115)
         for name, value in defaults.items():

@@ -206,6 +206,7 @@ void Controller::stop() {
   output_.duty.fill(0.); output_.base_enable = false; output_.lift_steps_s = 0.;
   output_.lift_position_limit = false;
   target_.fill(0.); ramp_.fill(0.); stall_s_.fill(0.); direction_.fill(0);
+  warnings_ = 0;
   for (auto & p : pid_) p.reset();
   lift_rate_ = 0.;
 }
@@ -435,11 +436,14 @@ void Controller::tick(uint64_t now, const Sensors & s) {
   // Keep controlling the last target until a new command or D arrives.
   // Silence on Serial is not a fault.
   output_.base_enable = mode_ == Mode::Active;
+  warnings_ = 0;
   for (size_t i = 0; i < 4; ++i) {
-    if (mode_ != Mode::Active) { output_.duty[i] = 0.; pid_[i].reset(); continue; }
+    if (mode_ != Mode::Active) {
+      output_.duty[i] = 0.; stall_s_[i] = 0.; pid_[i].reset(); continue;
+    }
     const int wanted = sign(target_[i]);
     if (wanted && direction_[i] && wanted != direction_[i] && stationary_s_[i] < .03) {
-      ramp_[i] = 0.; output_.duty[i] = 0.; pid_[i].reset(); continue;
+      ramp_[i] = 0.; output_.duty[i] = 0.; stall_s_[i] = 0.; pid_[i].reset(); continue;
     }
     if (wanted && wanted != direction_[i]) { direction_[i] = wanted; ramp_[i] = 0.; pid_[i].reset(); }
     ramp_[i] = approach(ramp_[i], target_[i], config_.wheel_accel * dt);
@@ -447,25 +451,27 @@ void Controller::tick(uint64_t now, const Sensors & s) {
     const bool stalled = std::abs(ramp_[i]) > .5 && std::abs(output_.duty[i]) > .2 && std::abs(velocity_[i]) < .05;
     const bool wrong_direction = ramp_[i] * velocity_[i] < -.1;
     stall_s_[i] = stalled || wrong_direction ? stall_s_[i] + dt : 0.;
-    if (stall_s_[i] > .5) { trip(Encoder); return; }
+    // Low-speed breakaway torque can cause no encoder pulses at high PI duty.
+    // Report tracking trouble per wheel without latching a fault or disarming.
+    if (stall_s_[i] > .5) warnings_ |= uint32_t(1) << i;
   }
   lift_tick(dt, now, s);
 }
 size_t Controller::telemetry(uint64_t now, const Sensors & s, char * output, size_t capacity) {
   char payload[kFrameCapacity];
   const int n = std::snprintf(payload, sizeof(payload),
-    "S,2,%" PRIu64 ",%" PRIu64 ",%" PRIu64 ",%" PRIu64 ",%" PRId64 ",%" PRId64 ",%" PRId64 ",%" PRId64 ",%" PRId64 ",%" PRIu32 ",%u,%u,%u,%u,%u,%u",
+    "S,2,%" PRIu64 ",%" PRIu64 ",%" PRIu64 ",%" PRIu64 ",%" PRId64 ",%" PRId64 ",%" PRId64 ",%" PRId64 ",%" PRId64 ",%" PRIu32 ",%u,%u,%u,%u,%u,%u,%" PRIu32,
     boot_, ++state_seq_, now, ack_, s.ticks[0], s.ticks[1], s.ticks[2], s.ticks[3], s.lift_steps,
     faults_, unsigned(mode_), unsigned(homed_), unsigned(s.low), unsigned(s.high), unsigned(s.estop),
-    unsigned(config_.valid() ? (config_.lift_ready ? 3 : 1) : 0));
+    unsigned(config_.valid() ? (config_.lift_ready ? 3 : 1) : 0), warnings_);
   return n > 0 && size_t(n) < sizeof(payload) ? encode_frame(payload, output, capacity) : 0;
 }
 size_t Controller::simple_telemetry(uint64_t now, const Sensors & s, char * output, size_t capacity) {
   const int n=std::snprintf(output,capacity,
-    "S,%" PRIu64 ",%" PRId64 ",%" PRId64 ",%" PRId64 ",%" PRId64 ",%" PRId64 ",%u,%u,%u,%" PRIu32 ",%u\n",
+    "S,%" PRIu64 ",%" PRId64 ",%" PRId64 ",%" PRId64 ",%" PRId64 ",%" PRId64 ",%u,%u,%u,%" PRIu32 ",%u,%" PRIu32 "\n",
     now/1000,s.ticks[0],s.ticks[1],s.ticks[2],s.ticks[3],s.lift_steps,
     unsigned(mode_),unsigned(homed_),unsigned(s.low),faults_,
-    unsigned(config_.valid() ? (config_.lift_ready ? 3 : 1) : 0));
+    unsigned(config_.valid() ? (config_.lift_ready ? 3 : 1) : 0), warnings_);
   return n>0 && size_t(n)<capacity ? size_t(n) : 0;
 }
 }  // namespace forklift_mcu

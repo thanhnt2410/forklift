@@ -59,10 +59,10 @@ constexpr uint32_t telemetry_period_us = 50000;  // 20 Hz, readable Serial Monit
 // Starting guesses, not gains measured on GA25-370. Duty is normalized [-1,1],
 // velocity rad/s, dt seconds; tune each wheel independently after checking sign.
 constexpr forklift_mcu::Gains wheel_pi[4] = {
-  {.08,.12,0.},  // FL
-  {.08,.12,0.},  // FR
-  {.08,.12,0.},  // RL
-  {.08,.12,0.},  // RR
+  {.08,.12,0.05},  // FL
+  {.08,.12,0.05},  // FR
+  {.08,.12,0.05},  // RL
+  {.08,.12,0.05},  // RR
 };
 // Provisional distance conversion ONLY, not calibrated physical metres.
 // 1.8-degree NEMA17, TB6600 1/8 step, direct screw with 8 mm lead/revolution.
@@ -99,8 +99,8 @@ inline forklift_mcu::Config control_config() {
   c.stop_base_on_fault = stop_base_on_fault;
   c.encoder_cpr.fill(nominal_encoder_cpr);  // 937.2 counts / output revolution.
   for (unsigned i=0;i<4;++i) c.gains[i] = wheel_pi[i];
-  c.max_wheel_rad_s = 2.;  // Initial bench envelope, not GA25 rated speed.
-  c.max_duty = .25;
+  c.max_wheel_rad_s = 10.;  // MCU ceiling; ROS limits translation to 6 rad/s (0.30 m/s).
+  c.max_duty = .50;
   c.steps_per_m = provisional_lift_steps_per_m;
   c.travel_m = lift_max_steps / provisional_lift_steps_per_m;
   c.lift_max_steps_s = 1000.; c.lift_accel_steps_s2 = 4000.;

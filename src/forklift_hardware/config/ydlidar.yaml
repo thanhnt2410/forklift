@@ -3,7 +3,9 @@
 ydlidar_ros2_driver_node:
   ros__parameters:
     use_sim_time: false
-    port: /dev/serial/by-id/usb-Silicon_Labs_CP2102_USB_to_UART_Bridge_Controller_0001-if00-port0
+    # Both ESP32 and LiDAR report CP2102 serial 0001; by-id collides.
+    # Pi's physical USB port 1.4 currently holds the LiDAR. Keep this socket.
+    port: /dev/serial/by-path/platform-fd500000.pcie-pci-0000:01:00.0-usb-0:1.4:1.0-port0
     frame_id: laser_frame
     baudrate: 115200
     lidar_type: 1

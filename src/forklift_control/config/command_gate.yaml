@@ -3,8 +3,8 @@ command_gate:
     use_sim_time: true
     command_timeout: 0.3
     state_timeout: 0.5
-    max_vx: 0.25
-    max_vy: 0.20
+    max_vx: 0.30
+    max_vy: 0.30
     max_wz: 0.6
     max_ax: 0.5
     max_ay: 0.5

@@ -133,9 +133,9 @@ Click vào terminal điều khiển để nhận phím:
 
 | Phím | Chức năng |
 |---|---|
-| ↑ / ↓ | Tiến 0,15 m/s / lùi 0,12 m/s |
+| ↑ / ↓ | Tiến / lùi 0,30 m/s |
 | ← / → | Quay trái / phải, 0,4 rad/s |
-| A / D hoặc Shift + ← / → | Đi ngang trái / phải, 0,12 m/s |
+| A / D hoặc Shift + ← / → | Đi ngang trái / phải, 0,30 m/s |
 | R hoặc Page Up | Nâng càng thêm 1 cm |
 | F hoặc Page Down | Hạ càng 1 cm |
 | H hoặc Home | Homing càng |
@@ -222,8 +222,9 @@ Phần cứng dự kiến: ESP32 DevKit WROOM 38 chân, bốn GA25-370 có encod
 bốn BTS7960, TB6600/NEMA17 cho nâng và MPU6050 dự kiến nối Raspberry Pi.
 
 Đã có khung firmware đọc encoder, PID bánh, Serial CSV và điều khiển nâng. Tuy nhiên,
-PI khởi đầu **Kp=0,08; Ki=0,12; Kd=0** đã được đặt cho cả bốn bánh để tuning.
-**Firmware hiện bật profile thử bánh**, trần PWM 25%, giới hạn 2 rad/s và boot
+PID hiện tại **Kp=0,08; Ki=0,12; Kd=0,05** được đặt cho cả bốn bánh để tuning.
+**Firmware hiện bật profile thử bánh**, trần PWM 50%, giới hạn MCU 10 rad/s,
+giới hạn phía ROS 6 rad/s (tịnh tiến 0,30 m/s với bánh bán kính 0,05 m), và boot
 disarm; nâng dùng **một công tắc NC dưới GPIO32**, R nâng thêm 2.000 xung,
 F/H hạ tối đa 3 giây hoặc dừng sớm tại công tắc. Không cần home trước khi nâng/lái;
 quãng nâng thực tế sẽ đo và hiệu chỉnh sau. Mức điện, chân boot,
@@ -233,14 +234,27 @@ Serial mặc định 115200 baud, CSV từng dòng không CRC/boot ID/ACK; ESP32
 trạng thái 20 Hz. Cần cập nhật firmware và ROS cùng phiên bản giao thức.
 Các tham số thử nằm ở `firmware/esp32/forklift_esp32/board_config.h`.
 
+Bánh không quay ở tốc độ thấp dù PWM cao, hoặc encoder ngược chiều lệnh kéo
+dài trên 0,5 s, hiện chỉ phát `WHEEL_TRACKING_WARNING` theo từng bánh; không
+khóa MCU hoặc tự disarm. Warning tự hết khi điều kiện hết hoặc nhận lệnh dừng.
+Phải **nạp lại firmware chính và cập nhật/build bridge trên Pi** để áp dụng.
+Các trường hợp encoder nhảy số phi lý hoặc bánh còn chạy khi nâng vẫn là lỗi 8.
+Đổi sang warning không tự khắc phục thiếu mô-men ở tốc độ thấp; xem
+[chi tiết cảnh báo encoder](docs/esp32_manual_control.md#cảnh-báo-bánh-không-quay-ở-tốc-độ-thấp).
+
 Sau khi firmware đã được cấu hình đúng và nạp riêng, mở kết nối bằng:
 
 ```bash
-ros2 launch forklift_bringup real.launch.py port:=/dev/serial/by-id/TEN_THIET_BI_ESP32
+ros2 launch forklift_bringup real.launch.py
 ```
 
-Launch mặc định disarm; cần kiểm tra telemetry và arm chủ động trước khi dùng
-bàn phím. Xem [hướng dẫn ESP32: cấu hình, arm, bàn phím và reset](docs/esp32_manual_control.md).
+Launch mặc định `port:=auto`, nhận diện ESP32 bằng telemetry và bỏ qua cổng đang
+được chương trình khác dùng. Có thể chỉ định cổng thủ công bằng
+`port:=/dev/serial/by-id/TEN_THIET_BI_ESP32`. Auto cần `fuser` từ gói `psmisc`.
+Launch mặc định `auto_arm:=true`: tự arm một lần sau khi có telemetry hợp lệ,
+bánh đứng yên và lệnh zero mới từ command gate; không cần gọi service arm.
+Dùng `auto_arm:=false` nếu muốn arm thủ công. Xem
+[hướng dẫn ESP32: cấu hình, bàn phím và reset](docs/esp32_manual_control.md).
 LiDAR trên Pi chạy riêng bằng `ros2 launch forklift_bringup lidar.launch.py`,
 dùng cấu hình `src/forklift_hardware/config/ydlidar.yaml`.
 Xem [hướng dẫn LiDAR Pi và kết nối laptop](docs/ydlidar_pi.md).
@@ -254,6 +268,114 @@ chủ động vẫn có hiệu lực. Cơ cấu nâng giữ homing/giới hạn 
 Xem [hướng dẫn firmware và GPIO](firmware/esp32/README.md),
 [cấu hình ESP32/PID](firmware/esp32/forklift_esp32/board_config.h) và
 [thông số phần cứng](config/robot_measurements.yaml).
+
+## Mapping robot thật: Pi + laptop
+
+Hướng dẫn này dùng khi **ESP32 và LiDAR cắm USB vào Pi**. Pi chạy driver phần
+cứng; laptop chạy SLAM, RViz và bàn phím điều khiển. Hai máy cần cùng mạng,
+cùng `ROS_DOMAIN_ID`, đã cập nhật và build code tương ứng. Các đường dẫn dưới
+đây giả sử repo nằm tại `~/ros_ws/forklift` trên Pi và `~/workspace/forklift`
+trên laptop; thay theo thư mục thực tế nếu khác.
+
+### 1. Trên Pi: chạy LiDAR trước, ESP32 sau
+
+Trong **mỗi terminal trên Pi**, chạy phần thiết lập:
+
+```bash
+source /opt/ros/humble/setup.bash
+source ~/ros_ws/forklift/install/local_setup.bash
+export ROS_DOMAIN_ID=0
+export ROS_LOCALHOST_ONLY=0
+```
+
+Terminal 1 — giữ LiDAR chạy để auto ESP32 bỏ qua cổng đang được driver sử dụng:
+
+```bash
+ros2 launch forklift_bringup lidar.launch.py
+```
+
+Terminal 2 — tự dò cổng ESP32:
+
+```bash
+ros2 launch forklift_bringup real.launch.py
+```
+
+`real.launch.py` không tự chạy LiDAR. ESP32 cắm vào Pi thì bridge phải chạy trên
+Pi, kể cả khi mở terminal qua SSH từ laptop. Đóng bridge cũ và Serial Monitor
+trước khi chạy; nếu rút/cắm lại USB, khởi động lại launch để dò cổng mới.
+
+### 2. Trên laptop: chạy SLAM và RViz
+
+Trong **mỗi terminal trên laptop**, chạy phần thiết lập:
+
+```bash
+source /opt/ros/humble/setup.bash
+source ~/workspace/forklift/install/local_setup.bash
+export ROS_DOMAIN_ID=0
+export ROS_LOCALHOST_ONLY=0
+```
+
+Terminal 1 — kiểm tra dữ liệu từ Pi rồi chạy mapping:
+
+```bash
+ros2 topic echo /esp32/status --once
+ros2 topic echo /scan --once --field header
+ros2 topic echo /odom --once --field header
+ros2 launch forklift_bringup mapping_real.launch.py
+```
+
+Launch mở RViz với Fixed Frame `map`, phát TF robot từ URDF CAD và chạy SLAM
+Toolbox bằng thời gian thực. Vị trí LiDAR theo mô hình là `[0, 0, 0.2946]` m
+so với `base_link`, roll/pitch/yaw bằng 0. Không chạy thêm static TF test cho
+`base_link -> laser_frame` hoặc một `robot_state_publisher` khác.
+
+Mỗi lần khởi động `mapping_real.launch.py` là **phiên tạo bản đồ mới**. Chạy một
+phiên tại một thời điểm. `mapping.launch.py` là launch mô phỏng Gazebo.
+
+### 3. Điều khiển quét bản đồ
+
+Terminal 2 trên laptop — khi sẵn sàng cho xe chạy:
+
+```bash
+ros2 topic echo /esp32/status --once
+```
+
+Chờ trạng thái `ARMED; host=OK; mcu=ACTIVE; fault=0` trước khi mở bàn phím.
+Bridge mặc định tự arm; không cần chạy service. Sau khi arm vẫn cần lệnh zero
+mới trước khi nhận lệnh di chuyển, nên thả phím rồi bấm lại nếu đã giữ từ trước.
+
+```bash
+ros2 run forklift_control arrow_teleop.py
+```
+
+Focus terminal bàn phím, chờ `Manual mode ready`. Dùng phím mũi tên để tiến/lùi
+và quay, A/D để đi ngang; Space/S để dừng. Điều khiển xe chậm qua khu vực cần
+quét rồi quay về vùng đã đi qua. Trong RViz, tường nên đứng yên và các lượt quét
+chồng khớp; nếu tường bị đôi hoặc xoay theo xe, dừng để kiểm tra TF, odom và
+timestamp trước khi quét tiếp.
+
+### 4. Lưu bản đồ
+
+Dừng xe và giữ SLAM chạy. Trong terminal khác trên laptop đã source workspace:
+
+```bash
+mkdir -p ~/maps
+ros2 run nav2_map_server map_saver_cli -f ~/maps/forklift_real
+```
+
+Lệnh lưu `~/maps/forklift_real.yaml` và ảnh bản đồ. Đổi tên sau `-f` để giữ bản
+đồ cũ. Đây là bản đồ occupancy dùng cho định vị; muốn tiếp tục phiên SLAM sau
+khi tắt cần lưu thêm pose graph. Xem [hướng dẫn LiDAR và mapping thật](docs/ydlidar_pi.md).
+
+Sau khi lưu và dừng xe, disarm trước khi kết thúc các launch:
+
+```bash
+ros2 service call /esp32/arm std_srvs/srv/SetBool '{data: false}'
+```
+
+Disarm hoặc lỗi sẽ hủy auto arm trong phiên hiện tại; bridge không tự arm lại
+ngay sau thao tác dừng/disarm. Có thể khởi động lại launch khi đã xử lý lỗi để
+dùng auto arm ở phiên mới, hoặc gọi service arm thủ công nếu cần.
 
 ## Cấu trúc và cấu hình chính
 

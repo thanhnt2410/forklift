@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Manual ESP32 USB/UART bringup; explicit arm, no Gazebo or navigation."""
+"""Manual ESP32 USB/UART bringup with optional automatic startup arm."""
 from pathlib import Path
 import yaml
 from ament_index_python.packages import get_package_share_directory as share
@@ -8,6 +8,7 @@ from launch.actions import DeclareLaunchArgument, EmitEvent, OpaqueFunction
 from launch.events import Shutdown
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
+from launch_ros.parameter_descriptions import ParameterValue
 
 
 def setup(context):
@@ -21,7 +22,9 @@ def setup(context):
         return EmitEvent(event=Shutdown(reason=reason))
     return [
         Node(package='forklift_hardware', executable='esp32_bridge.py',
-             parameters=[config, {'port': port, 'use_sim_time': False}], output='screen',
+             parameters=[config, {'port': port, 'use_sim_time': False,
+                                 'auto_arm': ParameterValue(LaunchConfiguration('auto_arm'), value_type=bool)}],
+             output='screen',
              on_exit=shutdown('ESP32 bridge exited')),
         Node(package='forklift_control', executable='command_gate.py',
              parameters=[str(Path(share('forklift_control'))/'config/command_gate.yaml'), gate],
@@ -34,5 +37,7 @@ def generate_launch_description():
         DeclareLaunchArgument('port', default_value='auto',
                               description='auto detects firmware telemetry; or an explicit ESP32 serial path'),
         DeclareLaunchArgument('config', default_value=str(Path(share('forklift_hardware'))/'config/esp32.yaml')),
+        DeclareLaunchArgument('auto_arm', default_value='true', choices=['true', 'false'],
+                              description='Automatically arm once at startup after healthy telemetry and zero input'),
         OpaqueFunction(function=setup),
     ])

@@ -3,13 +3,16 @@ esp32_bridge:
     use_sim_time: false
     baud: 115200
     serial_protocol: simple
+    # Enable after fresh telemetry and a zero command from the command gate.
+    auto_arm: true
     # Nominal encoder calibration: 11 PPR * x4 * 21.3, verify on output shaft.
     encoder_cpr: 937.2
     # CAD geometry remains provisional on hardware; overrides injected into gate.
     wheel_radius: 0.05
     kinematic_sum: 0.260145
-    # Match firmware board_config.h, not the SIM controller's 12 rad/s.
-    max_wheel_speed: 2.0
+    # Keep below the MCU's 10 rad/s limit, not the SIM controller's 12 rad/s.
+    # 6 rad/s * 0.05 m = 0.30 m/s for pure translation.
+    max_wheel_speed: 6.0
     state_timeout: 0.25
     command_timeout: 0.3
     ack_timeout: 0.25
