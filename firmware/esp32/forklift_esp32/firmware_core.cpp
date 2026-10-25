@@ -80,6 +80,7 @@ bool parse_command(const char * input, size_t size, Command & command) {
     next.enabled = fields[9][0] == '1';
   } else if (count == 4) {
     if (!std::strcmp(fields[0], "H")) next.operation = Operation::Home;
+    else if (!std::strcmp(fields[0], "U")) next.operation = Operation::Raise;
     else if (!std::strcmp(fields[0], "R")) next.operation = Operation::Reset;
     else if (!std::strcmp(fields[0], "D")) next.operation = Operation::Stop;
     else return false;
@@ -99,53 +100,86 @@ bool Receiver::push(char byte, Command & command) {
   buffer_[used_++] = byte; return false;
 }
 bool parse_simple_command(const char * input, size_t size, double steps_per_m, Command & command) {
-  if (size && input[size-1]=='\n') --size;
-  if (size && input[size-1]=='\r') --size;
-  if (!size || size>=kFrameCapacity || std::memchr(input,'\0',size)) return false;
-  char text[kFrameCapacity];std::memcpy(text,input,size);text[size]='\0';
+  // Chap nhan ca Newline va CR+LF tu Arduino Serial Monitor.
+  if (size && input[size - 1] == '\n') --size;
+  if (size && input[size - 1] == '\r') --size;
+  if (!size || size >= kFrameCapacity || std::memchr(input, '\0', size)) {
+    return false;
+  }
+
+  char text[kFrameCapacity];
+  std::memcpy(text, input, size);
+  text[size] = '\0';
   Command next;
-  if (size==1) {
-    if (text[0]=='H') next.operation=Operation::Home;
-    else if (text[0]=='D') next.operation=Operation::Stop;
-    else if (text[0]=='R') next.operation=Operation::Reset;
-    else return false;
-  } else {
-    char * fields[7];size_t count=1;fields[0]=text;
-    for (size_t i=0;i<size;++i) if (text[i]==',') {
-      if (count==7) return false;
-      text[i]='\0';fields[count++]=text+i+1;
+
+  // Lenh mot chu: H = ha, U = nang theo so step, D = dung, R = reset loi.
+  if (size == 1) {
+    switch (text[0]) {
+      case 'H': next.operation = Operation::Home; break;
+      case 'U': next.operation = Operation::Raise; break;
+      case 'D': next.operation = Operation::Stop; break;
+      case 'R': next.operation = Operation::Reset; break;
+      default: return false;
     }
-    if (count!=7 || std::strcmp(fields[0],"C")) return false;
-    next.operation=Operation::Control;
-    for (size_t i=0;i<4;++i) if (!real_value(fields[i+1],next.wheel[i])) return false;
-    uint64_t steps;
-    if (!unsigned_value(fields[5],steps) || steps>INT32_MAX ||
-        (steps && !positive(steps_per_m)) ||
-        (std::strcmp(fields[6],"0") && std::strcmp(fields[6],"1"))) return false;
-    next.lift_m=steps ? double(steps)/steps_per_m : 0.;
-    next.enabled=fields[6][0]=='1';
+    command = next;
+    return true;
   }
-  command=next;return true;
+
+  // Tach 7 truong: C,wFL,wFR,wRL,wRR,lift_steps,enabled.
+  char * fields[7];
+  size_t fieldCount = 1;
+  fields[0] = text;
+  for (size_t i = 0; i < size; i++) {
+    if (text[i] != ',') continue;
+    if (fieldCount == 7) return false;
+    text[i] = '\0';
+    fields[fieldCount++] = text + i + 1;
+  }
+
+  if (fieldCount != 7 || std::strcmp(fields[0], "C") != 0) return false;
+  next.operation = Operation::Control;
+  for (size_t wheel = 0; wheel < 4; wheel++) {
+    if (!real_value(fields[wheel + 1], next.wheel[wheel])) return false;
+  }
+
+  uint64_t liftSteps;
+  if (!unsigned_value(fields[5], liftSteps) || liftSteps > INT32_MAX) return false;
+  if (liftSteps > 0 && !positive(steps_per_m)) return false;
+  if (std::strcmp(fields[6], "0") != 0 && std::strcmp(fields[6], "1") != 0) return false;
+
+  next.lift_m = liftSteps ? double(liftSteps) / steps_per_m : 0.;
+  next.enabled = fields[6][0] == '1';
+  command = next;
+  return true;
 }
+
 bool SimpleReceiver::push(char byte, double steps_per_m, Command & command) {
-  if (byte=='\n') {
-    const bool ok=!discard_ && parse_simple_command(buffer_,used_,steps_per_m,command);
-    used_=0;discard_=false;return ok;
+  if (byte == '\n') {
+    const bool valid = !discard_ && parse_simple_command(buffer_, used_, steps_per_m, command);
+    used_ = 0;
+    discard_ = false;
+    return valid;
   }
+
   if (discard_) return false;
-  if (used_>=sizeof(buffer_)-1 || byte=='\0') {discard_=true;return false;}
-  buffer_[used_++]=byte;return false;
+  if (used_ >= sizeof(buffer_) - 1 || byte == '\0') {
+    discard_ = true;
+    return false;
+  }
+
+  buffer_[used_++] = byte;
+  return false;
 }
 bool Config::valid() const {
   if (!base_ready || !positive(max_wheel_rad_s) || max_wheel_rad_s > 12. ||
-      !positive(wheel_accel) || !positive(max_duty) || max_duty > 1. || watchdog_us < 50000 || watchdog_us > 300000) return false;
+      !positive(wheel_accel) || !positive(max_duty) || max_duty > 1.) return false;
   for (size_t i = 0; i < 4; ++i) {
     const auto & g = gains[i];
     if (!positive(encoder_cpr[i]) || !positive(g.kp) || !std::isfinite(g.ki) || g.ki < 0. ||
         !std::isfinite(g.kd) || g.kd < 0.) return false;
   }
   return !lift_ready || (positive(steps_per_m) && positive(travel_m) && positive(lift_max_steps_s) &&
-    (!lower_only_lift || (home_seek_max_steps > 0 && home_release_max_steps > 0)) &&
+    (!lower_only_lift || (lift_raise_steps > 0 && positive(lift_lower_timeout_s))) &&
     steps_per_m * travel_m <= double(INT32_MAX) &&
     lift_max_steps_s <= 5000. && positive(lift_accel_steps_s2) && positive(home_steps_s) &&
     home_steps_s <= lift_max_steps_s && positive(backoff_m) && backoff_m < travel_m && positive(home_timeout_s));
@@ -186,7 +220,7 @@ void Controller::stop_for_fault() {
   }
 }
 void Controller::trip(uint32_t fault) {
-  faults_ |= fault; mode_ = Mode::Faulted; homed_ = false; disabled_seen_ = false; stop_for_fault();
+  faults_ |= fault; mode_ = Mode::Faulted; homed_ = false; stop_for_fault();
   output_.zero_lift = output_.clear_emergency = false;
   // Keep lift driver energized if initialized: stopping STEP is not a brake.
 }
@@ -196,40 +230,134 @@ bool Controller::stopped() const {
 }
 bool Controller::receive(const Command & c, uint64_t now, const Sensors & s) {
   if (c.boot != boot_ || c.sequence <= ack_ || !primed_) return false;
+
   if (c.operation == Operation::Reset) {
-    if (!config_.valid() || s.estop || (s.low && s.high) || !s.io_ok || !stopped() || output_.base_enable || output_.lift_steps_s != 0.) return false;
-    stop(); faults_ = 0; homed_ = false; mode_ = Mode::Disarmed; disabled_seen_ = true;
+    // R: chi xoa loi khi da dung va nguyen nhan phan cung da het.
+    if (!config_.valid() || s.estop || (s.low && s.high) || !s.io_ok ||
+        !stopped() || output_.base_enable || output_.lift_steps_s != 0.) {
+      return false;
+    }
+    stop();
+    faults_ = 0;
+    homed_ = false;
+    mode_ = Mode::Disarmed;
     output_.clear_emergency = true;
+
   } else if (c.operation == Operation::Stop) {
+    // D: dung ngay, ke ca khi dang loi. Khong tu xoa loi phan cung.
     if (mode_ == Mode::Homing) homed_ = false;
-    stop(); if (!faults_) mode_ = Mode::Disarmed; disabled_seen_ = true;
-  } else if (c.operation == Operation::Home) {
-    if (faults_ || !config_.lift_ready || !disabled_seen_ || mode_ != Mode::Disarmed || !stopped() || s.estop || s.emergency_event || !s.io_ok) return false;
-    stop(); homed_ = false; output_.lift_hold = true; mode_ = Mode::Homing;
-    home_started_ = now; home_phase_ = s.low ? HomePhase::Backoff : HomePhase::Seek; released_ = false;
+    stop();
+    if (!faults_) mode_ = Mode::Disarmed;
+
+  } else if (c.operation == Operation::Home || c.operation == Operation::Raise) {
+    // H: ha toi cong tac hoac het 3 giay. U: nang them lift_raise_steps.
+    if (faults_ || !config_.lift_ready || mode_ != Mode::Disarmed ||
+        !stopped() || s.estop || s.emergency_event || !s.io_ok) {
+      return false;
+    }
+    if (c.operation == Operation::Raise &&
+        (!config_.lower_only_lift || s.high ||
+         s.lift_steps > INT64_MAX - config_.lift_raise_steps)) return false;
+    stop();
+    lift_lowering_ = c.operation == Operation::Home;
+    if (lift_lowering_) homed_ = false;
+    else lift_raise_goal_ = s.lift_steps + config_.lift_raise_steps;
+    output_.lift_hold = true;
+    mode_ = Mode::Homing;
+    home_started_ = now;
+    home_phase_ = s.low ? HomePhase::Backoff : HomePhase::Seek;
+    released_ = false;
     home_phase_start_step_ = s.lift_steps;
+
   } else {
-    if (!std::isfinite(c.lift_m) || c.lift_m < 0. ||
-        c.lift_m > (config_.lift_ready ? config_.travel_m : 0.)) return false;
-    for (double v : c.wheel) if (!std::isfinite(v) || std::abs(v) > config_.max_wheel_rad_s) return false;
+    // C: kiem tra van toc banh va dich nang truoc khi cap nhat muc tieu.
+    if ((config_.lower_only_lift && c.lift_m != 0.) ||
+        !std::isfinite(c.lift_m) || c.lift_m < 0. ||
+        c.lift_m > (config_.lift_ready ? config_.travel_m : 0.)) {
+      return false;
+    }
+    for (double speed : c.wheel) {
+      if (!std::isfinite(speed) || std::abs(speed) > config_.max_wheel_rad_s) return false;
+    }
+
     if (!c.enabled) {
-      // Disabled C frames are also the heartbeat during an explicit H operation.
-      if (mode_ != Mode::Homing) { stop(); if (!faults_) mode_ = Mode::Disarmed; disabled_seen_ = true; }
-    } else {
-      if (faults_ || !disabled_seen_ || s.estop || s.emergency_event || !s.io_ok || mode_ == Mode::Homing ||
-          (!homed_ && c.lift_m != 0.)) return false;
-      if (mode_ != Mode::Active && !stopped()) return false;
-      if (homed_ && (std::abs(c.lift_m * config_.steps_per_m - double(s.lift_steps)) > .5)) {
-        if (!stopped()) return false;
-        for (double v : c.wheel) if (std::abs(v) > 1e-6) return false;
+      // Keep compatibility with ROS disabled C frames during H.
+      // Homing itself no longer needs periodic commands.
+      if (mode_ != Mode::Homing) {
+        stop();
+        if (!faults_) mode_ = Mode::Disarmed;
       }
-      target_ = c.wheel; lift_target_ = c.lift_m; mode_ = Mode::Active;
+    } else {
+      if (faults_ || s.estop || s.emergency_event || !s.io_ok || mode_ == Mode::Homing ||
+          (!homed_ && c.lift_m != 0.)) {
+        return false;
+      }
+      if (mode_ != Mode::Active && !stopped()) return false;
+
+      // Chi doi vi tri nang khi banh da dung va lenh khong yeu cau chay banh.
+      if (!config_.lower_only_lift && homed_ &&
+          (std::abs(c.lift_m * config_.steps_per_m - double(s.lift_steps)) > .5)) {
+        if (!stopped()) return false;
+        for (double speed : c.wheel) {
+          if (std::abs(speed) > 1e-6) return false;
+        }
+      }
+      target_ = c.wheel;
+      lift_target_ = c.lift_m;
+      mode_ = Mode::Active;
     }
   }
-  ack_ = c.sequence; last_rx_ = now; return true;
+
+  ack_ = c.sequence;
+  return true;
 }
+void Controller::manual_lift_tick(double dt, uint64_t now, const Sensors & s) {
+  // Ban thu cong: khong tim/nhả/cham lai, khong can home truoc khi nang.
+  output_.lift_position_limit = false;
+  if (mode_ != Mode::Homing) {
+    lift_rate_ = 0.;
+    output_.lift_steps_s = 0.;
+    return;
+  }
+
+  double requested;
+  if (lift_lowering_) {
+    const bool timeUp = double(now - home_started_) / 1e6 >= config_.lift_lower_timeout_s;
+    if (s.low || timeUp) {
+      stop();
+      mode_ = Mode::Disarmed;
+      // Chi dat moc 0 khi cham cong tac; het 3s khong gia lap da home.
+      homed_ = s.low;
+      output_.zero_lift = s.low;
+      return;
+    }
+    requested = -config_.home_steps_s;
+  } else {
+    output_.lift_position_limit = true;
+    output_.lift_goal_steps = lift_raise_goal_;
+    if (s.lift_steps >= lift_raise_goal_) {
+      stop();
+      mode_ = Mode::Disarmed;
+      return;
+    }
+    if (s.high) { trip(Limit); return; }
+    const double remaining = double(lift_raise_goal_) - double(s.lift_steps);
+    requested = std::min(config_.lift_max_steps_s,
+      std::sqrt(2. * config_.lift_accel_steps_s2 * remaining));
+  }
+
+  if (!stopped()) { trip(Encoder); return; }
+  lift_rate_ = approach(lift_rate_, requested, config_.lift_accel_steps_s2 * dt);
+  output_.lift_steps_s = lift_rate_;
+  output_.lift_hold = true;
+}
+
 void Controller::lift_tick(double dt, uint64_t now, const Sensors & s) {
   if (!config_.lift_ready) return;
+  if (config_.lower_only_lift) {
+    manual_lift_tick(dt, now, s);
+    return;
+  }
   output_.lift_position_limit = false;
   double requested = 0.;
   if (mode_ == Mode::Homing) {
@@ -304,7 +432,8 @@ void Controller::tick(uint64_t now, const Sensors & s) {
     stationary_s_[i] = std::abs(velocity_[i]) < .15 ? stationary_s_[i] + dt : 0.;
   }
   if (faults_) { stop_for_fault(); return; }
-  if ((mode_ == Mode::Active || mode_ == Mode::Homing) && (now < last_rx_ || now - last_rx_ >= config_.watchdog_us)) { trip(Watchdog); return; }
+  // Keep controlling the last target until a new command or D arrives.
+  // Silence on Serial is not a fault.
   output_.base_enable = mode_ == Mode::Active;
   for (size_t i = 0; i < 4; ++i) {
     if (mode_ != Mode::Active) { output_.duty[i] = 0.; pid_[i].reset(); continue; }

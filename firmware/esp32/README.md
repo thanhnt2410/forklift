@@ -11,7 +11,7 @@ Theo yêu cầu dùng giá trị khởi đầu để tuning sau, `base_bench_pro
 cho phép khởi tạo GPIO bánh với PI dự kiến. Các cờ xác nhận điện vẫn `false`;
 profile thử không có nghĩa đã kiểm chứng đấu dây/mức logic/strapping.
 Khởi động PWM=0, STEP=0, chưa homed, mode `Disarmed`, capability **3** nếu HAL thành công;
-chỉ nhận chạy sau handshake disabled và arm chủ động từ ROS. Nếu khởi tạo lỗi,
+nhận ngay lệnh `C,...,1`, không cần gửi `D` trước hoặc gửi lặp liên tục. Nếu khởi tạo lỗi,
 firmware vẫn khóa/capability 0. Đặt `base_bench_profile=false` để trở về yêu cầu
 đủ ba cờ xác nhận trước khi khởi tạo bánh.
 
@@ -35,14 +35,15 @@ Kd=0 để bắt đầu bằng PI và tránh khuếch đại nhiễu tốc độ
 Bình thường LOW; chạm đáy/hở mạch HIGH. Không có công tắc trên, `upper_pin=-1`;
 không đọc GPIO âm. Phản hồi E-stop chưa gán trong profile thử thủ công này.
 
-- F/H sau arm: tìm đáy → nhả công tắc → đi thêm 100 xung → chạm lại chậm,
-  xác nhận home và đặt bộ đếm về 0. Không tự chuyển động khi vừa bật nguồn.
-- R: tới **2.000 xung tuyệt đối từ home**, không cộng thêm khi bấm/giữ R nhiều lần.
-- Giới hạn trên phần mềm 2.000 xung, có kiểm tra trong timer tạo STEP.
-- Tốc độ nâng 1000 xung/s, gia tốc 4000 xung/s²; home 400 xung/s và chạm lại
-  200 xung/s. Home tối đa 30 s; tìm đáy tối đa 6.000 xung, tìm nhả tối đa
-  200 xung, pha chạm lại cũng có giới hạn xung. Kẹt/hở NC không làm đi lên mãi.
-- Space dừng STEP/hủy action. Lỗi/watchdog vẫn dừng STEP; giữ chính sách PWM bánh.
+- F/H sau arm: hạ tối đa **3 giây**, hoặc dừng sớm khi công tắc dưới tác động.
+  Không nhả/chạm lại; công tắc đã tác động thì dừng ngay. Hết thời gian là hoàn tất
+  bình thường, không fault 32. Chỉ đặt bước về 0 và homed khi thực sự chạm công tắc.
+- R trên ROS (U trên Serial): nâng **thêm 2.000 xung từ vị trí hiện tại**, không
+  cần home. Bấm lại sau khi hoàn tất sẽ nâng thêm; giữ phím không xếp hàng lệnh.
+- Không còn giới hạn tổng 2.000 xung. Timer chặn chính xác tại đích tương đối
+  của mỗi lần nâng; profile không có công tắc trên nên cần quan sát hành trình.
+- Tốc độ nâng/hạ tối đa 1000 xung/s, gia tốc 4000 xung/s².
+- Space dừng STEP/hủy action. Lỗi phần cứng vẫn dừng STEP; giữ chính sách PWM bánh.
 
 Quãng đường vật lý chưa biết. Giả định 200 bước/vòng, vi bước 1/8, lead 8 mm/vòng
 chỉ tạo **thang tọa độ UART danh nghĩa 200000 step/m**. Giá trị 0,01 trong goal
@@ -56,6 +57,7 @@ Xem [cách đo và hiệu chỉnh](../../docs/esp32_manual_control.md#đo-quãng
 `base_enable_hardwired_high=true`, `stop_base_on_fault=false` trong `board_config.h`.
 R_EN/L_EN kéo HIGH ngoài, không dùng GPIO EN. Khi lỗi hoặc mất liên lạc, firmware
 báo fault và **giữ PWM cuối của bốn bánh**, không tiếp tục PID với dữ liệu lỗi.
+Riêng mất lệnh Serial không còn là lỗi: firmware tiếp tục PID theo vận tốc đặt cuối.
 `Faulted` không có nghĩa bánh đã dừng. Lệnh `D` hoặc `C enabled=0` vẫn đưa PWM về 0;
 sau đó phải xử lý lỗi và reset trước khi nhận lệnh chạy mới. Cơ cấu nâng vẫn dừng
 STEP khi lỗi và giữ homing/giới hạn. Chưa nạp hoặc kiểm chứng phần cứng.
@@ -75,13 +77,13 @@ STEP khi lỗi và giữ homing/giới hạn. Chưa nạp hoặc kiểm chứng 
 - Xung STEP/DIR qua timer, giới hạn 5000 xung/s; giữ dòng nâng sau khi dừng.
   Biên dạng tốc độ/giảm tốc và chặn nâng đồng thời với chạy bánh.
 - Profile hiện tại dùng **một công tắc NC dưới**, không yêu cầu công tắc trên.
-  Homing tìm dưới → đi lên cho công tắc nhả → đi thêm khoảng backoff → chạm lại chậm.
-  Không nhả công tắc hoặc không hoàn tất đúng thời gian sẽ lỗi.
-- CSV từng dòng đơn giản, kiểm tra kiểu số/giới hạn và bắt đầu disarm; chẩn đoán
-  timeout lệnh 300 ms, fault latch và reset sau khi có lệnh dừng. Giao thức v2 cũ
+  Hạ tối đa 3 s hoặc tới công tắc; nâng thêm một số xung, không cần home.
+- CSV từng dòng đơn giản, kiểm tra kiểu số/giới hạn và bắt đầu disarm;
+  không timeout lệnh Serial, không yêu cầu handshake disabled. Lỗi phần cứng
+  vẫn được chốt và cần dừng/reset. Giao thức v2 cũ
   vẫn có thể chọn riêng để đối chiếu.
 - Kiểm tra chu kỳ điều khiển quá 50 ms. Timer ISR chặn STEP khi trễ; latch yêu cầu
-  reboot. Trong profile hiện tại, lỗi timeout/encoder/IO/deadline không tự ngắt PWM bánh.
+  reboot. Trong profile hiện tại, lỗi encoder/IO/deadline không tự ngắt PWM bánh.
   Các thời gian trên là thiết kế phần mềm, **chưa đo trên ESP32 thật**.
 
 Chưa có đo dòng, xác nhận tải thật, cảm biến vị trí nâng, hoặc brake cơ khí.
@@ -95,12 +97,12 @@ Thứ tự bánh: FL, FR, RL, RR nhìn theo hướng tiến của xe.
 
 | Chức năng | GPIO ESP32 |
 |---|---|
-| FL RPWM / LPWM | 23 / 22 |
+| FL RPWM / LPWM | 25 / 26 |
 | FR RPWM / LPWM | 18 / 19 |
-| RL RPWM / LPWM | 25 / 26 |
+| RL RPWM / LPWM | 23 / 22 |
 | RR RPWM / LPWM | 21 / 27 |
 | FL encoder A / B | 34 / 35 |
-| FR encoder A / B | 12 / 14 |
+| FR encoder A / B | 2 / 14 |
 | RL encoder A / B | 5 / 17 |
 | RR encoder A / B | 16 / 4 |
 | R_EN và L_EN của mỗi BTS7960 | Kéo HIGH ngoài theo user, không dùng GPIO; EN pin `-1` |
@@ -113,14 +115,21 @@ Thứ tự bánh: FL, FR, RL, RR nhìn theo hướng tiến của xe.
 
 Hiểu nhãn user “RHW/LPW” là RPWM/LPWM, “DTR+” là DIR+. Mảng firmware giữ thứ tự
 FL/FR/RL/RR; không thay thứ tự joint ROS theo thứ tự liệt kê FR/RR/FL/RL của user.
+Đã đồng bộ cấu hình sau test từng bánh với `firmware/esp32_test`: đổi cặp PWM
+FL/RL, `motor_sign={1,-1,1,-1}`, `encoder_sign={1,1,1,-1}`.
+Encoder A của FR đã chuyển từ GPIO12 sang GPIO2; B vẫn GPIO14.
+PCNT dùng HIGH=INVERSE, LOW=KEEP để cùng quy ước với bộ giải mã ngắt của bản test:
+chuỗi AB `00 → 01 → 11 → 10 → 00` đếm +4 trước khi nhân `encoder_sign`.
 Không giữ GPIO5/23/4/13 ở chức năng EN/E-stop/limit của bảng dự kiến cũ.
 
 GPIO34/35 chỉ vào và không có pull-up/pull-down nội, cần mạch ngoài nếu encoder
-yêu cầu kéo mức. GPIO12 (FR A) và GPIO5 (RL A) là chân strapping. GPIO12 HIGH lúc
-reset có thể chọn VDD_SDIO 1,8 V thay vì 3,3 V và làm WROOM không boot.
+yêu cầu kéo mức. FR A đã chuyển khỏi GPIO12 để tránh chọn sai điện áp flash lúc reset.
+GPIO2 (FR A) và GPIO5 (RL A) vẫn là chân strapping; GPIO2 cần LOW hoặc thả nổi
+khi vào chế độ nạp UART. Nếu encoder giữ GPIO2 HIGH và không nạp được, tắt nguồn
+rồi tháo dây tín hiệu GPIO2 trong lúc nạp; không nối tắt ngõ ra encoder xuống GND.
 [Giải thích boot của Espressif](https://docs.espressif.com/projects/esptool/en/latest/esp32/advanced-topics/boot-mode-selection.html).
 GPIO32 hiện dành cho công tắc dưới; không dùng đồng thời làm FR encoder A.
-Code vẫn giữ FR A ở GPIO12 theo dây user. `strapping_levels_reviewed=false`
+`strapping_levels_reviewed=false`
 vẫn ghi nhận chưa kiểm chứng; profile thử bánh hiện bỏ qua khóa xác nhận này,
 không xử lý được mức điện lúc boot. Chỉ đặt cờ `true` sau khi kiểm chứng thực tế.
 Firmware không thể ngăn tín hiệu của boot ROM trước `setup()`. Với EN kéo HIGH,
@@ -158,15 +167,15 @@ dội tiếp điểm và thời gian dừng khi thử bàn. Chưa có lọc dộ
 Profile thử bánh bỏ qua yêu cầu xác nhận điện theo lựa chọn người dùng, giữ bảng
 chân đã cung cấp. Khi thử, kê bánh khỏi mặt đất, chưa mang tải; kiểm tra chiều
 motor/encoder rồi mới tuning PI. Nếu đếm ngược, sửa `encoder_sign`/`motor_sign`,
-không tăng gain để bù sai dấu. GPIO12/5 và mức điện vẫn cần xử lý như mục trên.
+không tăng gain để bù sai dấu. GPIO2/5 và mức điện vẫn cần xử lý như mục trên.
 Profile nâng một công tắc dùng giả định số xung theo yêu cầu; đấu công tắc dưới,
 kiểm tra chiều nâng/hạ, mức điện và dòng DIP trước khi thử không tải. Các bảo vệ
 phần mềm và công tắc dưới không thay cho công tắc trên hoặc mạch dừng vật lý.
 
 ## Serial CSV đơn giản — mặc định
 
-USB–UART **230400 baud, 8N1**. Mỗi bản tin ASCII kết thúc bằng newline, không CRC,
-không boot ID, không sequence hoặc ACK trên dây. Serial Monitor chọn 230400 và
+USB–UART **115200 baud, 8N1**. Mỗi bản tin ASCII kết thúc bằng newline, không CRC,
+không boot ID, không sequence hoặc ACK trên dây. Serial Monitor chọn 115200 và
 New Line (Both NL & CR cũng được). ESP32 tự phát trạng thái **20 lần/giây**:
 
 ```text
@@ -176,11 +185,12 @@ S,1200,0,0,0,0,0,1,0,1,0,3
 
 - `ms`: thời gian ESP32 chạy, ms, dùng tính vận tốc từ số đếm encoder.
 - `tFL…tRR`: encoder có dấu; `lift_steps`: xung nâng tính từ home.
-- `mode`: 0 khóa, 1 disarmed, 2 active, 3 homing, 4 fault.
+- `mode`: 0 khóa, 1 disarmed, 2 active, 3 đang nâng/hạ (nhãn cũ HOMING), 4 fault.
 - `homed`, `lower`: 0/1; `lower=1` chỉ nói input công tắc đang tác động, chưa
-  tự xác nhận vị trí home nếu chưa thực hiện chu trình tìm/nhả/chạm lại.
-- `fault`: bitmask 1 config, 2 E-stop, 4 watchdog, 8 encoder, 16 limit,
+  tự xác nhận vị trí home cho tới khi lệnh hạ nhận công tắc.
+- `fault`: bitmask 1 config, 2 E-stop, 8 encoder, 16 limit,
   32 home timeout, 64 deadline, 128 peripheral.
+  Bit 4 của watchdog Serial cũ được để trống, không còn phát sinh.
 - `capabilities`: 0 cấu hình lỗi, 1 bánh, 3 bánh+nâng.
 
 Các lệnh ROS gửi xuống:
@@ -190,15 +200,29 @@ C,wFL,wFR,wRL,wRR,lift_steps,enabled
 C,0,0,0,0,0,0
 C,0,0,0,0,0,1
 H
+U
 D
 R
 ```
 
-`C` đặt vận tốc bánh **rad/s**, đích nâng **số xung**, enabled 0/1. `H` home,
-`D` dừng, `R` reset fault (khác phím R bàn phím nâng; node chuyển phím thành C).
-Khởi động vẫn disarm; C disabled trước rồi mới bật. Khi home phải tiếp tục
-C disabled định kỳ. Bộ điều khiển vẫn kiểm tra tốc độ, chiều encoder, xung,
-homing và watchdog. Lỗi bánh vẫn giữ PWM theo lựa chọn ngắt nguồn thủ công.
+`C` đặt vận tốc bánh **rad/s**, trường lift để **0** trong profile thủ công,
+enabled 0/1. `H` hạ tối đa 3 s hoặc tới công tắc, `U` nâng thêm 2.000 xung,
+`D` dừng, `R` reset fault (khác phím R bàn phím nâng; node chuyển phím thành U).
+Khởi động vẫn disarm/PWM=0; nhận ngay `C,...,1` mà không cần `D` trước.
+Mỗi lệnh chỉ cần gửi một lần; PID tiếp tục chạy theo mục tiêu cuối cho đến
+khi có lệnh mới hoặc `D`. `H` cũng không cần heartbeat. Bộ điều khiển vẫn
+kiểm tra tốc độ, chiều encoder và đích xung của mỗi lần nâng. Lỗi phần cứng bánh
+vẫn giữ PWM theo lựa chọn ngắt nguồn thủ công.
+
+Thử trực tiếp bằng Serial Monitor: gửi `C,1,0,0,0,0,1` để chạy bánh trước trái
+1 rad/s, gửi `D` để dừng. Không còn lỗi `fault=4` khi gửi bằng tay.
+Đóng Serial Monitor trước khi dùng ROS. Mất kết nối Serial không tự dừng bánh.
+
+Sketch được chia thành các hàm theo kiểu Arduino: `readSerialCommands()` đọc
+lệnh không chặn, `updateMotors()` cập nhật PI mỗi 10 ms, `sendStatus()` gửi
+trạng thái mỗi 50 ms; `setup()` và `loop()` điều phối các hàm này bằng `millis()`.
+Cấu hình chân/gain nằm ở `board_config.h`, đọc encoder/PWM/STEP ở `board_hal.cpp`,
+parser và PI/homing ở `firmware_core.cpp` để kiểm thử được trên máy tính.
 
 Bản tin lỗi định dạng bị bỏ qua. Vì không có CRC/ID/ACK, định dạng này dễ xem
 bằng Monitor nhưng không kiểm tra được lỗi bit tạo thành số hợp lệ hoặc xác
@@ -214,7 +238,7 @@ MCU PTY cũ vẫn riêng biệt. Backend ros2_control PTY v1 không đổi.
 
 ## Build và kiểm thử
 
-Lõi C++17 chạy native trên máy phát triển (CMake, GTest):
+Lõi C++17 chạy native trên máy phát triển (CMake, không cần GTest cho bộ test Serial):
 
 ```bash
 cmake -S firmware/esp32 -B build/esp32_native -DCMAKE_BUILD_TYPE=Debug

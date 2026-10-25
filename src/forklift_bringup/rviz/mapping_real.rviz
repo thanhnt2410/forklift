@@ -1,0 +1,49 @@
+Panels:
+- Class: rviz_common/Displays
+  Name: Displays
+Visualization Manager:
+  Class: ''
+  Global Options:
+    Fixed Frame: map
+    Background Color: 35; 38; 45
+    Frame Rate: 30
+  Displays:
+  - Class: rviz_default_plugins/Grid
+    Name: Grid
+    Enabled: true
+    Cell Size: 0.5
+  - Class: rviz_default_plugins/RobotModel
+    Name: Robot
+    Enabled: true
+    Description Source: Topic
+    Description Topic:
+      Value: /robot_description
+      Durability Policy: Transient Local
+  - Class: rviz_default_plugins/LaserScan
+    Name: LiDAR
+    Enabled: true
+    Topic:
+      Value: /scan
+      Reliability Policy: Best Effort
+    Size (m): 0.02
+    Style: Points
+    Color Transformer: FlatColor
+    Color: 80; 220; 160
+  - Class: rviz_default_plugins/Map
+    Name: Map
+    Enabled: true
+    Topic:
+      Value: /map
+      Durability Policy: Transient Local
+    Alpha: 0.7
+  Tools:
+  - Class: rviz_default_plugins/MoveCamera
+  - Class: rviz_default_plugins/Select
+  Views:
+    Current:
+      Class: rviz_default_plugins/TopDownOrtho
+      Scale: 70
+      Target Frame: base_link
+Window Geometry:
+  Width: 1200
+  Height: 800

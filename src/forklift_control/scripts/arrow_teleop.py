@@ -98,6 +98,8 @@ class ArrowTeleop(Node):
         self.manual = False
         self.mode_future = None
         self.last_request = self.last_key = -math.inf
+        self.last_lift_key = None
+        self.last_lift_key_at = -math.inf
         self.command = (0., 0., 0.)
         self.create_timer(.02, self.tick, clock=Clock())
 
@@ -117,7 +119,11 @@ class ArrowTeleop(Node):
         if key not in commands:
             self.pub.publish(Twist())
             if key in ('lift_up', 'lift_down', 'home'):
-                self.start_lift(key, now)
+                # Terminal key repeat must not queue more relative raises.
+                repeated = key == self.last_lift_key and now-self.last_lift_key_at < self.p['key_timeout']
+                self.last_lift_key, self.last_lift_key_at = key, now
+                if not repeated:
+                    self.start_lift(key, now)
             else:
                 self.stop_lift()
 
@@ -130,7 +136,7 @@ class ArrowTeleop(Node):
     def pulse_preset(self, msg):
         if math.isfinite(msg.data) and 0. < msg.data <= self.p['lift_max_height']:
             self.preset_target = msg.data
-            self.get_logger().info('Pulse preset enabled: R raises once; F/H returns to bottom switch. Distance is provisional.')
+            self.get_logger().info('Manual lift: R adds one configured pulse increment; F/H lowers for up to 3 seconds or until the bottom switch.')
 
     def start_lift(self, key, now):
         if self.pending:
@@ -159,11 +165,10 @@ class ArrowTeleop(Node):
             self.get_logger().warning(f'Lift key ignored: {reason}.')
             return
         if key == 'home' or (key == 'lift_down' and self.preset_target is not None):
-            client, goal = self.lift_home, HomeLift.Goal(timeout=60.)
+            client, goal = self.lift_home, HomeLift.Goal(timeout=5. if self.preset_target is not None else 60.)
         else:
-            if not self.lift.homed:
-                self.get_logger().warning('Press F or H to find the bottom switch first.' if self.preset_target is not None
-                                          else 'Press H to home the lift first.')
+            if self.preset_target is None and not self.lift.homed:
+                self.get_logger().warning('Press H to home the lift first.')
                 return
             target = (self.preset_target if self.preset_target is not None else
                       max(0., min(self.p['lift_max_height'], self.lift.height +
@@ -250,7 +255,7 @@ def main():
         print('Forklift keyboard: Up/Down = forward/reverse; Left/Right = turn; '
               'A/D or Shift+Left/Right = strafe.\n'
               'R/PageUp = raise; F/PageDown = lower; H/Home = homing.\n'
-              'Position mode: 1 cm steps. Pulse preset mode: R raises once, F returns to bottom.\n'
+              'Position mode: 1 cm steps. Manual pulse mode: R raises one increment; F/H lowers up to 3 s or bottom switch.\n'
               'Letter keys work with or without Shift/Caps Lock.\n'
               'Space = stop wheels and lift; Q/Ctrl+C = stop and quit.\n'
               'Focus this terminal. Drive keys expire after 0.35 s by default; lift goals run to their target.',

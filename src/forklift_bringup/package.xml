@@ -16,9 +16,11 @@
   <exec_depend>forklift_gazebo</exec_depend>
   <exec_depend>forklift_control</exec_depend>
   <exec_depend>forklift_hardware</exec_depend>
+  <exec_depend>ydlidar_ros2_driver</exec_depend>
   <exec_depend>forklift_lift</exec_depend><exec_depend>forklift_task_manager</exec_depend>
   <exec_depend>ros_gz_bridge</exec_depend><exec_depend>ros_gz_interfaces</exec_depend>
   <exec_depend>forklift_navigation</exec_depend>
+  <exec_depend>slam_toolbox</exec_depend>
   <exec_depend>nav2_rviz_plugins</exec_depend>
   <exec_depend>robot_localization</exec_depend>
   <exec_depend>rclpy</exec_depend><exec_depend>controller_manager_msgs</exec_depend>

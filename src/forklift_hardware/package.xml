@@ -7,6 +7,7 @@
   <depend>hardware_interface</depend><depend>pluginlib</depend><depend>rclcpp</depend>
   <depend>rclcpp_lifecycle</depend><depend>diagnostic_msgs</depend>
   <exec_depend>rclpy</exec_depend><exec_depend>std_srvs</exec_depend>
+  <exec_depend>psmisc</exec_depend>
   <exec_depend>forklift_interfaces</exec_depend><exec_depend>geometry_msgs</exec_depend>
   <exec_depend>nav_msgs</exec_depend><exec_depend>sensor_msgs</exec_depend>
   <exec_depend>std_msgs</exec_depend><exec_depend>tf2_msgs</exec_depend>

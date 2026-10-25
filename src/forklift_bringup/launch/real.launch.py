@@ -31,7 +31,8 @@ def setup(context):
 
 def generate_launch_description():
     return LaunchDescription([
-        DeclareLaunchArgument('port', description='ESP32 USB serial path; prefer /dev/serial/by-id/...'),
+        DeclareLaunchArgument('port', default_value='auto',
+                              description='auto detects firmware telemetry; or an explicit ESP32 serial path'),
         DeclareLaunchArgument('config', default_value=str(Path(share('forklift_hardware'))/'config/esp32.yaml')),
         OpaqueFunction(function=setup),
     ])

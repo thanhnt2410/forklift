@@ -53,8 +53,7 @@ void ARDUINO_ISR_ATTR pulse_tick() {
                              (direction > 0 && lift_count >= lift_goal))) ||
     (estop_pin >= 0 && gpio_get_level(gpio_num_t(estop_pin)) == int(estop_active_level)) ||
     (direction < 0 && gpio_get_level(gpio_num_t(lower_pin)) == int(limit_active_level)) ||
-    (direction > 0 && upper_pin >= 0 && gpio_get_level(gpio_num_t(upper_pin)) == int(limit_active_level)) ||
-    (single_lower_bench_profile && direction > 0 && lift_count >= lift_max_steps);
+    (direction > 0 && upper_pin >= 0 && gpio_get_level(gpio_num_t(upper_pin)) == int(limit_active_level));
   if (!direction || inhibited) {
     gpio_set_level(gpio_num_t(step_pin), 0); step_high = false; phase = 0;
     portEXIT_CRITICAL_ISR(&pulse_lock); return;
@@ -143,7 +142,9 @@ bool initialize() {
       if (pcnt_new_channel(units[i],&channel,&handle)!=ESP_OK ||
           pcnt_channel_set_edge_action(handle,j ? PCNT_CHANNEL_EDGE_ACTION_INCREASE : PCNT_CHANNEL_EDGE_ACTION_DECREASE,
             j ? PCNT_CHANNEL_EDGE_ACTION_DECREASE : PCNT_CHANNEL_EDGE_ACTION_INCREASE)!=ESP_OK ||
-          pcnt_channel_set_level_action(handle,PCNT_CHANNEL_LEVEL_ACTION_KEEP,PCNT_CHANNEL_LEVEL_ACTION_INVERSE)!=ESP_OK) {
+          // Arguments are HIGH action, LOW action. Match the test sketch:
+          // AB 00 -> 01 -> 11 -> 10 -> 00 counts +4 before encoder_sign.
+          pcnt_channel_set_level_action(handle,PCNT_CHANNEL_LEVEL_ACTION_INVERSE,PCNT_CHANNEL_LEVEL_ACTION_KEEP)!=ESP_OK) {
         all_off(); return false;
       }
     }

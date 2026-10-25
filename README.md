@@ -224,12 +224,12 @@ bốn BTS7960, TB6600/NEMA17 cho nâng và MPU6050 dự kiến nối Raspberry P
 Đã có khung firmware đọc encoder, PID bánh, Serial CSV và điều khiển nâng. Tuy nhiên,
 PI khởi đầu **Kp=0,08; Ki=0,12; Kd=0** đã được đặt cho cả bốn bánh để tuning.
 **Firmware hiện bật profile thử bánh**, trần PWM 25%, giới hạn 2 rad/s và boot
-disarm; nâng dùng **một công tắc NC dưới GPIO32**, R tới 2.000 xung từ home,
-F/H hạ về công tắc rồi đặt lại vị trí 0. Bấm R nhiều lần không cộng dồn;
+disarm; nâng dùng **một công tắc NC dưới GPIO32**, R nâng thêm 2.000 xung,
+F/H hạ tối đa 3 giây hoặc dừng sớm tại công tắc. Không cần home trước khi nâng/lái;
 quãng nâng thực tế sẽ đo và hiệu chỉnh sau. Mức điện, chân boot,
 chiều motor/encoder và PI chưa được kiểm chứng trên xe. Đã bổ sung backend USB/UART CSV đơn giản và
 `real.launch.py` để dùng cùng bàn phím với ESP32, đọc encoder và điều khiển nâng.
-Serial mặc định 230400 baud, CSV từng dòng không CRC/boot ID/ACK; ESP32 tự phát
+Serial mặc định 115200 baud, CSV từng dòng không CRC/boot ID/ACK; ESP32 tự phát
 trạng thái 20 Hz. Cần cập nhật firmware và ROS cùng phiên bản giao thức.
 Các tham số thử nằm ở `firmware/esp32/forklift_esp32/board_config.h`.
 
@@ -241,6 +241,9 @@ ros2 launch forklift_bringup real.launch.py port:=/dev/serial/by-id/TEN_THIET_BI
 
 Launch mặc định disarm; cần kiểm tra telemetry và arm chủ động trước khi dùng
 bàn phím. Xem [hướng dẫn ESP32: cấu hình, arm, bàn phím và reset](docs/esp32_manual_control.md).
+LiDAR trên Pi chạy riêng bằng `ros2 launch forklift_bringup lidar.launch.py`,
+dùng cấu hình `src/forklift_hardware/config/ydlidar.yaml`.
+Xem [hướng dẫn LiDAR Pi và kết nối laptop](docs/ydlidar_pi.md).
 Đã kiểm tra qua PTY với lõi firmware C++; chưa kiểm chứng kết nối USB hoặc xe thật.
 
 Theo lựa chọn phần cứng hiện tại, R_EN/L_EN kéo HIGH ngoài và khi lỗi/mất liên lạc,

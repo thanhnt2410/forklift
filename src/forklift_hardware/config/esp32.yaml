@@ -1,7 +1,7 @@
 esp32_bridge:
   ros__parameters:
     use_sim_time: false
-    baud: 230400
+    baud: 115200
     serial_protocol: simple
     # Nominal encoder calibration: 11 PPR * x4 * 21.3, verify on output shaft.
     encoder_cpr: 937.2
@@ -13,11 +13,11 @@ esp32_bridge:
     state_timeout: 0.25
     command_timeout: 0.3
     ack_timeout: 0.25
-    # Pulse preset profile: NOT calibrated metres. Must match board_config.h.
-    # R reaches 2000 pulses from home; F/H seeks the physical bottom switch.
+    # Manual pulse lift: R adds 2000 pulses; F/H lowers up to 3s or bottom switch.
+    # H/U commands execute once on the MCU; no home required before raising.
     lift_preset_mode: true
     lift_raise_steps: 2000
-    lift_max_steps: 2000
+    lift_max_steps: 2000  # Legacy goal-token scale, not an absolute travel limit.
     # Provisional UART coordinate conversion only; measure travel and revise later.
     lift_steps_per_m: 200000.0
     lift_max_height: 0.01

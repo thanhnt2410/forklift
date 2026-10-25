@@ -1,0 +1,26 @@
+# Measured on the user's LiDAR: 115200 baud, one-way data stream.
+# This is a hardware-specific profile, not the stock X4 128000-baud profile.
+ydlidar_ros2_driver_node:
+  ros__parameters:
+    use_sim_time: false
+    port: /dev/serial/by-id/usb-Silicon_Labs_CP2102_USB_to_UART_Bridge_Controller_0001-if00-port0
+    frame_id: laser_frame
+    baudrate: 115200
+    lidar_type: 1
+    device_type: 0
+    sample_rate: 5
+    isSingleChannel: true
+    support_motor_dtr: false
+    fixed_resolution: false
+    auto_reconnect: false
+    intensity: false
+    abnormal_check_count: 4
+    ignore_array: ""
+    reversion: true
+    inverted: true
+    angle_min: -180.0
+    angle_max: 180.0
+    range_min: 0.1
+    range_max: 12.0
+    frequency: 10.0
+    invalid_range_is_inf: false

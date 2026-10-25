@@ -8,11 +8,12 @@ namespace forklift_mcu {
 constexpr double kTau = 6.2831853071795864769;
 constexpr size_t kFrameCapacity = 256;
 enum Fault : uint32_t {
-  Configuration = 1, Emergency = 2, Watchdog = 4, Encoder = 8,
+  // Bit 4 is reserved for the old serial watchdog; it is no longer raised.
+  Configuration = 1, Emergency = 2, Encoder = 8,
   Limit = 16, HomeTimeout = 32, Deadline = 64, Peripheral = 128
 };
 enum class Mode : uint8_t { Locked, Disarmed, Active, Homing, Faulted };
-enum class Operation { Control, Home, Reset, Stop };
+enum class Operation { Control, Home, Raise, Reset, Stop };
 struct Command {
   Operation operation{Operation::Stop};
   uint64_t boot{}, sequence{};
@@ -50,12 +51,13 @@ struct Config {
   bool stop_base_on_fault{true};
   bool lower_only_lift{false};
   int64_t home_seek_max_steps{}, home_release_max_steps{};
+  int64_t lift_raise_steps{2000};
+  double lift_lower_timeout_s{3.};
   std::array<double, 4> encoder_cpr{};  // Actual x4 counts / output shaft revolution.
   std::array<Gains, 4> gains{};
   double max_wheel_rad_s{2.0}, wheel_accel{2.0}, max_duty{0.25};
   double steps_per_m{}, travel_m{}, lift_max_steps_s{}, lift_accel_steps_s2{};
   double home_steps_s{}, backoff_m{}, home_timeout_s{};
-  uint64_t watchdog_us{300000};
   bool valid() const;
 };
 struct Sensors {
@@ -98,9 +100,10 @@ class Controller {
   void trip(uint32_t fault);
   bool stopped() const;
   void lift_tick(double dt, uint64_t now_us, const Sensors & sensors);
+  void manual_lift_tick(double dt, uint64_t now_us, const Sensors & sensors);
   Config config_;
-  uint64_t boot_, ack_{}, state_seq_{}, last_rx_{}, last_tick_{}, home_started_{};
-  bool primed_{}, disabled_seen_{}, homed_{};
+  uint64_t boot_, ack_{}, state_seq_{}, last_tick_{}, home_started_{};
+  bool primed_{}, homed_{};
   Mode mode_{Mode::Locked};
   uint32_t faults_{};
   std::array<Pid, 4> pid_;
@@ -108,6 +111,8 @@ class Controller {
   std::array<int, 4> direction_{};
   std::array<int64_t, 4> previous_ticks_{};
   double lift_target_{}, lift_rate_{};
+  bool lift_lowering_{};
+  int64_t lift_raise_goal_{};
   enum class HomePhase { Seek, Backoff, Approach } home_phase_{HomePhase::Seek};
   int64_t release_step_{};
   int64_t home_phase_start_step_{};
