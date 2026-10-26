@@ -56,14 +56,14 @@ constexpr bool simple_serial = true;
 constexpr uint32_t control_period_us = 10000;
 constexpr uint32_t telemetry_period_us = 50000;  // 20 Hz, readable Serial Monitor.
 
-// Starting guesses, not gains measured on GA25-370. Duty is normalized [-1,1],
-// velocity rad/s, dt seconds; tune each wheel independently after checking sign.
+// THÔNG SỐ PID ĐÃ TEST MƯỢT (Kp=0.032, Ki=0.16, Kd=0.0)
 constexpr forklift_mcu::Gains wheel_pi[4] = {
-  {.08,.12,0.05},  // FL
-  {.08,.12,0.05},  // FR
-  {.08,.12,0.05},  // RL
-  {.08,.12,0.05},  // RR
+  {0.032, 0.16, 0.0},  // FL
+  {0.032, 0.16, 0.0},  // FR
+  {0.032, 0.16, 0.0},  // RL
+  {0.032, 0.16, 0.0},  // RR
 };
+
 // Provisional distance conversion ONLY, not calibrated physical metres.
 // 1.8-degree NEMA17, TB6600 1/8 step, direct screw with 8 mm lead/revolution.
 // Match actual motor, DIP switches, lead, travel and assigned limits before use.
