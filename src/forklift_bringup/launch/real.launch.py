@@ -14,6 +14,10 @@ from launch_ros.parameter_descriptions import ParameterValue
 def setup(context):
     config = LaunchConfiguration('config').perform(context)
     port = LaunchConfiguration('port').perform(context)
+    lidar_config = LaunchConfiguration('lidar_params_file').perform(context)
+    lidar_port = yaml.safe_load(Path(lidar_config).read_text())['ydlidar_ros2_driver_node']['ros__parameters']['port']
+    if not isinstance(lidar_port, str) or not Path(lidar_port).is_absolute():
+        raise ValueError('LiDAR config must specify an absolute serial path so ESP32 auto can exclude it')
     # One file supplies geometry/limits to the bridge and the command gate.
     params = yaml.safe_load(Path(config).read_text())['esp32_bridge']['ros__parameters']
     gate = {key: params[key] for key in ('wheel_radius', 'kinematic_sum', 'max_wheel_speed')}
@@ -22,7 +26,7 @@ def setup(context):
         return EmitEvent(event=Shutdown(reason=reason))
     return [
         Node(package='forklift_hardware', executable='esp32_bridge.py',
-             parameters=[config, {'port': port, 'use_sim_time': False,
+             parameters=[config, {'port': port, 'lidar_port': lidar_port, 'use_sim_time': False,
                                  'auto_arm': ParameterValue(LaunchConfiguration('auto_arm'), value_type=bool)}],
              output='screen',
              on_exit=shutdown('ESP32 bridge exited')),
@@ -37,6 +41,9 @@ def generate_launch_description():
         DeclareLaunchArgument('port', default_value='auto',
                               description='auto detects firmware telemetry; or an explicit ESP32 serial path'),
         DeclareLaunchArgument('config', default_value=str(Path(share('forklift_hardware'))/'config/esp32.yaml')),
+        DeclareLaunchArgument('lidar_params_file',
+                              default_value=str(Path(share('forklift_hardware'))/'config/ydlidar.yaml'),
+                              description='Reserve this LiDAR serial port during ESP32 detection'),
         DeclareLaunchArgument('auto_arm', default_value='true', choices=['true', 'false'],
                               description='Automatically arm once at startup after healthy telemetry and zero input'),
         OpaqueFunction(function=setup),

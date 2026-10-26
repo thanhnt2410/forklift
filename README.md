@@ -288,7 +288,7 @@ export ROS_DOMAIN_ID=0
 export ROS_LOCALHOST_ONLY=0
 ```
 
-Terminal 1 — giữ LiDAR chạy để auto ESP32 bỏ qua cổng đang được driver sử dụng:
+Terminal 1 — chạy LiDAR theo ổ USB `by-path` đã cấu hình:
 
 ```bash
 ros2 launch forklift_bringup lidar.launch.py
@@ -299,6 +299,11 @@ Terminal 2 — tự dò cổng ESP32:
 ```bash
 ros2 launch forklift_bringup real.launch.py
 ```
+
+ESP32 auto loại cổng LiDAR trong `ydlidar.yaml` cùng mọi alias trước khi dò
+telemetry, kể cả khi LiDAR chưa chạy. Giữ LiDAR ở đúng ổ USB đã cấu hình;
+nếu đổi ổ, cập nhật `port` trong YAML. Nếu LiDAR dùng file riêng, truyền cùng
+file đó qua `lidar_params_file:=...` cho `real.launch.py`.
 
 `real.launch.py` không tự chạy LiDAR. ESP32 cắm vào Pi thì bridge phải chạy trên
 Pi, kể cả khi mở terminal qua SSH từ laptop. Đóng bridge cũ và Serial Monitor

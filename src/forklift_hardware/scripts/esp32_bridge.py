@@ -207,7 +207,7 @@ class SerialPort:
 class Esp32Bridge(Node):
     def __init__(self):
         super().__init__('esp32_bridge')
-        defaults = dict(port='/dev/serial/by-id/SET_ESP32_PORT', baud=115200, serial_protocol='simple',
+        defaults = dict(port='/dev/serial/by-id/SET_ESP32_PORT', lidar_port='', baud=115200, serial_protocol='simple',
                         wheel_radius=.05, kinematic_sum=.260145, encoder_cpr=937.2,
                         max_wheel_speed=2., state_timeout=.25, command_timeout=.3,
                         ack_timeout=.25, lift_steps_per_m=0., lift_max_height=0.,
@@ -292,10 +292,14 @@ class Esp32Bridge(Node):
             execute_callback=self.execute_move, goal_callback=lambda g: self.accept('move', g),
             cancel_callback=lambda h: CancelResponse.ACCEPT)
         # Open last, after ROS construction and parameter validation.
+        if (self.p['port'] != 'auto' and self.p['lidar_port'] and
+                os.path.realpath(self.p['port']) == os.path.realpath(self.p['lidar_port'])):
+            raise ValueError('ESP32 port resolves to the reserved LiDAR port; select a different USB device')
         if self.p['port'] == 'auto':
             parser = parse_simple_state if self.simple else parse_state
             self.p['port'], self.serial = detect_esp32(
-                self.p['baud'], parser, SerialPort, self.get_logger().info)
+                self.p['baud'], parser, SerialPort, self.get_logger().info,
+                exclude_ports=(self.p['lidar_port'],))
             self.set_parameters([Parameter('port', value=self.p['port'])])
         else:
             self.serial = SerialPort(self.p['port'], self.p['baud'])

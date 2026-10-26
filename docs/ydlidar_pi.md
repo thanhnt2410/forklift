@@ -7,9 +7,34 @@ Launch này chỉ chạy LiDAR, không mở cổng ESP32, không arm hoặc ch�
 
 Sửa `src/forklift_hardware/config/ydlidar.yaml` trên Pi. Cấu hình đã thử trực tiếp
 với thiết bị hiện tại: 115200 baud, giao tiếp một chiều, motor quay độc lập,
-không ép số điểm cố định. Trong lần thử đã nhận 10 LaserScan khoảng 6,17 Hz,
+Trong lần thử ban đầu với `fixed_resolution=false` đã nhận 10 LaserScan khoảng 6,17 Hz,
 khoảng 649 điểm/lượt, frame `laser_frame`; đây không phải profile X4 mặc định
 128000 baud. Chưa xác nhận model bằng phản hồi thông tin thiết bị.
+
+Cấu hình hiện tại giữ `fixed_resolution=true`: người dùng đã xác nhận map
+cập nhật với giá trị này trên xe thật.
+
+## Tự chọn cổng khi cả hai thiết bị dùng CP2102
+
+LiDAR dùng `port` theo `by-path` trong YAML, tự theo đúng ổ USB dù số
+`ttyUSB0/1` thay đổi. `real.launch.py` đọc cùng YAML và truyền `lidar_port`
+cho bridge: ESP32 auto bỏ qua cổng LiDAR cùng mọi alias của nó trước khi mở
+cổng, kể cả khi driver LiDAR chưa chạy. Các cổng còn lại được nhận diện bằng
+hai bản tin telemetry ESP32 có timestamp tăng; không chọn chỉ theo CP2102.
+Giữ đúng ổ USB vật lý của LiDAR. Nếu đổi ổ, cập nhật `port` trong YAML.
+
+Chạy hai terminal như thường lệ, không cần chỉ định cổng ESP32:
+
+```bash
+ros2 launch forklift_bringup lidar.launch.py
+ros2 launch forklift_bringup real.launch.py
+```
+
+Nếu LiDAR dùng file cấu hình riêng, truyền cùng file cho cả hai launch:
+`lidar.launch.py params_file:=/duong/dan/lidar.yaml` và
+`real.launch.py lidar_params_file:=/duong/dan/lidar.yaml`.
+Không khởi động lại hai launch phần cứng đồng thời; chờ một launch dò xong
+rồi chạy launch còn lại. Cơ chế này không tự dò lại khi rút/cắm USB lúc đang chạy.
 
 Build sau khi thêm file lần đầu:
 

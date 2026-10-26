@@ -13,7 +13,7 @@ ydlidar_ros2_driver_node:
     sample_rate: 5
     isSingleChannel: true
     support_motor_dtr: false
-    fixed_resolution: false
+    fixed_resolution: true
     auto_reconnect: false
     intensity: false
     abnormal_check_count: 4

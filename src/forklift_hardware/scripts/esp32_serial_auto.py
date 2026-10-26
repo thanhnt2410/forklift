@@ -31,16 +31,21 @@ def port_in_use(path):
     return result.returncode == 0
 
 
-def detect_esp32(baud, parser, port_factory, log, probe_seconds=3.0):
+def detect_esp32(baud, parser, port_factory, log, probe_seconds=3.0, exclude_ports=()):
     """Return the unique MCU's (path, open port); close every other probe.
 
     Two valid, advancing telemetry timestamps identify a candidate. Keeping the
     selected descriptor open avoids resetting/reopening it after detection.
     Never pick the first tty or identify an ESP32 solely by its USB chip ID.
     """
+    # Compare resolved devices so ttyUSB and by-id aliases are excluded too.
+    excluded = {os.path.realpath(path) for path in exclude_ports if path}
     matches = []
     try:
         for path in usb_serial_candidates():
+            if os.path.realpath(path) in excluded:
+                log(f'Auto serial: skipping reserved LiDAR port {path}')
+                continue
             if port_in_use(path):
                 log(f'Auto serial: skipping busy port {path}')
                 continue
