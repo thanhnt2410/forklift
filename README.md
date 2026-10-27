@@ -248,9 +248,10 @@ Sau khi firmware đã được cấu hình đúng và nạp riêng, mở kết n
 ros2 launch forklift_bringup real.launch.py
 ```
 
-Launch mặc định `port:=auto`, nhận diện ESP32 bằng telemetry và bỏ qua cổng đang
-được chương trình khác dùng. Có thể chỉ định cổng thủ công bằng
-`port:=/dev/serial/by-id/TEN_THIET_BI_ESP32`. Auto cần `fuser` từ gói `psmisc`.
+Launch mặc định lấy `port` từ `esp32.yaml`, dùng đường dẫn `by-path` ổ USB
+`1.3` trên Pi; LiDAR dùng ổ `1.4`. Giữ đúng hai ổ cắm này dù số `ttyUSB0/1`
+thay đổi. Có thể ghi đè bằng `port:=/dev/serial/by-path/...`.
+Chế độ dò telemetry chỉ dùng khi truyền `port:=auto`, cần `fuser` từ gói `psmisc`.
 Launch mặc định `auto_arm:=true`: tự arm một lần sau khi có telemetry hợp lệ,
 bánh đứng yên và lệnh zero mới từ command gate; không cần gọi service arm.
 Dùng `auto_arm:=false` nếu muốn arm thủ công. Xem
@@ -294,20 +295,20 @@ Terminal 1 — chạy LiDAR theo ổ USB `by-path` đã cấu hình:
 ros2 launch forklift_bringup lidar.launch.py
 ```
 
-Terminal 2 — tự dò cổng ESP32:
+Terminal 2 — chạy ESP32 ở ổ USB `1.3` đã cấu hình:
 
 ```bash
 ros2 launch forklift_bringup real.launch.py
 ```
 
-ESP32 auto loại cổng LiDAR trong `ydlidar.yaml` cùng mọi alias trước khi dò
-telemetry, kể cả khi LiDAR chưa chạy. Giữ LiDAR ở đúng ổ USB đã cấu hình;
-nếu đổi ổ, cập nhật `port` trong YAML. Nếu LiDAR dùng file riêng, truyền cùng
-file đó qua `lidar_params_file:=...` cho `real.launch.py`.
+Mặc định không dò cổng: ESP32 dùng `by-path` ổ `1.3`, LiDAR dùng ổ `1.4`.
+Nếu đổi ổ, cập nhật `port` trong YAML tương ứng. Nếu LiDAR dùng file riêng,
+truyền cùng file đó qua `lidar_params_file:=...` cho `real.launch.py` để bridge
+kiểm tra tránh mở nhầm cổng LiDAR.
 
 `real.launch.py` không tự chạy LiDAR. ESP32 cắm vào Pi thì bridge phải chạy trên
 Pi, kể cả khi mở terminal qua SSH từ laptop. Đóng bridge cũ và Serial Monitor
-trước khi chạy; nếu rút/cắm lại USB, khởi động lại launch để dò cổng mới.
+trước khi chạy; nếu rút/cắm lại USB, khởi động lại launch để mở lại kết nối.
 
 ### 2. Trên laptop: chạy SLAM và RViz
 

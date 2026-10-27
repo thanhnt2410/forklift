@@ -225,8 +225,8 @@ class Esp32Bridge(Node):
                     'state_timeout', 'command_timeout', 'ack_timeout', 'lift_tolerance')
         if any(not math.isfinite(self.p[k]) or self.p[k] <= 0 for k in positive):
             raise ValueError('Geometry, timing and speed parameters must be finite and positive')
-        if self.p['max_wheel_speed'] > 12 or self.p['state_timeout'] > .3 or self.p['ack_timeout'] > .3:
-            raise ValueError('Wheel limit <=12 rad/s; feedback/ACK limits <=0.3 s')
+        if self.p['max_wheel_speed'] > 12 or self.p['state_timeout'] > 1.0 or self.p['ack_timeout'] > 1.0:
+            raise ValueError('Wheel limit <=12 rad/s; feedback/ACK limits <=1.0 s')
         if self.p['baud'] not in (115200, 230400):
             raise ValueError('Unsupported baud; use 115200 (default) or 230400')
         if any(not math.isfinite(self.p[k]) or self.p[k] < 0 for k in ('lift_steps_per_m', 'lift_max_height')):

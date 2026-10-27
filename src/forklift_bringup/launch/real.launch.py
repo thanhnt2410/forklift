@@ -20,6 +20,9 @@ def setup(context):
         raise ValueError('LiDAR config must specify an absolute serial path so ESP32 auto can exclude it')
     # One file supplies geometry/limits to the bridge and the command gate.
     params = yaml.safe_load(Path(config).read_text())['esp32_bridge']['ros__parameters']
+    # An explicit launch argument overrides the fixed physical port in YAML.
+    if not port:
+        port = params['port']
     gate = {key: params[key] for key in ('wheel_radius', 'kinematic_sum', 'max_wheel_speed')}
     gate.update(use_sim_time=False, autonomous_enabled=False, require_navigation_ready=False)
     def shutdown(reason):
@@ -38,8 +41,8 @@ def setup(context):
 
 def generate_launch_description():
     return LaunchDescription([
-        DeclareLaunchArgument('port', default_value='auto',
-                              description='auto detects firmware telemetry; or an explicit ESP32 serial path'),
+        DeclareLaunchArgument('port', default_value='',
+                              description='Default: port from ESP32 YAML; override with a serial path or auto'),
         DeclareLaunchArgument('config', default_value=str(Path(share('forklift_hardware'))/'config/esp32.yaml')),
         DeclareLaunchArgument('lidar_params_file',
                               default_value=str(Path(share('forklift_hardware'))/'config/ydlidar.yaml'),
