@@ -338,6 +338,19 @@ so với `base_link`, roll/pitch/yaw bằng 0. Không chạy thêm static TF tes
 Mỗi lần khởi động `mapping_real.launch.py` là **phiên tạo bản đồ mới**. Chạy một
 phiên tại một thời điểm. `mapping.launch.py` là launch mô phỏng Gazebo.
 
+Mapping hiện xuất thêm `/map_probability` với xác suất ô `0–100` và
+`/mapping/trajectory` với các pose SLAM đã hiệu chỉnh. RViz mapping hiển thị
+bản đồ nhiều mức xám và đường màu cam. `/map` vẫn phục vụ bản đồ điều hướng.
+Launch thật lọc dữ liệu LiDAR trước SLAM và báo tình trạng tại
+`/mapping/scan_status`. Xem [cách build, ghi bag, kiểm chứng và lưu bản đồ xác suất](docs/probability_mapping.md).
+
+Panel **SLAM Toolbox** được mở sẵn trong RViz mapping. Nút **Save Map** lưu
+đồng thời bản đồ điều hướng, bản đồ xác suất PNG/YAML và JSON giữ giá trị ô
+nguyên gốc, với cùng prefix do bạn nhập.
+
+Mapping dùng `lifecycle_manager_mapping` cho saver; AMCL và các server Nav2
+được quản lý bởi hai lifecycle manager riêng. Xem [trạng thái và lệnh lifecycle](docs/lifecycle.md).
+
 ### 3. Điều khiển quét bản đồ
 
 Terminal 2 trên laptop — khi sẵn sàng cho xe chạy:
@@ -366,11 +379,13 @@ Dừng xe và giữ SLAM chạy. Trong terminal khác trên laptop đã source w
 
 ```bash
 mkdir -p ~/maps
-ros2 run nav2_map_server map_saver_cli -f ~/maps/forklift_real
+ros2 service call /slam_toolbox/save_map slam_toolbox/srv/SaveMap \
+  "{name: {data: '$HOME/maps/forklift_real'}}"
 ```
 
-Lệnh lưu `~/maps/forklift_real.yaml` và ảnh bản đồ. Đổi tên sau `-f` để giữ bản
-đồ cũ. Đây là bản đồ occupancy dùng cho định vị; muốn tiếp tục phiên SLAM sau
+Lệnh (hoặc nút Save Map trong RViz) lưu `forklift_real.yaml/.pgm`, bản đồ xác suất
+`forklift_real_probability.yaml/.png` và `forklift_real_probability.grid.json`
+trong `~/maps`. Đổi prefix để giữ bản đồ cũ. Muốn tiếp tục phiên SLAM sau
 khi tắt cần lưu thêm pose graph. Xem [hướng dẫn LiDAR và mapping thật](docs/ydlidar_pi.md).
 
 Sau khi lưu và dừng xe, disarm trước khi kết thúc các launch:
