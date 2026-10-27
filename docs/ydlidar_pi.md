@@ -14,14 +14,13 @@ khoảng 649 điểm/lượt, frame `laser_frame`; đây không phải profile X
 Cấu hình hiện tại giữ `fixed_resolution=true`: người dùng đã xác nhận map
 cập nhật với giá trị này trên xe thật.
 
-## Tự chọn cổng khi cả hai thiết bị dùng CP2102
+## Cổng cố định khi cả hai thiết bị dùng CP2102
 
-LiDAR dùng `port` theo `by-path` trong YAML, tự theo đúng ổ USB dù số
-`ttyUSB0/1` thay đổi. `real.launch.py` đọc cùng YAML và truyền `lidar_port`
-cho bridge: ESP32 auto bỏ qua cổng LiDAR cùng mọi alias của nó trước khi mở
-cổng, kể cả khi driver LiDAR chưa chạy. Các cổng còn lại được nhận diện bằng
-hai bản tin telemetry ESP32 có timestamp tăng; không chọn chỉ theo CP2102.
-Giữ đúng ổ USB vật lý của LiDAR. Nếu đổi ổ, cập nhật `port` trong YAML.
+ESP32 dùng `port` trong `esp32.yaml` theo ổ USB `1.3`, LiDAR dùng `port`
+trong `ydlidar.yaml` theo ổ USB `1.4`. Mặc định không dò `auto`.
+Các đường dẫn `by-path` giữ đúng ổ USB dù số `ttyUSB0/1` thay đổi.
+Giữ nguyên hai ổ cắm vật lý; nếu đổi ổ, cập nhật `port` trong YAML tương ứng.
+`real.launch.py` vẫn đọc cấu hình LiDAR để tránh mở nhầm cổng đó cho ESP32.
 
 Chạy hai terminal như thường lệ, không cần chỉ định cổng ESP32:
 
@@ -33,8 +32,9 @@ ros2 launch forklift_bringup real.launch.py
 Nếu LiDAR dùng file cấu hình riêng, truyền cùng file cho cả hai launch:
 `lidar.launch.py params_file:=/duong/dan/lidar.yaml` và
 `real.launch.py lidar_params_file:=/duong/dan/lidar.yaml`.
-Không khởi động lại hai launch phần cứng đồng thời; chờ một launch dò xong
-rồi chạy launch còn lại. Cơ chế này không tự dò lại khi rút/cắm USB lúc đang chạy.
+Có thể ghi đè cổng ESP32 bằng `real.launch.py port:=/dev/serial/by-path/...`.
+Chế độ dò telemetry vẫn có sẵn qua `port:=auto` và bỏ qua cổng LiDAR.
+Nếu rút/cắm USB lúc đang chạy, khởi động lại launch tương ứng.
 
 Build sau khi thêm file lần đầu:
 

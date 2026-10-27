@@ -131,10 +131,11 @@ def setup(context):
             str(Path(share('forklift_navigation'))/'launch/navigation.launch.py')),
             launch_arguments={'mode': navigation, 'map': map_file,
                               'controller': LaunchConfiguration('controller'),
+                              'autostart': LaunchConfiguration('autostart'),
                               'use_ekf': str(use_ekf).lower(), 'p6': str(world=='p6').lower()}.items()))
     if rviz:
         ready.append(Node(package='rviz2', executable='rviz2', parameters=[common],
-                          arguments=['-d', str(Path(share('forklift_bringup'))/'rviz'/('navigation.rviz' if navigation != 'none' else ('p5.rviz' if lift_mode=='supervised' else 'sim.rviz')))], output='screen'))
+                          arguments=['-d', str(Path(share('forklift_bringup'))/'rviz'/('mapping_real.rviz' if navigation == 'mapping' else ('navigation.rviz' if navigation != 'none' else ('p5.rviz' if lift_mode=='supervised' else 'sim.rviz'))))], output='screen'))
 
     if gui and world=='p6':
         # Start the server and activate controllers before starting the GUI.
@@ -169,6 +170,7 @@ def generate_launch_description():
         DeclareLaunchArgument('world', default_value='minimal', choices=['minimal', 'warehouse', 'p6']),
         DeclareLaunchArgument('gui', default_value='true', choices=['true', 'false']),
         DeclareLaunchArgument('rviz', default_value='true', choices=['true', 'false']),
+        DeclareLaunchArgument('autostart', default_value='true', choices=['true', 'false']),
         DeclareLaunchArgument('navigation', default_value='none', choices=['none', 'mapping', 'localization']),
         DeclareLaunchArgument('controller', default_value='mppi', choices=['rpp','mppi']),
         DeclareLaunchArgument('use_ekf', default_value='true', choices=['true', 'false']),

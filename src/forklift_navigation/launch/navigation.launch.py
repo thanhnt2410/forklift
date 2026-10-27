@@ -6,7 +6,8 @@ import os
 import yaml
 from ament_index_python.packages import get_package_share_directory as share
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, OpaqueFunction, RegisterEventHandler, EmitEvent
+from launch.actions import DeclareLaunchArgument, OpaqueFunction, RegisterEventHandler, EmitEvent, IncludeLaunchDescription
+from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.event_handlers import OnShutdown
 from launch.events import Shutdown
 from launch.substitutions import LaunchConfiguration
@@ -15,14 +16,20 @@ from launch_ros.actions import Node
 
 def setup(context):
     mode=LaunchConfiguration('mode').perform(context)
-    common={'use_sim_time':True}
+    common={'use_sim_time':LaunchConfiguration('use_sim_time').perform(context).lower()=='true'}
+    autostart=LaunchConfiguration('autostart').perform(context).lower()=='true'
     use_ekf=LaunchConfiguration('use_ekf').perform(context).lower()=='true'
     p6=LaunchConfiguration('p6').perform(context)=='true'
     relay=Node(package='forklift_navigation',executable='scan_relay.py',parameters=[common,{'p6_load_filter':p6, 'geometry_file':str(Path(share('forklift_description'))/'config/robot.yaml')}],output='screen',
                on_exit=EmitEvent(event=Shutdown(reason='Scan relay exited')))
     if mode=='mapping':
-        return [relay,Node(package='slam_toolbox',executable='async_slam_toolbox_node',name='slam_toolbox',
-                     parameters=[str(Path(share('forklift_navigation'))/'config/slam.yaml'),common],output='screen')]
+        return [relay,Node(package='forklift_navigation',executable='probability_slam',name='slam_toolbox',
+                     parameters=[str(Path(share('forklift_navigation'))/'config/slam.yaml'),common],output='screen',
+                     on_exit=EmitEvent(event=Shutdown(reason='SLAM exited'))),
+                IncludeLaunchDescription(PythonLaunchDescriptionSource(str(
+                    Path(share('forklift_navigation'))/'launch/mapping_services.launch.py')),
+                    launch_arguments={'use_sim_time':str(common['use_sim_time']).lower(),
+                                      'autostart':str(autostart).lower()}.items())]
     map_file=Path(LaunchConfiguration('map').perform(context))
     if not map_file.is_file():raise FileNotFoundError(f'Save a SLAM map before navigation: {map_file}')
     config=yaml.safe_load((Path(share('forklift_navigation'))/'config/nav2.yaml').read_text())
@@ -62,7 +69,7 @@ def setup(context):
     ])
     for label,names in [('localization',['map_server','amcl']),('navigation',['controller_server','planner_server','smoother_server','behavior_server','bt_navigator','waypoint_follower','velocity_smoother'])]:
         nodes.append(Node(package='nav2_lifecycle_manager',executable='lifecycle_manager',name=f'lifecycle_manager_{label}',
-            parameters=[common,{'autostart':True,'node_names':names,'bond_timeout':4.}],output='screen'))
+            parameters=[common,{'autostart':autostart,'node_names':names,'bond_timeout':4.}],output='screen'))
     def cleanup(event,context):Path(path).unlink(missing_ok=True);return []
     return [RegisterEventHandler(OnShutdown(on_shutdown=cleanup)),*nodes]
 
@@ -70,6 +77,8 @@ def setup(context):
 def generate_launch_description():
     return LaunchDescription([
         DeclareLaunchArgument('p6',default_value='false',choices=['true','false']),
+        DeclareLaunchArgument('autostart',default_value='true',choices=['true','false']),
+        DeclareLaunchArgument('use_sim_time',default_value='true',choices=['true','false']),
         DeclareLaunchArgument('controller',default_value='mppi',choices=['rpp','mppi']),
         DeclareLaunchArgument('mode',default_value='mapping',choices=['mapping','localization']),
         DeclareLaunchArgument('use_ekf',default_value='true',choices=['true','false']),

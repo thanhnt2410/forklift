@@ -248,9 +248,10 @@ Sau khi firmware đã được cấu hình đúng và nạp riêng, mở kết n
 ros2 launch forklift_bringup real.launch.py
 ```
 
-Launch mặc định `port:=auto`, nhận diện ESP32 bằng telemetry và bỏ qua cổng đang
-được chương trình khác dùng. Có thể chỉ định cổng thủ công bằng
-`port:=/dev/serial/by-id/TEN_THIET_BI_ESP32`. Auto cần `fuser` từ gói `psmisc`.
+Launch mặc định lấy `port` từ `esp32.yaml`, dùng đường dẫn `by-path` ổ USB
+`1.3` trên Pi; LiDAR dùng ổ `1.4`. Giữ đúng hai ổ cắm này dù số `ttyUSB0/1`
+thay đổi. Có thể ghi đè bằng `port:=/dev/serial/by-path/...`.
+Chế độ dò telemetry chỉ dùng khi truyền `port:=auto`, cần `fuser` từ gói `psmisc`.
 Launch mặc định `auto_arm:=true`: tự arm một lần sau khi có telemetry hợp lệ,
 bánh đứng yên và lệnh zero mới từ command gate; không cần gọi service arm.
 Dùng `auto_arm:=false` nếu muốn arm thủ công. Xem
@@ -294,20 +295,20 @@ Terminal 1 — chạy LiDAR theo ổ USB `by-path` đã cấu hình:
 ros2 launch forklift_bringup lidar.launch.py
 ```
 
-Terminal 2 — tự dò cổng ESP32:
+Terminal 2 — chạy ESP32 ở ổ USB `1.3` đã cấu hình:
 
 ```bash
 ros2 launch forklift_bringup real.launch.py
 ```
 
-ESP32 auto loại cổng LiDAR trong `ydlidar.yaml` cùng mọi alias trước khi dò
-telemetry, kể cả khi LiDAR chưa chạy. Giữ LiDAR ở đúng ổ USB đã cấu hình;
-nếu đổi ổ, cập nhật `port` trong YAML. Nếu LiDAR dùng file riêng, truyền cùng
-file đó qua `lidar_params_file:=...` cho `real.launch.py`.
+Mặc định không dò cổng: ESP32 dùng `by-path` ổ `1.3`, LiDAR dùng ổ `1.4`.
+Nếu đổi ổ, cập nhật `port` trong YAML tương ứng. Nếu LiDAR dùng file riêng,
+truyền cùng file đó qua `lidar_params_file:=...` cho `real.launch.py` để bridge
+kiểm tra tránh mở nhầm cổng LiDAR.
 
 `real.launch.py` không tự chạy LiDAR. ESP32 cắm vào Pi thì bridge phải chạy trên
 Pi, kể cả khi mở terminal qua SSH từ laptop. Đóng bridge cũ và Serial Monitor
-trước khi chạy; nếu rút/cắm lại USB, khởi động lại launch để dò cổng mới.
+trước khi chạy; nếu rút/cắm lại USB, khởi động lại launch để mở lại kết nối.
 
 ### 2. Trên laptop: chạy SLAM và RViz
 
@@ -337,6 +338,19 @@ so với `base_link`, roll/pitch/yaw bằng 0. Không chạy thêm static TF tes
 Mỗi lần khởi động `mapping_real.launch.py` là **phiên tạo bản đồ mới**. Chạy một
 phiên tại một thời điểm. `mapping.launch.py` là launch mô phỏng Gazebo.
 
+Mapping hiện xuất thêm `/map_probability` với xác suất ô `0–100` và
+`/mapping/trajectory` với các pose SLAM đã hiệu chỉnh. RViz mapping hiển thị
+bản đồ nhiều mức xám và đường màu cam. `/map` vẫn phục vụ bản đồ điều hướng.
+Launch thật lọc dữ liệu LiDAR trước SLAM và báo tình trạng tại
+`/mapping/scan_status`. Xem [cách build, ghi bag, kiểm chứng và lưu bản đồ xác suất](docs/probability_mapping.md).
+
+Panel **SLAM Toolbox** được mở sẵn trong RViz mapping. Nút **Save Map** lưu
+đồng thời bản đồ điều hướng, bản đồ xác suất PNG/YAML và JSON giữ giá trị ô
+nguyên gốc, với cùng prefix do bạn nhập.
+
+Mapping dùng `lifecycle_manager_mapping` cho saver; AMCL và các server Nav2
+được quản lý bởi hai lifecycle manager riêng. Xem [trạng thái và lệnh lifecycle](docs/lifecycle.md).
+
 ### 3. Điều khiển quét bản đồ
 
 Terminal 2 trên laptop — khi sẵn sàng cho xe chạy:
@@ -365,11 +379,13 @@ Dừng xe và giữ SLAM chạy. Trong terminal khác trên laptop đã source w
 
 ```bash
 mkdir -p ~/maps
-ros2 run nav2_map_server map_saver_cli -f ~/maps/forklift_real
+ros2 service call /slam_toolbox/save_map slam_toolbox/srv/SaveMap \
+  "{name: {data: '$HOME/maps/forklift_real'}}"
 ```
 
-Lệnh lưu `~/maps/forklift_real.yaml` và ảnh bản đồ. Đổi tên sau `-f` để giữ bản
-đồ cũ. Đây là bản đồ occupancy dùng cho định vị; muốn tiếp tục phiên SLAM sau
+Lệnh (hoặc nút Save Map trong RViz) lưu `forklift_real.yaml/.pgm`, bản đồ xác suất
+`forklift_real_probability.yaml/.png` và `forklift_real_probability.grid.json`
+trong `~/maps`. Đổi prefix để giữ bản đồ cũ. Muốn tiếp tục phiên SLAM sau
 khi tắt cần lưu thêm pose graph. Xem [hướng dẫn LiDAR và mapping thật](docs/ydlidar_pi.md).
 
 Sau khi lưu và dừng xe, disarm trước khi kết thúc các launch:

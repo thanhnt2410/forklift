@@ -48,6 +48,11 @@ license. It remains configuration for the external library; no SLAM Toolbox
 implementation is copied into this project. P3 interface/mock and P4 glue,
 guard and test code are Apache-2.0.
 
+`probability_slam` links the installed SLAM Toolbox async library and derives
+from its async node and Karto grid interfaces. The extension uses upstream ray
+tracing and corrected poses, adds a smoothed occupancy estimate and trajectory,
+and does not copy upstream implementation. It currently targets Humble 2.6.10.
+
 ## User-supplied forklift CAD
 
 The SolidWorks export originally named URDF20 is integrated into

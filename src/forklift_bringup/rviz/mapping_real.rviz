@@ -1,6 +1,8 @@
 Panels:
 - Class: rviz_common/Displays
   Name: Displays
+- Class: slam_toolbox::SlamToolboxPlugin
+  Name: SLAM Toolbox
 Visualization Manager:
   Class: ''
   Global Options:
@@ -30,12 +32,23 @@ Visualization Manager:
     Color Transformer: FlatColor
     Color: 80; 220; 160
   - Class: rviz_default_plugins/Map
-    Name: Map
+    Name: Occupancy Probability
     Enabled: true
     Topic:
-      Value: /map
+      Value: /map_probability
       Durability Policy: Transient Local
-    Alpha: 0.7
+    Alpha: 1.0
+    Color Scheme: map
+  - Class: rviz_default_plugins/Path
+    Name: SLAM Corrected Trajectory
+    Enabled: true
+    Topic:
+      Value: /mapping/trajectory
+      Durability Policy: Transient Local
+    Color: 255; 170; 40
+    Line Style: Lines
+    Line Width: 0.025
+    Buffer Length: 1
   Tools:
   - Class: rviz_default_plugins/MoveCamera
   - Class: rviz_default_plugins/Select
