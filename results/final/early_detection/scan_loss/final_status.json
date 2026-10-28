@@ -1,0 +1,108 @@
+{
+  "dynamic": true,
+  "refinement": {
+    "initial": [
+      0.3505973948083576,
+      0.650863849660223,
+      -0.0034919412176619875
+    ],
+    "corrected": [
+      0.4330721764040658,
+      0.6093898023532676,
+      -0.025620542683859288
+    ],
+    "face": [
+      1.0828588541059856,
+      0.5927382714596364,
+      -0.02562054268385929
+    ],
+    "samples": 5,
+    "arrival_error": [
+      -0.11916490008865832,
+      0.047829852324601685,
+      -0.04334134923726551
+    ],
+    "alignment_path_validated": true,
+    "replan_required": false
+  },
+  "initial_detection": {
+    "outcome": "DETECTED",
+    "initial": [
+      0.35,
+      0.7,
+      0.060000000000000005
+    ],
+    "corrected": [
+      0.3505973948083576,
+      0.650863849660223,
+      -0.0034919412176619875
+    ],
+    "face": [
+      1.0005934318750076,
+      0.6485940924815213,
+      -0.0034919412176619875
+    ],
+    "samples": 5
+  },
+  "route_ready": true,
+  "route_revision": 1,
+  "state": "FAULT",
+  "code": "FEEDBACK_OR_NAVIGATION_FAULT",
+  "active": false,
+  "load_detected": false,
+  "carrying": false,
+  "contacts": [],
+  "contact_messages": 0,
+  "face": {
+    "x": 0.7687714615283887,
+    "y": -0.04911554894201484,
+    "yaw": -0.006822544277200275,
+    "width": 0.2377180901442978,
+    "residual": 0.0001706508662170697,
+    "points": 36,
+    "map_pose": [
+      1.0858545216514646,
+      0.5900501679546238,
+      -0.02329280535097381
+    ]
+  },
+  "elapsed": 33.71369634300936,
+  "events": [
+    {
+      "state": "CHECK_READY",
+      "wall_time": 525206.000793718
+    },
+    {
+      "state": "LOWER_FOR_PICK",
+      "wall_time": 525206.814944362
+    },
+    {
+      "state": "DETECT_PICK_INITIAL",
+      "wall_time": 525208.495238308
+    },
+    {
+      "state": "PLAN_MISSION",
+      "wall_time": 525210.1168938
+    },
+    {
+      "state": "NAV_PICK",
+      "wall_time": 525212.575280597
+    },
+    {
+      "state": "DETECT_PICK",
+      "wall_time": 525234.234870682
+    },
+    {
+      "state": "ORIENT_PICK",
+      "wall_time": 525235.614965092
+    },
+    {
+      "state": "ALIGN",
+      "wall_time": 525237.858573779
+    },
+    {
+      "state": "FAULT",
+      "wall_time": 525238.695122028
+    }
+  ]
+}

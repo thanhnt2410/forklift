@@ -1,0 +1,59 @@
+[
+  {
+    "test": "startup_ready",
+    "passed": true
+  },
+  {
+    "test": "start_without_poses_rejected",
+    "passed": true
+  },
+  {
+    "test": "invalid_frame_rejected",
+    "passed": true
+  },
+  {
+    "test": "both_rviz_inputs_received",
+    "passed": true
+  },
+  {
+    "test": "start_service_accepted",
+    "passed": true
+  },
+  {
+    "test": "concurrent_start_rejected",
+    "passed": true
+  },
+  {
+    "test": "clear_while_active_rejected",
+    "passed": true
+  },
+  {
+    "test": "stopped_at_end",
+    "passed": true
+  },
+  {
+    "test": "single_velocity_owner",
+    "passed": true
+  },
+  {
+    "test": "no_return_home",
+    "passed": true
+  },
+  {
+    "test": "no_navigate_to_pose_recovery",
+    "passed": true
+  },
+  {
+    "test": "preflight_rejected_unreachable_goal",
+    "passed": true,
+    "code": "NO_VALID_PATH_NAV_DROP"
+  },
+  {
+    "test": "no_base_motion_before_failure",
+    "passed": true
+  },
+  {
+    "test": "navigation_not_started",
+    "passed": true
+  }
+]

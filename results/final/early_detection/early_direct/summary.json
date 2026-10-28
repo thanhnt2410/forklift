@@ -1,0 +1,7 @@
+{
+  "passed": true,
+  "checks_passed": 32,
+  "checks_total": 32,
+  "scenario": "early_direct",
+  "physical_hardware_used": false
+}

@@ -1,0 +1,9 @@
+Starting >>> forklift_navigation
+Starting >>> forklift_task_manager
+Finished <<< forklift_task_manager [4.34s]
+Finished <<< forklift_navigation [4.67s]
+Starting >>> forklift_bringup
+[Processing: forklift_bringup]
+Finished <<< forklift_bringup [30.1s]
+
+Summary: 3 packages finished [35.0s]

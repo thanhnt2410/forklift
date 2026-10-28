@@ -1,0 +1,115 @@
+{
+  "dynamic": true,
+  "refinement": {
+    "initial": [
+      0.35,
+      0.7,
+      0.060000000000000005
+    ],
+    "corrected": [
+      0.39526919721814,
+      0.6206270123691761,
+      -0.025652616192573793
+    ],
+    "face": [
+      1.0450553405128176,
+      0.6039546405454435,
+      -0.025652616192573793
+    ],
+    "samples": 5
+  },
+  "route_ready": true,
+  "route_revision": 3,
+  "state": "FAULT",
+  "code": "ACTION_FAILED_6",
+  "active": false,
+  "load_detected": true,
+  "carrying": true,
+  "contacts": [
+    {
+      "a": "p6_pallet::load::deck_collision",
+      "b": "forklift::lift_carriage::lift_carriage_fixed_joint_lump__fork_right_collision_collision_1",
+      "aid": 63,
+      "bid": 102
+    },
+    {
+      "a": "p6_pallet::load::deck_collision",
+      "b": "forklift::lift_carriage::lift_carriage_fixed_joint_lump__fork_left_collision_collision_2",
+      "aid": 63,
+      "bid": 103
+    }
+  ],
+  "contact_messages": 3382,
+  "face": {
+    "x": 0.2825240724980237,
+    "y": 1.2584211158736392e-06,
+    "yaw": -2.675339022173152e-05,
+    "width": 0.23706808277906674,
+    "residual": 0.00013605006367390176,
+    "points": 92,
+    "map_pose": [
+      1.0294204225487642,
+      0.6019014032442149,
+      -0.025894636938619875
+    ]
+  },
+  "elapsed": 162.95909330097493,
+  "events": [
+    {
+      "state": "CHECK_READY",
+      "wall_time": 515338.472399712
+    },
+    {
+      "state": "LOWER_FOR_PICK",
+      "wall_time": 515339.314105937
+    },
+    {
+      "state": "PLAN_MISSION",
+      "wall_time": 515340.334870366
+    },
+    {
+      "state": "NAV_PICK",
+      "wall_time": 515343.036009371
+    },
+    {
+      "state": "DETECT_PICK",
+      "wall_time": 515371.274136241
+    },
+    {
+      "state": "REFINE_PICK",
+      "wall_time": 515372.200509286
+    },
+    {
+      "state": "ORIENT_PICK",
+      "wall_time": 515389.911691837
+    },
+    {
+      "state": "ALIGN",
+      "wall_time": 515392.061818008
+    },
+    {
+      "state": "INSERT",
+      "wall_time": 515400.177223693
+    },
+    {
+      "state": "LIFT_PICK",
+      "wall_time": 515432.616900467
+    },
+    {
+      "state": "VERIFY_LOAD",
+      "wall_time": 515435.01171911
+    },
+    {
+      "state": "RETREAT_PICK",
+      "wall_time": 515435.833266145
+    },
+    {
+      "state": "NAV_DROP",
+      "wall_time": 515448.411647293
+    },
+    {
+      "state": "FAULT",
+      "wall_time": 515500.312418118
+    }
+  ]
+}

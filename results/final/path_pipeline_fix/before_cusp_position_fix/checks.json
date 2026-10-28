@@ -1,0 +1,157 @@
+[
+  {
+    "test": "startup_ready",
+    "passed": true
+  },
+  {
+    "test": "invalid_mission_rejected",
+    "passed": true
+  },
+  {
+    "test": "mission_1_accepted",
+    "passed": true
+  },
+  {
+    "test": "mission_1_concurrent_rejected",
+    "passed": true
+  },
+  {
+    "test": "mission_1_action",
+    "passed": false,
+    "status": 6,
+    "code": "ACTION_FAILED_6"
+  },
+  {
+    "test": "mission_1_pallet_at_b",
+    "passed": false,
+    "x": 0.95,
+    "y": 0.65,
+    "z": -1.8797065771958278e-11
+  },
+  {
+    "test": "mission_1_home",
+    "passed": false,
+    "x": -1.0363844388709271,
+    "y": 0.698740320186682
+  },
+  {
+    "test": "mission_1_physical_carry",
+    "passed": false,
+    "minimum_z": 0.0
+  },
+  {
+    "test": "mission_1_transport_gate",
+    "passed": false
+  },
+  {
+    "test": "mission_1_pickup_alignment",
+    "passed": false
+  },
+  {
+    "test": "mission_1_nav_no_strafe",
+    "passed": true,
+    "samples": 445
+  },
+  {
+    "test": "mission_1_curved_travel",
+    "passed": true,
+    "samples": 165
+  },
+  {
+    "test": "mission_1_planned_reverse",
+    "passed": true,
+    "samples": 174
+  },
+  {
+    "test": "mission_1_transit_speed",
+    "passed": false,
+    "maximum_mps": 0.16
+  },
+  {
+    "test": "mission_1_whole_route_before_motion",
+    "passed": true,
+    "segments": 9
+  },
+  {
+    "test": "mission_1_withdrawal_clearance",
+    "passed": false,
+    "retreat_m": 0.0
+  },
+  {
+    "test": "mission_1_approved_path_used",
+    "passed": true
+  },
+  {
+    "test": "mission_1_reverse_curved_transport",
+    "passed": false,
+    "samples": 0
+  },
+  {
+    "test": "mission_1_reverse_home",
+    "passed": false,
+    "samples": 0
+  },
+  {
+    "test": "mission_1_no_gear_oscillation",
+    "passed": false,
+    "phases": {
+      "NAV_PICK": {
+        "actual": 0,
+        "planned": 1,
+        "samples": 445
+      },
+      "NAV_DROP": {
+        "actual": 0,
+        "planned": 0,
+        "samples": 0
+      },
+      "RETURN_HOME": {
+        "actual": 0,
+        "planned": 0,
+        "samples": 0
+      }
+    }
+  },
+  {
+    "test": "mission_1_body_stability",
+    "passed": true
+  },
+  {
+    "test": "mission_1_straight_insertion",
+    "passed": false
+  },
+  {
+    "test": "mission_1_stationary_orientation",
+    "passed": false
+  },
+  {
+    "test": "mission_1_terminal_path_straight",
+    "passed": true,
+    "forward": true,
+    "paths": 1,
+    "maximum_cross_m": 0.0,
+    "maximum_heading_rad": 0.0
+  },
+  {
+    "test": "mission_1_fork_heading_on_arrival",
+    "passed": false
+  },
+  {
+    "test": "mission_1_phase_order",
+    "passed": false,
+    "matched": 1
+  },
+  {
+    "test": "mission_1_no_static_collision",
+    "passed": true,
+    "obstacle": null
+  },
+  {
+    "test": "mission_1_released",
+    "passed": true
+  },
+  {
+    "test": "single_cmd_vel_owner",
+    "passed": true
+  }
+]

@@ -1,0 +1,14 @@
+{
+  "nominal": {
+    "passed": true,
+    "minimum_fork_tip_clearance_m": 0.15216114309028214
+  },
+  "rotated": {
+    "passed": true,
+    "minimum_fork_tip_clearance_m": 0.1517972872393832
+  },
+  "cancel_loaded": {
+    "passed": true,
+    "pallet_height_m": 0.008103771284443931
+  }
+}

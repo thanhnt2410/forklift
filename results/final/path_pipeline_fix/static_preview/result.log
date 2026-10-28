@@ -1,0 +1,56 @@
+{
+  "NAV_PICK": {
+    "length_m": 2.5616688419048708,
+    "reverse_m": 1.261668841904874,
+    "gear_changes": 1,
+    "turn_radians": 2.268927224466595
+  },
+  "ALIGN_PICK": {
+    "length_m": 0.09999999999999998,
+    "reverse_m": 0.0,
+    "gear_changes": 0,
+    "turn_radians": 0.0
+  },
+  "INSERT_PICK": {
+    "length_m": 0.27,
+    "reverse_m": 0.0,
+    "gear_changes": 0,
+    "turn_radians": 0.0
+  },
+  "RETREAT_PICK": {
+    "length_m": 0.35,
+    "reverse_m": 0.35,
+    "gear_changes": 0,
+    "turn_radians": 0.0
+  },
+  "NAV_DROP": {
+    "length_m": 2.6914055242594292,
+    "reverse_m": 1.791405524259433,
+    "gear_changes": 1,
+    "turn_radians": 3.1415927410125732
+  },
+  "ALIGN_DROP": {
+    "length_m": 0.09999999999999998,
+    "reverse_m": 0.0,
+    "gear_changes": 0,
+    "turn_radians": 0.0
+  },
+  "INSERT_DROP": {
+    "length_m": 0.27,
+    "reverse_m": 0.0,
+    "gear_changes": 0,
+    "turn_radians": 0.0
+  },
+  "RETREAT_DROP": {
+    "length_m": 0.35,
+    "reverse_m": 0.35,
+    "gear_changes": 0,
+    "turn_radians": 0.0
+  },
+  "RETURN_HOME": {
+    "length_m": 0.8611816250878658,
+    "reverse_m": 0.8012659372092478,
+    "gear_changes": 1,
+    "turn_radians": 1.8325951735125943
+  }
+}

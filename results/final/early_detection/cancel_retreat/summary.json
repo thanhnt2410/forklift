@@ -1,0 +1,7 @@
+{
+  "passed": true,
+  "checks_passed": 18,
+  "checks_total": 18,
+  "scenario": "cancel_retreat",
+  "physical_hardware_used": false
+}

@@ -1,0 +1,7 @@
+{
+  "passed": true,
+  "checks_passed": 17,
+  "checks_total": 17,
+  "scenario": "scan_loss",
+  "physical_hardware_used": false
+}

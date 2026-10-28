@@ -29,6 +29,7 @@ def setup(context):
     world = LaunchConfiguration('world').perform(context)
     gui = LaunchConfiguration('gui').perform(context).lower() == 'true'
     rviz = LaunchConfiguration('rviz').perform(context).lower() == 'true'
+    rviz_config = LaunchConfiguration('rviz_config').perform(context)
     navigation = LaunchConfiguration('navigation').perform(context)
     map_file = LaunchConfiguration('map').perform(context)
     use_ekf = LaunchConfiguration('use_ekf').perform(context).lower() == 'true'
@@ -135,7 +136,7 @@ def setup(context):
                               'use_ekf': str(use_ekf).lower(), 'p6': str(world=='p6').lower()}.items()))
     if rviz:
         ready.append(Node(package='rviz2', executable='rviz2', parameters=[common],
-                          arguments=['-d', str(Path(share('forklift_bringup'))/'rviz'/('mapping_real.rviz' if navigation == 'mapping' else ('navigation.rviz' if navigation != 'none' else ('p5.rviz' if lift_mode=='supervised' else 'sim.rviz'))))], output='screen'))
+                          arguments=['-d', rviz_config or str(Path(share('forklift_bringup'))/'rviz'/('mapping_real.rviz' if navigation == 'mapping' else ('navigation.rviz' if navigation != 'none' else ('p5.rviz' if lift_mode=='supervised' else 'sim.rviz'))))], output='screen'))
 
     if gui and world=='p6':
         # Start the server and activate controllers before starting the GUI.
@@ -170,6 +171,7 @@ def generate_launch_description():
         DeclareLaunchArgument('world', default_value='minimal', choices=['minimal', 'warehouse', 'p6']),
         DeclareLaunchArgument('gui', default_value='true', choices=['true', 'false']),
         DeclareLaunchArgument('rviz', default_value='true', choices=['true', 'false']),
+        DeclareLaunchArgument('rviz_config', default_value='', description='Optional RViz config override'),
         DeclareLaunchArgument('autostart', default_value='true', choices=['true', 'false']),
         DeclareLaunchArgument('navigation', default_value='none', choices=['none', 'mapping', 'localization']),
         DeclareLaunchArgument('controller', default_value='mppi', choices=['rpp','mppi']),

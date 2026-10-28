@@ -1,0 +1,80 @@
+{
+  "/mission/status": {
+    "dynamic": true,
+    "refinement": null,
+    "route_ready": false,
+    "route_revision": 0,
+    "state": "FAULT",
+    "code": "ACTION_FAILED_6",
+    "active": false,
+    "load_detected": false,
+    "carrying": false,
+    "contacts": [],
+    "contact_messages": 0,
+    "face": null,
+    "elapsed": 194.57545334700262,
+    "events": [
+      {
+        "state": "CHECK_READY",
+        "wall_time": 514592.430636346
+      },
+      {
+        "state": "LOWER_FOR_PICK",
+        "wall_time": 514593.246350551
+      },
+      {
+        "state": "NAV_PICK",
+        "wall_time": 514594.20729483
+      },
+      {
+        "state": "FAULT",
+        "wall_time": 514626.886741424
+      }
+    ]
+  },
+  "/mission/route_info": {
+    "route_source": "dynamic_goals",
+    "planned_before_motion": false,
+    "pick": [
+      0.8920220136642456,
+      0.5701334476470947,
+      -0.08761760533454176
+    ],
+    "drop": [
+      -0.9822393655776978,
+      -0.8019599914550781,
+      3.1302790832939267
+    ]
+  },
+  "/mission/active_path": {
+    "points": 0,
+    "end": null
+  },
+  "/mission/route": {
+    "points": 0,
+    "end": null
+  },
+  "/mission_motion/source": "DOCKING",
+  "/navigation/status": "READY",
+  "lift": {
+    "state": "IDLE",
+    "fault": "",
+    "homed": true,
+    "height": 7.079596681932058e-06,
+    "offset": 0.001265071562809865
+  },
+  "/mission/input_status": {
+    "poses": [
+      "pick",
+      "drop"
+    ],
+    "busy": false,
+    "message": "ACTION_FAILED_6"
+  },
+  "robot_map_pose": {
+    "x": 0.04686005922635229,
+    "y": -0.32731101013339947,
+    "z": 0.9999997091183395,
+    "w": 0.0007627340536197451
+  }
+}

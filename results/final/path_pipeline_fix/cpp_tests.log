@@ -1,0 +1,17 @@
+Internal ctest changing into directory: /home/thanh/ros_ws/forklift/build/forklift_navigation
+Test project /home/thanh/ros_ws/forklift/build/forklift_navigation
+    Start 1: occupancy_probability_test
+1/4 Test #1: occupancy_probability_test .......   Passed    0.09 sec
+    Start 2: terminal_path_test
+2/4 Test #2: terminal_path_test ...............   Passed    0.09 sec
+    Start 3: exact_goal_test
+3/4 Test #3: exact_goal_test ..................   Passed    0.09 sec
+    Start 4: route_guard_test
+4/4 Test #4: route_guard_test .................   Passed    0.09 sec
+
+100% tests passed, 0 tests failed out of 4
+
+Label Time Summary:
+gtest    =   0.36 sec*proc (4 tests)
+
+Total Test time (real) =   0.36 sec

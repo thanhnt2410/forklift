@@ -4,6 +4,7 @@ from pathlib import Path
 import tempfile
 import os
 import yaml
+import copy
 from ament_index_python.packages import get_package_share_directory as share
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, OpaqueFunction, RegisterEventHandler, EmitEvent, IncludeLaunchDescription
@@ -37,6 +38,19 @@ def setup(context):
     if controller=='mppi':
         overlay=yaml.safe_load((Path(share('forklift_navigation'))/'config/nav2_mppi.yaml').read_text())
         config['controller_server']['ros__parameters'].update(overlay['controller_server']['ros__parameters'])
+    if p6:
+        control=config['controller_server']['ros__parameters']
+        control['goal_checker_plugins'].append('pickup_goal_checker')
+        # A is a standoff for mandatory LiDAR verification/docking. Keep the
+        # general checker unchanged for delivery, refinement and legacy routes.
+        control['pickup_goal_checker']={'plugin':'nav2_controller::SimpleGoalChecker',
+            'stateful':True,'xy_goal_tolerance':.06,'yaw_goal_tolerance':.10}
+        planners=config['planner_server']['ros__parameters']
+        profile=copy.deepcopy(planners['GridBased'])
+        profile.update(reverse_penalty=1.0,change_penalty=.15,non_straight_penalty=1.5)
+        for name,length in [('Pallet',.9),('Pallet11',1.1),('Pallet13',1.3),('Pallet15',1.5)]:
+            planners['planner_plugins'].append(name)
+            planners[name]={**copy.deepcopy(profile),'terminal_distance':length}
     g=yaml.safe_load((Path(share('forklift_description'))/'config/robot.yaml').read_text())
     # Include wheel contact spheres, chassis and fork tips in collision footprint.
     xmin=g['footprint_xmin']

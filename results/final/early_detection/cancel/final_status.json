@@ -1,0 +1,76 @@
+{
+  "dynamic": true,
+  "refinement": null,
+  "initial_detection": {
+    "outcome": "DETECTED",
+    "initial": [
+      0.35,
+      0.7,
+      0.060000000000000005
+    ],
+    "corrected": [
+      0.34926766918347985,
+      0.65157837541164,
+      -0.001450046172684561
+    ],
+    "face": [
+      0.9992669858275812,
+      0.6506358457296942,
+      -0.001450046172684561
+    ],
+    "samples": 5
+  },
+  "route_ready": true,
+  "route_revision": 1,
+  "state": "CANCELLED",
+  "code": "CANCELED",
+  "active": false,
+  "load_detected": false,
+  "carrying": false,
+  "contacts": [],
+  "contact_messages": 0,
+  "face": {
+    "x": 0.9999005890357809,
+    "y": 0.6496617002403884,
+    "yaw": -0.0024245972052791445,
+    "width": 0.2242813504165635,
+    "residual": 0.0009839718360942049,
+    "points": 19,
+    "map_pose": [
+      0.9992967394309408,
+      0.650590146925101,
+      -0.001495777818874045
+    ]
+  },
+  "elapsed": 29.133692611940205,
+  "events": [
+    {
+      "state": "CHECK_READY",
+      "wall_time": 525160.232914443
+    },
+    {
+      "state": "LOWER_FOR_PICK",
+      "wall_time": 525161.048638424
+    },
+    {
+      "state": "DETECT_PICK_INITIAL",
+      "wall_time": 525162.186880643
+    },
+    {
+      "state": "PLAN_MISSION",
+      "wall_time": 525163.449722372
+    },
+    {
+      "state": "NAV_PICK",
+      "wall_time": 525165.90729576
+    },
+    {
+      "state": "DETECT_PICK",
+      "wall_time": 525188.106926606
+    },
+    {
+      "state": "CANCELLED",
+      "wall_time": 525188.287444813
+    }
+  ]
+}

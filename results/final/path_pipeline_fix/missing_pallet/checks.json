@@ -1,0 +1,71 @@
+[
+  {
+    "test": "startup_ready",
+    "passed": true
+  },
+  {
+    "test": "start_without_poses_rejected",
+    "passed": true
+  },
+  {
+    "test": "invalid_frame_rejected",
+    "passed": true
+  },
+  {
+    "test": "both_rviz_inputs_received",
+    "passed": true
+  },
+  {
+    "test": "start_service_accepted",
+    "passed": true
+  },
+  {
+    "test": "concurrent_start_rejected",
+    "passed": true
+  },
+  {
+    "test": "clear_while_active_rejected",
+    "passed": true
+  },
+  {
+    "test": "stopped_at_end",
+    "passed": true
+  },
+  {
+    "test": "single_velocity_owner",
+    "passed": true
+  },
+  {
+    "test": "no_return_home",
+    "passed": true
+  },
+  {
+    "test": "no_navigate_to_pose_recovery",
+    "passed": true
+  },
+  {
+    "test": "whole_route_before_motion",
+    "passed": true
+  },
+  {
+    "test": "legacy_candidate_selection",
+    "passed": true
+  },
+  {
+    "test": "active_path_published",
+    "passed": true
+  },
+  {
+    "test": "expected_fault",
+    "passed": true,
+    "code": "PALLET_DETECTION_NOT_STABLE"
+  },
+  {
+    "test": "fault_injected",
+    "passed": true
+  },
+  {
+    "test": "fault_latches_new_mission",
+    "passed": true
+  }
+]

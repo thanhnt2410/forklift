@@ -1,0 +1,36 @@
+IDLE null
+{"test": "startup_ready", "passed": true}
+{"test": "invalid_mission_rejected", "passed": true}
+{"test": "mission_1_accepted", "passed": true}
+{"test": "mission_1_concurrent_rejected", "passed": true}
+CHECK_READY null
+LOWER_FOR_PICK null
+PLAN_MISSION null
+NAV_PICK null
+FAULT null
+{"dynamic": false, "refinement": null, "route_ready": true, "route_revision": 1, "state": "FAULT", "code": "ACTION_FAILED_6", "active": false, "load_detected": false, "carrying": false, "contacts": [], "contact_messages": 0, "face": null, "elapsed": 50.43822403601371, "events": [{"state": "CHECK_READY", "wall_time": 516551.043773736}, {"state": "LOWER_FOR_PICK", "wall_time": 516552.422222312}, {"state": "PLAN_MISSION", "wall_time": 516553.383334324}, {"state": "NAV_PICK", "wall_time": 516554.479698945}, {"state": "FAULT", "wall_time": 516600.641114184}]}
+{"test": "mission_1_action", "passed": false, "status": 6, "code": "ACTION_FAILED_6"}
+{"test": "mission_1_pallet_at_b", "passed": false, "x": 0.95, "y": 0.65, "z": -1.8797065771958278e-11}
+{"test": "mission_1_home", "passed": false, "x": -1.0363844388709271, "y": 0.698740320186682}
+{"test": "mission_1_physical_carry", "passed": false, "minimum_z": 0.0}
+{"test": "mission_1_transport_gate", "passed": false}
+{"test": "mission_1_pickup_alignment", "passed": false}
+{"test": "mission_1_nav_no_strafe", "passed": true, "samples": 445}
+{"test": "mission_1_curved_travel", "passed": true, "samples": 165}
+{"test": "mission_1_planned_reverse", "passed": true, "samples": 174}
+{"test": "mission_1_transit_speed", "passed": false, "maximum_mps": 0.16}
+{"test": "mission_1_whole_route_before_motion", "passed": true, "segments": 9}
+{"test": "mission_1_withdrawal_clearance", "passed": false, "retreat_m": 0.0}
+{"test": "mission_1_approved_path_used", "passed": true}
+{"test": "mission_1_reverse_curved_transport", "passed": false, "samples": 0}
+{"test": "mission_1_reverse_home", "passed": false, "samples": 0}
+{"test": "mission_1_no_gear_oscillation", "passed": false, "phases": {"NAV_PICK": {"actual": 0, "planned": 1, "samples": 445}, "NAV_DROP": {"actual": 0, "planned": 0, "samples": 0}, "RETURN_HOME": {"actual": 0, "planned": 0, "samples": 0}}}
+{"test": "mission_1_body_stability", "passed": true}
+{"test": "mission_1_straight_insertion", "passed": false}
+{"test": "mission_1_stationary_orientation", "passed": false}
+{"test": "mission_1_terminal_path_straight", "passed": true, "forward": true, "paths": 1, "maximum_cross_m": 0.0, "maximum_heading_rad": 0.0}
+{"test": "mission_1_fork_heading_on_arrival", "passed": false}
+{"test": "mission_1_phase_order", "passed": false, "matched": 1}
+{"test": "mission_1_no_static_collision", "passed": true, "obstacle": null}
+{"test": "mission_1_released", "passed": true}
+{"test": "single_cmd_vel_owner", "passed": true}

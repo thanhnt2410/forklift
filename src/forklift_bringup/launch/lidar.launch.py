@@ -15,7 +15,10 @@ def generate_launch_description():
     return LaunchDescription([
         DeclareLaunchArgument('params_file', default_value=default_params,
                               description='LiDAR port and measured hardware settings'),
+        DeclareLaunchArgument('scan_topic', default_value='/scan',
+                              description='Use /scan_raw with navigation_real.launch.py'),
         Node(package='ydlidar_ros2_driver', executable='ydlidar_ros2_driver_node',
              name='ydlidar_ros2_driver_node', output='screen',
-             parameters=[LaunchConfiguration('params_file')]),
+             parameters=[LaunchConfiguration('params_file')],
+             remappings=[('/scan', LaunchConfiguration('scan_topic'))]),
     ])

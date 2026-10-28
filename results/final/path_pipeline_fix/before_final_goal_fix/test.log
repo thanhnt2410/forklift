@@ -1,0 +1,49 @@
+IDLE null
+{"test": "startup_ready", "passed": true}
+{"test": "invalid_mission_rejected", "passed": true}
+{"test": "mission_1_accepted", "passed": true}
+{"test": "mission_1_concurrent_rejected", "passed": true}
+CHECK_READY null
+LOWER_FOR_PICK null
+PLAN_MISSION null
+NAV_PICK null
+ORIENT_PICK null
+ALIGN {"x": 0.7694788870488801, "y": -0.05170011309474896, "yaw": 0.005891495853027684, "width": 0.231332489423144, "residual": 0.0001834277665232014, "points": 35}
+INSERT {"x": 0.5523064222058669, "y": -2.5232361103623956e-07, "yaw": 5.609251162521135e-06, "width": 0.24004765593962182, "residual": 0.00014746300084752175, "points": 50}
+LIFT_PICK {"x": 0.2823473337428527, "y": -3.264076749845737e-07, "yaw": 5.418490243675487e-06, "width": 0.23694621966278684, "residual": 0.00013598132550263962, "points": 92}
+VERIFY_LOAD {"x": 0.2823473337428527, "y": -3.264076749845737e-07, "yaw": 5.418490243675487e-06, "width": 0.23694621966278684, "residual": 0.00013598132550263962, "points": 92}
+RETREAT_PICK {"x": 0.2823473337428527, "y": -3.264076749845737e-07, "yaw": 5.418490243675487e-06, "width": 0.23694621966278684, "residual": 0.00013598132550263962, "points": 92}
+NAV_DROP {"x": 0.2823473337428527, "y": -3.264076749845737e-07, "yaw": 5.418490243675487e-06, "width": 0.23694621966278684, "residual": 0.00013598132550263962, "points": 92}
+ORIENT_DROP {"x": 0.2823473337428527, "y": -3.264076749845737e-07, "yaw": 5.418490243675487e-06, "width": 0.23694621966278684, "residual": 0.00013598132550263962, "points": 92}
+ALIGN {"x": 1.181767389779586, "y": 1.3950191188346233, "yaw": 0.00933691820869842, "width": 0.39787588507547844, "residual": 0.0017917380390114815, "points": 20}
+INSERT {"x": 0.9976147623936139, "y": 1.3982156316242984, "yaw": -0.0002536711565903627, "width": 0.3683930955768916, "residual": 0.0013598306280025675, "points": 21}
+LOWER_RELEASE {"x": 0.7439491805385008, "y": 1.3979986342345518, "yaw": -0.005934509532101034, "width": 0.3766030305512277, "residual": 0.0012906128907216533, "points": 25}
+RETREAT_DROP {"x": 0.7439491805385008, "y": 1.3979986342345518, "yaw": -0.005934509532101034, "width": 0.3766030305512277, "residual": 0.0012906128907216533, "points": 25}
+RETURN_HOME {"x": 0.7439491805385008, "y": 1.3979986342345518, "yaw": -0.005934509532101034, "width": 0.3766030305512277, "residual": 0.0012906128907216533, "points": 25}
+FAULT {"x": 0.7439491805385008, "y": 1.3979986342345518, "yaw": -0.005934509532101034, "width": 0.3766030305512277, "residual": 0.0012906128907216533, "points": 25}
+{"dynamic": false, "refinement": null, "route_ready": true, "route_revision": 1, "state": "FAULT", "code": "ACTION_FAILED_6", "active": false, "load_detected": false, "carrying": false, "contacts": [{"a": "p6_pallet::load::deck_collision", "b": "forklift::lift_carriage::lift_carriage_fixed_joint_lump__fork_right_collision_collision_1", "aid": 63, "bid": 102}, {"a": "p6_pallet::load::deck_collision", "b": "forklift::lift_carriage::lift_carriage_fixed_joint_lump__fork_left_collision_collision_2", "aid": 63, "bid": 103}], "contact_messages": 4625, "face": {"x": 0.7439491805385008, "y": 1.3979986342345518, "yaw": -0.005934509532101034, "width": 0.3766030305512277, "residual": 0.0012906128907216533, "points": 25}, "elapsed": 226.86726848199032, "events": [{"state": "CHECK_READY", "wall_time": 516798.779638749}, {"state": "LOWER_FOR_PICK", "wall_time": 516800.529334133}, {"state": "PLAN_MISSION", "wall_time": 516801.489911622}, {"state": "NAV_PICK", "wall_time": 516804.022067854}, {"state": "ORIENT_PICK", "wall_time": 516836.810813592}, {"state": "ALIGN", "wall_time": 516838.854546111}, {"state": "INSERT", "wall_time": 516853.455658135}, {"state": "LIFT_PICK", "wall_time": 516880.690834323}, {"state": "VERIFY_LOAD", "wall_time": 516882.727132293}, {"state": "RETREAT_PICK", "wall_time": 516883.533667013}, {"state": "NAV_DROP", "wall_time": 516897.908272033}, {"state": "ORIENT_DROP", "wall_time": 516933.247863631}, {"state": "ALIGN", "wall_time": 516936.113332637}, {"state": "INSERT", "wall_time": 516946.653825567}, {"state": "LOWER_RELEASE", "wall_time": 516972.556253593}, {"state": "RETREAT_DROP", "wall_time": 516975.215396905}, {"state": "RETURN_HOME", "wall_time": 516987.427272398}, {"state": "FAULT", "wall_time": 517024.789017577}]}
+{"test": "mission_1_action", "passed": false, "status": 6, "code": "ACTION_FAILED_6"}
+{"test": "mission_1_pallet_at_b", "passed": true, "x": 0.9447015814346659, "y": -0.6003418418058697, "z": -9.820353799514357e-08}
+{"test": "mission_1_home", "passed": true, "x": -0.08029780990842833, "y": -0.008670277796658509}
+{"test": "mission_1_physical_carry", "passed": true, "minimum_z": 0.008078513610702364}
+{"test": "mission_1_transport_gate", "passed": true}
+{"test": "mission_1_pickup_alignment", "passed": true, "lateral_m": -9.187284505884907e-05, "yaw_rad": -5.756809664346375e-06, "depth_m": 0.1990096200541408}
+{"test": "mission_1_nav_no_strafe", "passed": true, "samples": 998}
+{"test": "mission_1_curved_travel", "passed": true, "samples": 482}
+{"test": "mission_1_planned_reverse", "passed": true, "samples": 477}
+{"test": "mission_1_transit_speed", "passed": true, "maximum_mps": 0.25}
+{"test": "mission_1_whole_route_before_motion", "passed": true, "segments": 9}
+{"test": "mission_1_withdrawal_clearance", "passed": true, "retreat_m": 0.44334276017681856}
+{"test": "mission_1_approved_path_used", "passed": true}
+{"test": "mission_1_reverse_curved_transport", "passed": true, "samples": 199}
+{"test": "mission_1_reverse_home", "passed": true, "samples": 107}
+{"test": "mission_1_no_gear_oscillation", "passed": true, "phases": {"NAV_PICK": {"actual": 1, "planned": 1, "samples": 306}, "NAV_DROP": {"actual": 1, "planned": 1, "samples": 332}, "RETURN_HOME": {"actual": 0, "planned": 1, "samples": 360}}}
+{"test": "mission_1_body_stability", "passed": true}
+{"test": "mission_1_straight_insertion", "passed": true}
+{"test": "mission_1_stationary_orientation", "passed": true}
+{"test": "mission_1_terminal_path_straight", "passed": true, "forward": true, "paths": 2, "maximum_cross_m": 0.0, "maximum_heading_rad": 0.0}
+{"test": "mission_1_fork_heading_on_arrival", "passed": true}
+{"test": "mission_1_phase_order", "passed": false, "matched": 14}
+{"test": "mission_1_no_static_collision", "passed": true, "obstacle": null}
+{"test": "mission_1_released", "passed": true}
+{"test": "single_cmd_vel_owner", "passed": true}

@@ -1,0 +1,21 @@
+Arguments (pass arguments as '<name>:=<value>'):
+
+    'use_sim_time':
+        no description given
+        (default: 'false')
+
+    'scan_topic':
+        no description given
+        (default: '/scan_raw')
+
+    'load_feedback':
+        One of: ['external', 'contacts']
+        (default: 'external')
+
+    'staging_distance':
+        no description given
+        (default: '0.65')
+
+    'pallet_face_width':
+        no description given
+        (default: '0.24')

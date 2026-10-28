@@ -1,0 +1,136 @@
+[
+  {
+    "test": "startup_ready",
+    "passed": true
+  },
+  {
+    "test": "start_without_poses_rejected",
+    "passed": true
+  },
+  {
+    "test": "invalid_frame_rejected",
+    "passed": true
+  },
+  {
+    "test": "both_rviz_inputs_received",
+    "passed": true
+  },
+  {
+    "test": "start_service_accepted",
+    "passed": true
+  },
+  {
+    "test": "concurrent_start_rejected",
+    "passed": true
+  },
+  {
+    "test": "clear_while_active_rejected",
+    "passed": true
+  },
+  {
+    "test": "stopped_at_end",
+    "passed": true
+  },
+  {
+    "test": "single_velocity_owner",
+    "passed": true
+  },
+  {
+    "test": "no_return_home",
+    "passed": true
+  },
+  {
+    "test": "mission_succeeded",
+    "passed": true,
+    "code": "SUCCEEDED"
+  },
+  {
+    "test": "lidar_refinement_executed",
+    "passed": true
+  },
+  {
+    "test": "coarse_pose_corrected",
+    "passed": true,
+    "refinement": {
+      "initial": [
+        0.35,
+        0.7,
+        0.060000000000000005
+      ],
+      "corrected": [
+        0.3997393329147716,
+        0.6263902760539374,
+        -0.022869224276701756
+      ],
+      "face": [
+        1.049569364861579,
+        0.6115265759758458,
+        -0.02286922427670176
+      ],
+      "samples": 5
+    }
+  },
+  {
+    "test": "refined_navigation_executed",
+    "passed": true
+  },
+  {
+    "test": "physical_pick_alignment",
+    "passed": true,
+    "lateral": -9.777736060878617e-05,
+    "yaw": -3.423128084302419e-05
+  },
+  {
+    "test": "physically_carried",
+    "passed": true
+  },
+  {
+    "test": "straight_insertion",
+    "passed": true
+  },
+  {
+    "test": "release_at_requested_map_pose",
+    "passed": true,
+    "map_error_m": 0.015434270080785144
+  },
+  {
+    "test": "pallet_in_delivery_region",
+    "passed": true,
+    "x": 0.8850658297865985,
+    "y": -0.5269504945908452,
+    "z": -7.470075257432793e-07,
+    "error_m": 0.09773779566690217,
+    "region_radius_m": 0.15
+  },
+  {
+    "test": "withdrawal_clearance",
+    "passed": true,
+    "distance": 0.3511191515308366
+  },
+  {
+    "test": "released",
+    "passed": true
+  },
+  {
+    "test": "phase_order",
+    "passed": true,
+    "events": [
+      "IDLE",
+      "CHECK_READY",
+      "LOWER_FOR_PICK",
+      "NAV_PICK",
+      "DETECT_PICK",
+      "REFINE_PICK",
+      "ORIENT_PICK",
+      "ALIGN",
+      "INSERT",
+      "LIFT_PICK",
+      "VERIFY_LOAD",
+      "RETREAT_PICK",
+      "NAV_DROP",
+      "LOWER_RELEASE",
+      "RETREAT_DROP",
+      "DONE"
+    ]
+  }
+]

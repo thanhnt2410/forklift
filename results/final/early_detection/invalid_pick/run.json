@@ -1,0 +1,10 @@
+{
+  "domain": 188,
+  "partition": "forklift_p6_3364918",
+  "dynamic": true,
+  "repetitions": 1,
+  "scenario": "invalid_pick",
+  "controller": "mppi",
+  "gui": false,
+  "physical_hardware_used": false
+}

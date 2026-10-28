@@ -13,6 +13,7 @@ class TerminalApproachPlanner : public nav2_core::GlobalPlanner {
   geometry_msgs::msg::PoseStamped cached_goal_;
   std::mutex plan_mutex_;
   double length_{.5};
+  double minimum_radius_{.5};
   rclcpp::Clock::SharedPtr clock_;
 public:
   void configure(const rclcpp_lifecycle::LifecycleNode::WeakPtr & parent,std::string name,
@@ -23,6 +24,7 @@ public:
     if(!std::isfinite(length_) || length_<.2 || length_>2.)throw std::runtime_error("Invalid terminal_distance");
     clock_=node->get_clock();costmap_=map;curve_=std::make_unique<nav2_smac_planner::SmacPlannerHybrid>();
     curve_->configure(parent,name,tf,map);
+    node->get_parameter(name+".minimum_turning_radius",minimum_radius_);
   }
   void activate() override {curve_->activate();}
   void deactivate() override {curve_->deactivate();cached_.poses.clear();}
@@ -66,10 +68,11 @@ public:
     const double step=std::min(.02,costmap_->getCostmap()->getResolution()/2);
     nav_msgs::msg::Path result;
     // Replanning on the final leg must not send the robot back to its entry.
-    if(along>=-.02 && along<=length_+.10 && std::abs(cross)<.08 &&
-      std::abs(wrap_angle(tf2::getYaw(start.pose.orientation)-a))<.30) {
-      result=terminal_leg(start,goal,step);
-    } else {
+    if(terminal_join_feasible(along,cross,wrap_angle(tf2::getYaw(start.pose.orientation)-a),length_)) {
+      auto join=terminal_leg(start,goal,step);
+      if(path_curvature_feasible(join,minimum_radius_))result=join;
+    }
+    if(result.poses.empty()) {
       auto entry=goal;entry.pose.position.x-=length_*c;entry.pose.position.y-=length_*s;
       result=curve_->createPlan(start,entry);
       if(result.poses.empty())throw nav2_core::PlannerException("No route to terminal corridor entry");

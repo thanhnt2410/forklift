@@ -1,0 +1,82 @@
+{
+  "dynamic": true,
+  "refinement": {
+    "initial": [
+      0.35,
+      0.7,
+      0.060000000000000005
+    ],
+    "corrected": [
+      0.3994911416701248,
+      0.61217922481856,
+      -0.025583285946865493
+    ],
+    "face": [
+      1.0492784393027785,
+      0.5955519028678331,
+      -0.025583285946865493
+    ],
+    "samples": 5
+  },
+  "route_ready": true,
+  "route_revision": 2,
+  "state": "FAULT",
+  "code": "FEEDBACK_OR_NAVIGATION_FAULT",
+  "active": false,
+  "load_detected": false,
+  "carrying": false,
+  "contacts": [],
+  "contact_messages": 0,
+  "face": {
+    "x": 0.6708091567565786,
+    "y": 9.631240919572464e-05,
+    "yaw": 0.004782385330428017,
+    "width": 0.22988754364984967,
+    "residual": 0.00016206198131767243,
+    "points": 40,
+    "map_pose": [
+      1.0531055167329886,
+      0.5979801987976685,
+      -0.026748908591374528
+    ]
+  },
+  "elapsed": 50.884886872023344,
+  "events": [
+    {
+      "state": "CHECK_READY",
+      "wall_time": 518879.701489844
+    },
+    {
+      "state": "LOWER_FOR_PICK",
+      "wall_time": 518881.148974443
+    },
+    {
+      "state": "PLAN_MISSION",
+      "wall_time": 518882.107021184
+    },
+    {
+      "state": "NAV_PICK",
+      "wall_time": 518884.567847818
+    },
+    {
+      "state": "DETECT_PICK",
+      "wall_time": 518911.209669171
+    },
+    {
+      "state": "REFINE_PICK",
+      "wall_time": 518912.072443882
+    },
+    {
+      "state": "ORIENT_PICK",
+      "wall_time": 518927.868237567
+    },
+    {
+      "state": "ALIGN",
+      "wall_time": 518928.831054044
+    },
+    {
+      "state": "FAULT",
+      "wall_time": 518929.567418365
+    }
+  ]
+}

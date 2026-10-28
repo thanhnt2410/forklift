@@ -10,7 +10,7 @@ import rclpy
 from rclpy.action import ActionClient
 from geometry_msgs.msg import PoseStamped
 from nav2_msgs.action import ComputePathToPose
-from forklift_task_manager.mission_route import straight_samples
+from forklift_task_manager.mission_route import straight_samples, path_statistics, choose_navigation_candidate
 
 p=argparse.ArgumentParser();p.add_argument('--output',default='results/bidirectional_preview');p.add_argument('--domain',type=int,default=199)
 p.add_argument('--clearance',type=float,default=.35);a=p.parse_args()
@@ -38,16 +38,7 @@ def start(args,name):
 def pose(values,node):
     m=PoseStamped();m.header.frame_id='map';m.header.stamp=node.get_clock().now().to_msg();m.pose.position.x=float(values[0]);m.pose.position.y=float(values[1]);m.pose.orientation.z=math.sin(values[2]/2);m.pose.orientation.w=math.cos(values[2]/2);return m
 
-def statistics(points):
-    distance=reverse=turn=0.;directions=[]
-    for u,v in zip(points,points[1:]):
-        dx,dy=v[0]-u[0],v[1]-u[1];d=math.hypot(dx,dy);distance+=d
-        turn+=abs(math.atan2(math.sin(v[2]-u[2]),math.cos(v[2]-u[2])))
-        if d<1e-5:continue
-        s=1 if dx*math.cos(u[2])+dy*math.sin(u[2])>0 else -1
-        if s<0:reverse+=d
-        if not directions or directions[-1]!=s:directions.append(s)
-    return dict(length_m=distance,reverse_m=reverse,gear_changes=max(0,len(directions)-1),turn_radians=turn)
+statistics = path_statistics
 
 try:
     start(['ros2','run','tf2_ros','static_transform_publisher','0','0','0','0','0','0','map','base_link'],'tf.log')
@@ -71,12 +62,7 @@ try:
         if result.status!=4 or not result.result.path.poses:raise RuntimeError('No static route: '+name)
         points=[[p.pose.position.x,p.pose.position.y,2*math.atan2(p.pose.orientation.z,p.pose.orientation.w)] for p in result.result.path.poses]
         return dict(stage=name,kind='navigation',planner=planner,collision_checked=True,poses=points,statistics=statistics(points),goal=end,terminal_distance=profiles.get(planner,0.))
-    def choose(candidates):
-        shortest=min(v['statistics']['length_m'] for v in candidates)
-        allowed=[v for v in candidates if v['statistics']['length_m']<=shortest*1.5]
-        def score(v):
-            z=v['statistics'];return z['length_m']+.6*z['gear_changes']+.12*z['turn_radians']
-        best=min(allowed,key=score);best['selection_score']=score(best);return best
+    choose = choose_navigation_candidate
     def navigation(name,begin,end,planner):
         candidates=[]
         goals=[end] if planner=='Pallet' else [[end[0],end[1],-math.pi+i*math.pi/12] for i in range(24)]

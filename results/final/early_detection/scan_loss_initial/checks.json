@@ -1,0 +1,75 @@
+[
+  {
+    "test": "startup_ready",
+    "passed": true
+  },
+  {
+    "test": "start_without_poses_rejected",
+    "passed": true
+  },
+  {
+    "test": "invalid_frame_rejected",
+    "passed": true
+  },
+  {
+    "test": "both_rviz_inputs_received",
+    "passed": true
+  },
+  {
+    "test": "start_service_accepted",
+    "passed": true
+  },
+  {
+    "test": "concurrent_start_rejected",
+    "passed": true
+  },
+  {
+    "test": "clear_while_active_rejected",
+    "passed": true
+  },
+  {
+    "test": "stopped_at_end",
+    "passed": true
+  },
+  {
+    "test": "single_velocity_owner",
+    "passed": true
+  },
+  {
+    "test": "no_return_home",
+    "passed": true
+  },
+  {
+    "test": "no_navigate_to_pose_recovery",
+    "passed": true
+  },
+  {
+    "test": "initial_detection_attempted",
+    "passed": true
+  },
+  {
+    "test": "expected_initial_fault",
+    "passed": true,
+    "code": "FEEDBACK_OR_NAVIGATION_FAULT"
+  },
+  {
+    "test": "initial_fault_injected",
+    "passed": true
+  },
+  {
+    "test": "initial_fault_not_fallback",
+    "passed": true
+  },
+  {
+    "test": "no_base_motion_before_initial_fault",
+    "passed": true
+  },
+  {
+    "test": "no_path_or_navigation_before_initial_fault",
+    "passed": true
+  },
+  {
+    "test": "fault_latches_new_mission",
+    "passed": true
+  }
+]

@@ -4,8 +4,9 @@
 [Trkkhrmn/ros2_amr_mecanumbot](https://github.com/Trkkhrmn/ros2_amr_mecanumbot).
 Robot sử dụng bốn bánh mecanum, LiDAR, IMU và cơ cấu nâng vít me.
 
-Hiện có thể chạy mô phỏng lấy hàng tại A → vận chuyển sang B → thả hàng → về Home.
-Firmware ESP32 đang được phát triển; **chưa nạp board hoặc chạy xe thật**.
+Người dùng đã xác nhận robot thật và mô phỏng tạo được map. Chu trình lấy–giao
+tự động trong repo được kiểm chứng trong mô phỏng; **chưa nghiệm thu chu trình
+này trên robot thật**. Có cả chế độ trạm cố định về Home và chế độ A/B chọn trên RViz.
 
 ## Chức năng hiện tại
 
@@ -13,10 +14,11 @@ Firmware ESP32 đang được phát triển; **chưa nạp board hoặc chạy x
 - Điều khiển bốn bánh mecanum, nâng/hạ và homing càng trong mô phỏng.
 - SLAM, định vị AMCL và điều hướng Nav2; EKF kết hợp odometry bánh với IMU mô phỏng.
 - Bộ bám đường mặc định **MPPI**, cho phép tiến/lùi theo đường cong.
-- Nhiệm vụ dùng Nav2 FollowPath theo các điểm đã duyệt; LiDAR căn chỉnh và chèn càng.
+- Nhiệm vụ trạm cố định dùng Nav2 FollowPath theo các điểm đã duyệt.
+- Nhiệm vụ A/B chọn trên RViz thử nhận dạng LiDAR ngay lúc Run, tạo tuyến tới A đã sửa theo các profile cũ và dùng FollowPath; kiểm tra lại trước khi căn chỉnh/chèn càng.
 - Khi chạy Nav2 dùng vận tốc tiến/lùi và quay; đi ngang dùng cho teleop hoặc docking.
 
-Đường nhiệm vụ được công bố đầy đủ trước khi xe di chuyển. Nếu tuyến không hợp lệ,
+Ở chế độ trạm cố định, đường nhiệm vụ được công bố đầy đủ trước khi xe di chuyển. Nếu tuyến không hợp lệ,
 xe dừng/báo lỗi thay vì tự chọn tuyến khác. Giới hạn vận tốc nhiệm vụ hiện tại:
 **tiến 0,25 m/s, lùi 0,16 m/s**; docking và chèn càng chạy chậm hơn.
 
@@ -73,7 +75,27 @@ source /opt/ros/humble/setup.bash
 source install/setup.bash
 ```
 
-## Chạy nhiệm vụ lấy–giao hàng
+## Chọn A/B trên RViz và lấy–giao pallet
+
+Sau khi build/source lại workspace, chạy `ros2 launch forklift_bringup p6.launch.py`.
+Trong RViz, dùng **Pick A** để đặt pose đứng trước pallet, **Drop B** để đặt pose
+robot lúc hạ hàng, rồi bấm **Run mission** trong panel **Pallet mission**.
+Robot dùng LiDAR sửa pose tiếp cận A, căn chỉnh/chèn càng, nâng, vận chuyển tới B,
+hạ và lùi ra; nhiệm vụ kết thúc tại đó. B là vùng thả trống, độ chính xác vật lý
+còn phụ thuộc AMCL. Đây là nhánh `pick_and_place`; lệnh `a_to_b` bên dưới giữ
+chu trình trạm cố định và về Home.
+
+Xem [hướng dẫn A/B, giới hạn nhận dạng và tích hợp robot thật](docs/dynamic_mission.md).
+[Báo cáo kiểm thử A/B](results/final/dynamic_mission/README.md) ghi kết quả,
+quỹ đạo và giới hạn sai số tại B.
+[Bản sửa tạo path theo code cũ](results/final/path_pipeline_fix/README.md) ghi
+chẩn đoán phiên Run bị lỗi và kết quả kiểm thử sau khi chuyển sang FollowPath.
+[Nhận dạng ngay lúc Run](results/final/early_detection/README.md) ghi kết quả
+nhánh lập tuyến sớm, fallback và xác nhận lại khi tới gần pallet.
+Robot thật cần nâng đã hiệu chuẩn và phản hồi tải thật; cấu hình nâng xung preset
+hiện tại chưa đáp ứng nhiệm vụ tự động này.
+
+## Chạy nhiệm vụ lấy–giao hàng tại trạm cố định
 
 Terminal 1 — mở thế giới có pallet, Gazebo, RViz, Nav2 và bộ quản lý nhiệm vụ:
 

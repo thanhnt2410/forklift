@@ -1,0 +1,7 @@
+{
+  "passed": true,
+  "checks_passed": 14,
+  "checks_total": 14,
+  "scenario": "invalid_drop",
+  "physical_hardware_used": false
+}

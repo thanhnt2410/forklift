@@ -1,0 +1,14 @@
+{
+  "passed": true,
+  "exit_code": 0,
+  "config": "src/forklift_bringup/rviz/mission.rviz",
+  "checks": [
+    "Pick A topic/name",
+    "Drop B topic/name",
+    "Run button",
+    "Stop button",
+    "Clear button",
+    "screenshot",
+    "clean shutdown"
+  ]
+}

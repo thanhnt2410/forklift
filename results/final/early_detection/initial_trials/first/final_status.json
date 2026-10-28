@@ -1,0 +1,147 @@
+{
+  "dynamic": true,
+  "refinement": {
+    "initial": [
+      0.3500513519710635,
+      0.6511576882938291,
+      -0.002653179662089563
+    ],
+    "corrected": [
+      0.4289250995988346,
+      0.6188468731325726,
+      -0.02996771374392304
+    ],
+    "face": [
+      1.0786332506846086,
+      0.599370774634537,
+      -0.02996771374392304
+    ],
+    "samples": 5,
+    "replan_required": true
+  },
+  "initial_detection": {
+    "outcome": "DETECTED",
+    "initial": [
+      0.35,
+      0.7,
+      0.060000000000000005
+    ],
+    "corrected": [
+      0.3500513519710635,
+      0.6511576882938291,
+      -0.002653179662089563
+    ],
+    "face": [
+      1.0000490641796518,
+      0.6494331235367786,
+      -0.002653179662089563
+    ],
+    "samples": 5
+  },
+  "route_ready": true,
+  "route_revision": 3,
+  "state": "DONE",
+  "code": "SUCCEEDED",
+  "active": false,
+  "load_detected": false,
+  "carrying": false,
+  "contacts": [
+    {
+      "a": "p6_pallet::load::deck_collision",
+      "b": "forklift::lift_carriage::lift_carriage_fixed_joint_lump__fork_right_collision_collision_1",
+      "aid": 63,
+      "bid": 102
+    },
+    {
+      "a": "p6_pallet::load::deck_collision",
+      "b": "forklift::lift_carriage::lift_carriage_fixed_joint_lump__fork_left_collision_collision_2",
+      "aid": 63,
+      "bid": 103
+    }
+  ],
+  "contact_messages": 2031,
+  "face": {
+    "x": 0.2823494820208824,
+    "y": -2.5331762278505126e-06,
+    "yaw": 5.025607389140886e-05,
+    "width": 0.23696588421922346,
+    "residual": 0.0001359923888909094,
+    "points": 92,
+    "map_pose": [
+      1.0435060450255547,
+      0.6069439968324402,
+      -0.02042834586612902
+    ]
+  },
+  "elapsed": 124.97310652001761,
+  "events": [
+    {
+      "state": "CHECK_READY",
+      "wall_time": 521512.00999126
+    },
+    {
+      "state": "LOWER_FOR_PICK",
+      "wall_time": 521513.183502354
+    },
+    {
+      "state": "DETECT_PICK_INITIAL",
+      "wall_time": 521514.743509016
+    },
+    {
+      "state": "PLAN_MISSION",
+      "wall_time": 521516.185245446
+    },
+    {
+      "state": "NAV_PICK",
+      "wall_time": 521518.643877101
+    },
+    {
+      "state": "DETECT_PICK",
+      "wall_time": 521539.944255185
+    },
+    {
+      "state": "REFINE_PICK",
+      "wall_time": 521541.267960761
+    },
+    {
+      "state": "ORIENT_PICK",
+      "wall_time": 521555.20365295
+    },
+    {
+      "state": "ALIGN",
+      "wall_time": 521557.287311636
+    },
+    {
+      "state": "INSERT",
+      "wall_time": 521563.167235044
+    },
+    {
+      "state": "LIFT_PICK",
+      "wall_time": 521584.585274162
+    },
+    {
+      "state": "VERIFY_LOAD",
+      "wall_time": 521586.323671548
+    },
+    {
+      "state": "RETREAT_PICK",
+      "wall_time": 521587.143316413
+    },
+    {
+      "state": "NAV_DROP",
+      "wall_time": 521595.783568044
+    },
+    {
+      "state": "LOWER_RELEASE",
+      "wall_time": 521625.143294942
+    },
+    {
+      "state": "RETREAT_DROP",
+      "wall_time": 521626.943350144
+    },
+    {
+      "state": "DONE",
+      "wall_time": 521635.963906794
+    }
+  ]
+}

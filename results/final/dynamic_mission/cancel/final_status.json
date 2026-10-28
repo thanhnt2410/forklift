@@ -1,0 +1,37 @@
+{
+  "dynamic": true,
+  "refinement": null,
+  "route_ready": false,
+  "route_revision": 0,
+  "state": "CANCELLED",
+  "code": "CANCELED",
+  "active": false,
+  "load_detected": false,
+  "carrying": false,
+  "contacts": [],
+  "contact_messages": 0,
+  "face": null,
+  "elapsed": 23.48863881500438,
+  "events": [
+    {
+      "state": "CHECK_READY",
+      "wall_time": 505839.047151936
+    },
+    {
+      "state": "LOWER_FOR_PICK",
+      "wall_time": 505840.536017733
+    },
+    {
+      "state": "NAV_PICK",
+      "wall_time": 505841.496860743
+    },
+    {
+      "state": "DETECT_PICK",
+      "wall_time": 505861.296168911
+    },
+    {
+      "state": "CANCELLED",
+      "wall_time": 505861.4159477
+    }
+  ]
+}

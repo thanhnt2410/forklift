@@ -1,0 +1,153 @@
+[
+  {
+    "test": "startup_ready",
+    "passed": true
+  },
+  {
+    "test": "start_without_poses_rejected",
+    "passed": true
+  },
+  {
+    "test": "invalid_frame_rejected",
+    "passed": true
+  },
+  {
+    "test": "both_rviz_inputs_received",
+    "passed": true
+  },
+  {
+    "test": "start_service_accepted",
+    "passed": true
+  },
+  {
+    "test": "concurrent_start_rejected",
+    "passed": true
+  },
+  {
+    "test": "clear_while_active_rejected",
+    "passed": true
+  },
+  {
+    "test": "stopped_at_end",
+    "passed": true
+  },
+  {
+    "test": "single_velocity_owner",
+    "passed": true
+  },
+  {
+    "test": "no_return_home",
+    "passed": true
+  },
+  {
+    "test": "no_navigate_to_pose_recovery",
+    "passed": true
+  },
+  {
+    "test": "whole_route_before_motion",
+    "passed": true
+  },
+  {
+    "test": "legacy_candidate_selection",
+    "passed": true
+  },
+  {
+    "test": "active_path_published",
+    "passed": true
+  },
+  {
+    "test": "mission_succeeded",
+    "passed": true,
+    "code": "SUCCEEDED"
+  },
+  {
+    "test": "lidar_refinement_executed",
+    "passed": true
+  },
+  {
+    "test": "coarse_pose_corrected",
+    "passed": true,
+    "refinement": {
+      "initial": [
+        0.35,
+        0.7,
+        0.060000000000000005
+      ],
+      "corrected": [
+        0.41050764720819366,
+        0.6285815564070796,
+        -0.028971205331791126
+      ],
+      "face": [
+        1.0602348837972482,
+        0.6097529071100419,
+        -0.028971205331791126
+      ],
+      "samples": 5
+    }
+  },
+  {
+    "test": "refined_navigation_executed",
+    "passed": true
+  },
+  {
+    "test": "physical_pick_alignment",
+    "passed": true,
+    "lateral": -0.0001832719881309508,
+    "yaw": -6.627507894576283e-06
+  },
+  {
+    "test": "physically_carried",
+    "passed": true
+  },
+  {
+    "test": "straight_insertion",
+    "passed": true
+  },
+  {
+    "test": "release_at_requested_map_pose",
+    "passed": true,
+    "map_error_m": 0.0275213669210518
+  },
+  {
+    "test": "pallet_in_delivery_region",
+    "passed": true,
+    "x": 0.9004578383229409,
+    "y": -0.5243467979140983,
+    "z": -5.66353432199327e-07,
+    "error_m": 0.09043137049434855,
+    "region_radius_m": 0.15
+  },
+  {
+    "test": "withdrawal_clearance",
+    "passed": true,
+    "distance": 0.3509034247691176
+  },
+  {
+    "test": "released",
+    "passed": true
+  },
+  {
+    "test": "phase_order",
+    "passed": true,
+    "events": [
+      "IDLE",
+      "CHECK_READY",
+      "LOWER_FOR_PICK",
+      "PLAN_MISSION",
+      "NAV_PICK",
+      "DETECT_PICK",
+      "REFINE_PICK",
+      "ORIENT_PICK",
+      "ALIGN",
+      "INSERT",
+      "LIFT_PICK",
+      "VERIFY_LOAD",
+      "RETREAT_PICK",
+      "NAV_DROP",
+      "LOWER_RELEASE",
+      "RETREAT_DROP",
+      "DONE"
+    ]
+  }
+]

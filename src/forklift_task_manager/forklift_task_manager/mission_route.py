@@ -5,6 +5,29 @@ import json
 import hashlib
 from pathlib import Path
 
+# Same profiles and scoring as the legacy offline route preview.
+DYNAMIC_PLANNERS = ('Pallet', 'Pallet11', 'Pallet13', 'Pallet15')
+
+def path_statistics(points):
+    distance=reverse=turn=0.;directions=[]
+    for u,v in zip(points,points[1:]):
+        dx,dy=v[0]-u[0],v[1]-u[1];d=math.hypot(dx,dy);distance+=d
+        turn+=abs(math.atan2(math.sin(v[2]-u[2]),math.cos(v[2]-u[2])))
+        if d<1e-5:continue
+        sign=1 if dx*math.cos(u[2])+dy*math.sin(u[2])>0 else -1
+        if sign<0:reverse+=d
+        if not directions or directions[-1]!=sign:directions.append(sign)
+    return dict(length_m=distance,reverse_m=reverse,gear_changes=max(0,len(directions)-1),turn_radians=turn)
+
+def choose_navigation_candidate(candidates):
+    if not candidates:raise ValueError('NO_PATH_CANDIDATES')
+    shortest=min(v['statistics']['length_m'] for v in candidates)
+    allowed=[v for v in candidates if v['statistics']['length_m']<=shortest*1.5]
+    def score(v):
+        s=v['statistics'];return s['length_m']+.6*s['gear_changes']+.12*s['turn_radians']
+    best=min(allowed,key=score)
+    return {**best,'selection_score':score(best),'candidates_evaluated':len(candidates)}
+
 def station_poses(parameters, station):
     angle=station['approach'][2];c,s=math.cos(angle),math.sin(angle)
     def at(distance):

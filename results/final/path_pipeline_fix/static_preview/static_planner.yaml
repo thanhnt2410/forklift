@@ -1,0 +1,199 @@
+global_costmap:
+  global_costmap:
+    ros__parameters:
+      always_send_full_costmap: true
+      footprint: '[[-0.1751, -0.225145], [0.52, -0.225145], [0.52, 0.225145], [-0.1751,
+        0.225145]]'
+      footprint_padding: 0.01
+      global_frame: map
+      inflation_layer:
+        cost_scaling_factor: 3.0
+        inflation_radius: 0.55
+        plugin: nav2_costmap_2d::InflationLayer
+      obstacle_layer:
+        enabled: true
+        observation_sources: scan
+        plugin: nav2_costmap_2d::ObstacleLayer
+        scan:
+          clearing: true
+          data_type: LaserScan
+          inf_is_valid: true
+          marking: true
+          max_obstacle_height: 2.0
+          observation_persistence: 0.0
+          obstacle_max_range: 9.5
+          obstacle_min_range: 0.12
+          raytrace_max_range: 10.0
+          raytrace_min_range: 0.12
+          topic: /scan
+      plugins:
+      - static_layer
+      - inflation_layer
+      publish_frequency: 2.0
+      resolution: 0.04
+      robot_base_frame: base_link
+      static_layer:
+        map_subscribe_transient_local: true
+        plugin: nav2_costmap_2d::StaticLayer
+      track_unknown_space: true
+      transform_tolerance: 0.5
+      update_frequency: 2.0
+      use_sim_time: false
+map_server:
+  ros__parameters:
+    use_sim_time: false
+    yaml_filename: /home/thanh/ros_ws/forklift/src/forklift_navigation/maps/warehouse.yaml
+planner_server:
+  ros__parameters:
+    Pallet:
+      allow_unknown: false
+      analytic_expansion_max_length: 2.0
+      analytic_expansion_ratio: 3.5
+      angle_quantization_bins: 72
+      cache_obstacle_heuristic: true
+      change_penalty: 0.15
+      cost_penalty: 2.0
+      downsample_costmap: false
+      downsampling_factor: 1
+      lookup_table_size: 4.0
+      max_iterations: 1000000
+      max_on_approach_iterations: 1000
+      max_planning_time: 2.0
+      minimum_turning_radius: 0.5
+      motion_model_for_search: REEDS_SHEPP
+      non_straight_penalty: 1.5
+      plugin: forklift_navigation/TerminalApproachPlanner
+      retrospective_penalty: 0.015
+      reverse_penalty: 1.0
+      smooth_path: true
+      smoother:
+        do_refinement: true
+        max_iterations: 1000
+        tolerance: 1.0e-10
+        w_data: 0.2
+        w_smooth: 0.3
+      terminal_distance: 0.9
+      tolerance: 0.02
+    Pallet11:
+      allow_unknown: false
+      analytic_expansion_max_length: 2.0
+      analytic_expansion_ratio: 3.5
+      angle_quantization_bins: 72
+      cache_obstacle_heuristic: true
+      change_penalty: 0.15
+      cost_penalty: 2.0
+      downsample_costmap: false
+      downsampling_factor: 1
+      lookup_table_size: 4.0
+      max_iterations: 1000000
+      max_on_approach_iterations: 1000
+      max_planning_time: 2.0
+      minimum_turning_radius: 0.5
+      motion_model_for_search: REEDS_SHEPP
+      non_straight_penalty: 1.5
+      plugin: forklift_navigation/TerminalApproachPlanner
+      retrospective_penalty: 0.015
+      reverse_penalty: 1.0
+      smooth_path: true
+      smoother:
+        do_refinement: true
+        max_iterations: 1000
+        tolerance: 1.0e-10
+        w_data: 0.2
+        w_smooth: 0.3
+      terminal_distance: 1.1
+      tolerance: 0.02
+    Pallet13:
+      allow_unknown: false
+      analytic_expansion_max_length: 2.0
+      analytic_expansion_ratio: 3.5
+      angle_quantization_bins: 72
+      cache_obstacle_heuristic: true
+      change_penalty: 0.15
+      cost_penalty: 2.0
+      downsample_costmap: false
+      downsampling_factor: 1
+      lookup_table_size: 4.0
+      max_iterations: 1000000
+      max_on_approach_iterations: 1000
+      max_planning_time: 2.0
+      minimum_turning_radius: 0.5
+      motion_model_for_search: REEDS_SHEPP
+      non_straight_penalty: 1.5
+      plugin: forklift_navigation/TerminalApproachPlanner
+      retrospective_penalty: 0.015
+      reverse_penalty: 1.0
+      smooth_path: true
+      smoother:
+        do_refinement: true
+        max_iterations: 1000
+        tolerance: 1.0e-10
+        w_data: 0.2
+        w_smooth: 0.3
+      terminal_distance: 1.3
+      tolerance: 0.02
+    Pallet15:
+      allow_unknown: false
+      analytic_expansion_max_length: 2.0
+      analytic_expansion_ratio: 3.5
+      angle_quantization_bins: 72
+      cache_obstacle_heuristic: true
+      change_penalty: 0.15
+      cost_penalty: 2.0
+      downsample_costmap: false
+      downsampling_factor: 1
+      lookup_table_size: 4.0
+      max_iterations: 1000000
+      max_on_approach_iterations: 1000
+      max_planning_time: 2.0
+      minimum_turning_radius: 0.5
+      motion_model_for_search: REEDS_SHEPP
+      non_straight_penalty: 1.5
+      plugin: forklift_navigation/TerminalApproachPlanner
+      retrospective_penalty: 0.015
+      reverse_penalty: 1.0
+      smooth_path: true
+      smoother:
+        do_refinement: true
+        max_iterations: 1000
+        tolerance: 1.0e-10
+        w_data: 0.2
+        w_smooth: 0.3
+      terminal_distance: 1.5
+      tolerance: 0.02
+    Transit:
+      allow_unknown: false
+      analytic_expansion_max_length: 2.0
+      analytic_expansion_ratio: 3.5
+      angle_quantization_bins: 72
+      cache_obstacle_heuristic: true
+      change_penalty: 0.15
+      cost_penalty: 2.0
+      downsample_costmap: false
+      downsampling_factor: 1
+      lookup_table_size: 4.0
+      max_iterations: 1000000
+      max_on_approach_iterations: 1000
+      max_planning_time: 2.0
+      minimum_turning_radius: 0.5
+      motion_model_for_search: REEDS_SHEPP
+      non_straight_penalty: 1.5
+      plugin: nav2_smac_planner/SmacPlannerHybrid
+      retrospective_penalty: 0.015
+      reverse_penalty: 1.0
+      smooth_path: true
+      smoother:
+        do_refinement: true
+        max_iterations: 1000
+        tolerance: 1.0e-10
+        w_data: 0.2
+        w_smooth: 0.3
+      tolerance: 0.02
+    expected_planner_frequency: 20.0
+    planner_plugins:
+    - Pallet
+    - Pallet11
+    - Pallet13
+    - Pallet15
+    - Transit
+    use_sim_time: false

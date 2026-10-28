@@ -1,0 +1,587 @@
+[INFO] [launch]: All log files can be found below /tmp/forklift_p6_3243464_logs/2026-10-28-17-46-24-683819-thanh-B760M-Pro-RS-D4-3243465
+[INFO] [launch]: Default logging verbosity is set to INFO
+[INFO] [ign-1]: process started with pid [3243496]
+[INFO] [robot_state_publisher-2]: process started with pid [3243498]
+[INFO] [parameter_bridge-3]: process started with pid [3243500]
+[INFO] [create-4]: process started with pid [3243502]
+[INFO] [contact_throttle-5]: process started with pid [3243504]
+[INFO] [parameter_bridge-6]: process started with pid [3243506]
+[INFO] [motion_mux.py-7]: process started with pid [3243508]
+[INFO] [task_manager.py-8]: process started with pid [3243510]
+[INFO] [mission_input.py-9]: process started with pid [3243512]
+[parameter_bridge-6] [INFO] [1793184384.949846816] [ros_gz_bridge]: Creating GZ->ROS Bridge: [/p6/contacts (ignition.msgs.Contacts) -> /p6/contacts (ros_gz_interfaces/msg/Contacts)] (Lazy 0)
+[robot_state_publisher-2] [INFO] [1793184384.960636261] [robot_state_publisher]: got segment base_link
+[robot_state_publisher-2] [INFO] [1793184384.960996910] [robot_state_publisher]: got segment chassis
+[robot_state_publisher-2] [INFO] [1793184384.961006080] [robot_state_publisher]: got segment front_left_wheel
+[robot_state_publisher-2] [INFO] [1793184384.961009739] [robot_state_publisher]: got segment front_right_wheel
+[robot_state_publisher-2] [INFO] [1793184384.961012538] [robot_state_publisher]: got segment imu_link
+[robot_state_publisher-2] [INFO] [1793184384.961015005] [robot_state_publisher]: got segment laser_frame
+[robot_state_publisher-2] [INFO] [1793184384.961017493] [robot_state_publisher]: got segment lidar_housing
+[robot_state_publisher-2] [INFO] [1793184384.961019925] [robot_state_publisher]: got segment lift_carriage
+[robot_state_publisher-2] [INFO] [1793184384.961022393] [robot_state_publisher]: got segment lift_drive_gear
+[robot_state_publisher-2] [INFO] [1793184384.961024768] [robot_state_publisher]: got segment lift_screw
+[robot_state_publisher-2] [INFO] [1793184384.961027129] [robot_state_publisher]: got segment lift_transmission
+[robot_state_publisher-2] [INFO] [1793184384.961029435] [robot_state_publisher]: got segment rear_left_wheel
+[robot_state_publisher-2] [INFO] [1793184384.961031750] [robot_state_publisher]: got segment rear_right_wheel
+[create-4] [INFO] [1793184385.541809538] [ros_gz_sim]: Requested creation of entity.
+[create-4] [INFO] [1793184385.541964239] [ros_gz_sim]: OK creation of entity.
+[INFO] [create-4]: process has finished cleanly [pid 3243502]
+[INFO] [spawner-10]: process started with pid [3243650]
+[parameter_bridge-3] [INFO] [1793184385.973464884] [ros_gz_bridge]: Creating GZ->ROS Bridge: [/clock (ignition.msgs.Clock) -> /clock (rosgraph_msgs/msg/Clock)] (Lazy 0)
+[parameter_bridge-3] [INFO] [1793184385.974724129] [ros_gz_bridge]: Creating GZ->ROS Bridge: [/scan (ignition.msgs.LaserScan) -> /scan_raw (sensor_msgs/msg/LaserScan)] (Lazy 0)
+[parameter_bridge-3] [INFO] [1793184385.980559286] [ros_gz_bridge]: Creating GZ->ROS Bridge: [/imu/sim (ignition.msgs.IMU) -> /imu/sim (sensor_msgs/msg/Imu)] (Lazy 0)
+[spawner-10] [INFO] [1793184386.037458814] [spawner_joint_state_broadcaster]: waiting for service /controller_manager/list_controllers to become available...
+[ign-1] [INFO] [1793184387.193008040] [GazeboSimROS2ControlPlugin]: robot_param_node is robot_state_publisher
+[ign-1] [INFO] [1793184387.193044212] [GazeboSimROS2ControlPlugin]: robot_param_node is robot_description
+[ign-1] [ERROR] [1793184387.722307009] [gz_ros2_control]: robot_state_publisher service not available, waiting again...
+[ign-1] [ERROR] [1793184388.223072139] [gz_ros2_control]: robot_state_publisher service not available, waiting again...
+[ign-1] [INFO] [1793184388.465061634] [gz_ros2_control]: connected to service!! robot_state_publisher asking for robot_description
+[ign-1] [INFO] [1793184388.465632914] [gz_ros2_control]: Received URDF from param server
+[ign-1] [INFO] [1793184388.471206905] [gz_ros2_control]: The position_proportional_gain has been set to: 0.1
+[ign-1] [INFO] [1793184388.471282981] [gz_ros2_control]: Loading joint: front_left_wheel_joint
+[ign-1] [INFO] [1793184388.471291853] [gz_ros2_control]: 	State:
+[ign-1] [INFO] [1793184388.471298174] [gz_ros2_control]: 		 position
+[ign-1] [INFO] [1793184388.471305590] [gz_ros2_control]: 		 velocity
+[ign-1] [INFO] [1793184388.471310115] [gz_ros2_control]: 	Command:
+[ign-1] [INFO] [1793184388.471314546] [gz_ros2_control]: 		 velocity
+[ign-1] [INFO] [1793184388.471326670] [gz_ros2_control]: Loading joint: front_right_wheel_joint
+[ign-1] [INFO] [1793184388.471329708] [gz_ros2_control]: 	State:
+[ign-1] [INFO] [1793184388.471332383] [gz_ros2_control]: 		 position
+[ign-1] [INFO] [1793184388.471335298] [gz_ros2_control]: 		 velocity
+[ign-1] [INFO] [1793184388.471337892] [gz_ros2_control]: 	Command:
+[ign-1] [INFO] [1793184388.471340590] [gz_ros2_control]: 		 velocity
+[ign-1] [INFO] [1793184388.471346389] [gz_ros2_control]: Loading joint: rear_left_wheel_joint
+[ign-1] [INFO] [1793184388.471349015] [gz_ros2_control]: 	State:
+[ign-1] [INFO] [1793184388.471352872] [gz_ros2_control]: 		 position
+[ign-1] [INFO] [1793184388.471357394] [gz_ros2_control]: 		 velocity
+[ign-1] [INFO] [1793184388.471361157] [gz_ros2_control]: 	Command:
+[ign-1] [INFO] [1793184388.471364728] [gz_ros2_control]: 		 velocity
+[ign-1] [INFO] [1793184388.471372453] [gz_ros2_control]: Loading joint: rear_right_wheel_joint
+[ign-1] [INFO] [1793184388.471376693] [gz_ros2_control]: 	State:
+[ign-1] [INFO] [1793184388.471380890] [gz_ros2_control]: 		 position
+[ign-1] [INFO] [1793184388.471384560] [gz_ros2_control]: 		 velocity
+[ign-1] [INFO] [1793184388.471388070] [gz_ros2_control]: 	Command:
+[ign-1] [INFO] [1793184388.471391884] [gz_ros2_control]: 		 velocity
+[ign-1] [INFO] [1793184388.471399500] [gz_ros2_control]: Loading joint: lift_joint
+[ign-1] [INFO] [1793184388.471402669] [gz_ros2_control]: 	State:
+[ign-1] [INFO] [1793184388.471405350] [gz_ros2_control]: 		 position
+[ign-1] [INFO] [1793184388.471410814] [gz_ros2_control]: 			 found initial value: 0.000000
+[ign-1] [INFO] [1793184388.471415863] [gz_ros2_control]: 		 velocity
+[ign-1] [INFO] [1793184388.471418451] [gz_ros2_control]: 	Command:
+[ign-1] [INFO] [1793184388.471421047] [gz_ros2_control]: 		 position
+[ign-1] [INFO] [1793184388.471476882] [gz_ros2_control]: Loading sensor: mpu6050_sim
+[ign-1] [INFO] [1793184388.471480404] [gz_ros2_control]: 	State:
+[ign-1] [INFO] [1793184388.471513556] [resource_manager]: Initialize hardware 'ForkliftSimSystem' 
+[ign-1] [INFO] [1793184388.471553840] [resource_manager]: Successful initialization of hardware 'ForkliftSimSystem'
+[ign-1] [INFO] [1793184388.471577635] [resource_manager]: 'configure' hardware 'ForkliftSimSystem' 
+[ign-1] [INFO] [1793184388.471580077] [gz_ros2_control]: System Successfully configured!
+[ign-1] [INFO] [1793184388.471585443] [resource_manager]: Successful 'configure' of hardware 'ForkliftSimSystem'
+[ign-1] [INFO] [1793184388.471589903] [resource_manager]: 'activate' hardware 'ForkliftSimSystem' 
+[ign-1] [INFO] [1793184388.471593247] [resource_manager]: Successful 'activate' of hardware 'ForkliftSimSystem'
+[ign-1] [INFO] [1793184388.471597696] [gz_ros2_control]: Loading controller_manager
+[ign-1] [WARN] [1793184388.533450278] [gz_ros2_control]:  Desired controller update period (0.01 s) is slower than the gazebo simulation period (0.001 s).
+[ign-1] [INFO] [1793184388.552229931] [controller_manager]: Loading controller 'joint_state_broadcaster'
+[spawner-10] [INFO] [1793184388.612847686] [spawner_joint_state_broadcaster]: [94mLoaded [1mjoint_state_broadcaster[0m
+[ign-1] [INFO] [1793184388.695412661] [controller_manager]: Configuring controller 'joint_state_broadcaster'
+[ign-1] [INFO] [1793184388.695564441] [joint_state_broadcaster]: 'joints' or 'interfaces' parameter is empty. All available state interfaces will be published
+[ign-1] libEGL warning: egl: failed to create dri2 screen
+[ign-1] libEGL warning: egl: failed to create dri2 screen
+[ign-1] [INFO] [1793184389.683540546] [gz_ros2_control]: IMU mpu6050_sim has a topic name: /imu/sim
+[spawner-10] [INFO] [1793184389.696734972] [spawner_joint_state_broadcaster]: [92mConfigured and activated [1mjoint_state_broadcaster[0m
+[INFO] [spawner-10]: process has finished cleanly [pid 3243650]
+[INFO] [spawner-11]: process started with pid [3243787]
+[spawner-11] [INFO] [1793184390.338386417] [spawner_base_controller]: waiting for service /controller_manager/list_controllers to become available...
+[spawner-11] [INFO] [1793184390.857461875] [spawner_base_controller]: [96mSetting controller param "params_file" to "['/tmp/forklift_controllers_lxtri8hg.yaml']" for [1mbase_controller[0m
+[ign-1] [INFO] [1793184390.867137091] [controller_manager]: Loading controller 'base_controller'
+[spawner-11] [INFO] [1793184390.895604763] [spawner_base_controller]: [94mLoaded [1mbase_controller[0m
+[ign-1] [INFO] [1793184390.979792702] [controller_manager]: Configuring controller 'base_controller'
+[ign-1] [INFO] [1793184390.990500458] [base_controller]: MecanumDriveController configured successfully
+[spawner-11] [INFO] [1793184391.026493997] [spawner_base_controller]: [92mConfigured and activated [1mbase_controller[0m
+[INFO] [spawner-11]: process has finished cleanly [pid 3243787]
+[INFO] [spawner-12]: process started with pid [3243809]
+[spawner-12] [INFO] [1793184391.692539725] [spawner_lift_controller]: waiting for service /controller_manager/list_controllers to become available...
+[spawner-12] [INFO] [1793184394.039275004] [spawner_lift_controller]: [96mSetting controller param "params_file" to "['/tmp/forklift_controllers_lxtri8hg.yaml']" for [1mlift_controller[0m
+[ign-1] [INFO] [1793184394.046278812] [controller_manager]: Loading controller 'lift_controller'
+[spawner-12] [INFO] [1793184394.081108019] [spawner_lift_controller]: [94mLoaded [1mlift_controller[0m
+[ign-1] [INFO] [1793184394.084731167] [controller_manager]: Configuring controller 'lift_controller'
+[ign-1] [INFO] [1793184394.084924106] [lift_controller]: No specific joint names are used for command interfaces. Using 'joints' parameter.
+[ign-1] [INFO] [1793184394.084954964] [lift_controller]: Command interfaces are [position] and state interfaces are [position velocity].
+[ign-1] [INFO] [1793184394.084978705] [lift_controller]: Using 'splines' interpolation method.
+[ign-1] [INFO] [1793184394.087100626] [lift_controller]: Controller state will be published at 50.00 Hz.
+[ign-1] [INFO] [1793184394.092249835] [lift_controller]: Action status changes will be monitored at 20.00 Hz.
+[spawner-12] [INFO] [1793184394.140282559] [spawner_lift_controller]: [92mConfigured and activated [1mlift_controller[0m
+[INFO] [spawner-12]: process has finished cleanly [pid 3243809]
+[INFO] [command_gate.py-13]: process started with pid [3243850]
+[INFO] [lift_sim_io.py-14]: process started with pid [3243852]
+[INFO] [lift_supervisor.py-15]: process started with pid [3243854]
+[INFO] [imu_adapter.py-16]: process started with pid [3243856]
+[INFO] [ekf_node-17]: process started with pid [3243858]
+[INFO] [scan_relay.py-18]: process started with pid [3243860]
+[INFO] [map_server-19]: process started with pid [3243862]
+[INFO] [amcl-20]: process started with pid [3243864]
+[INFO] [controller_server-21]: process started with pid [3243866]
+[INFO] [planner_server-22]: process started with pid [3243879]
+[INFO] [smoother_server-23]: process started with pid [3243922]
+[INFO] [behavior_server-24]: process started with pid [3243925]
+[INFO] [bt_navigator-25]: process started with pid [3243932]
+[INFO] [waypoint_follower-26]: process started with pid [3243936]
+[INFO] [velocity_smoother-27]: process started with pid [3243939]
+[INFO] [navigation_guard.py-28]: process started with pid [3243949]
+[INFO] [lifecycle_manager-29]: process started with pid [3243955]
+[INFO] [lifecycle_manager-30]: process started with pid [3243957]
+[map_server-19] [INFO] [1793184394.630857396] [map_server]: 
+[map_server-19] 	map_server lifecycle node launched. 
+[map_server-19] 	Waiting on external lifecycle transitions to activate
+[map_server-19] 	See https://design.ros2.org/articles/node_lifecycle.html for more information.
+[map_server-19] [INFO] [1793184394.631004750] [map_server]: Creating
+[amcl-20] [INFO] [1793184394.606065138] [amcl]: 
+[amcl-20] 	amcl lifecycle node launched. 
+[amcl-20] 	Waiting on external lifecycle transitions to activate
+[amcl-20] 	See https://design.ros2.org/articles/node_lifecycle.html for more information.
+[amcl-20] [INFO] [1793184394.606604330] [amcl]: Creating
+[controller_server-21] [INFO] [1793184394.589282830] [controller_server]: 
+[controller_server-21] 	controller_server lifecycle node launched. 
+[controller_server-21] 	Waiting on external lifecycle transitions to activate
+[controller_server-21] 	See https://design.ros2.org/articles/node_lifecycle.html for more information.
+[controller_server-21] [INFO] [1793184394.606523691] [controller_server]: Creating controller server
+[controller_server-21] [INFO] [1793184394.682718312] [local_costmap.local_costmap]: 
+[controller_server-21] 	local_costmap lifecycle node launched. 
+[controller_server-21] 	Waiting on external lifecycle transitions to activate
+[controller_server-21] 	See https://design.ros2.org/articles/node_lifecycle.html for more information.
+[controller_server-21] [INFO] [1793184394.683834066] [local_costmap.local_costmap]: Creating Costmap
+[smoother_server-23] [INFO] [1793184394.709817715] [smoother_server]: 
+[smoother_server-23] 	smoother_server lifecycle node launched. 
+[smoother_server-23] 	Waiting on external lifecycle transitions to activate
+[smoother_server-23] 	See https://design.ros2.org/articles/node_lifecycle.html for more information.
+[smoother_server-23] [INFO] [1793184394.717048228] [smoother_server]: Creating smoother server
+[planner_server-22] [INFO] [1793184394.720726037] [planner_server]: 
+[planner_server-22] 	planner_server lifecycle node launched. 
+[planner_server-22] 	Waiting on external lifecycle transitions to activate
+[planner_server-22] 	See https://design.ros2.org/articles/node_lifecycle.html for more information.
+[planner_server-22] [INFO] [1793184394.726405392] [planner_server]: Creating
+[lifecycle_manager-29] [INFO] [1793184394.786400426] [lifecycle_manager_localization]: Creating
+[lifecycle_manager-29] [INFO] [1793184394.792405704] [lifecycle_manager_localization]: [34m[1mCreating and initializing lifecycle service clients[0m[0m
+[waypoint_follower-26] [INFO] [1793184394.787311197] [waypoint_follower]: 
+[waypoint_follower-26] 	waypoint_follower lifecycle node launched. 
+[waypoint_follower-26] 	Waiting on external lifecycle transitions to activate
+[waypoint_follower-26] 	See https://design.ros2.org/articles/node_lifecycle.html for more information.
+[waypoint_follower-26] [INFO] [1793184394.787977820] [waypoint_follower]: Creating
+[lifecycle_manager-30] [INFO] [1793184394.798643952] [lifecycle_manager_navigation]: Creating
+[velocity_smoother-27] [INFO] [1793184394.815981714] [velocity_smoother]: 
+[velocity_smoother-27] 	velocity_smoother lifecycle node launched. 
+[velocity_smoother-27] 	Waiting on external lifecycle transitions to activate
+[velocity_smoother-27] 	See https://design.ros2.org/articles/node_lifecycle.html for more information.
+[planner_server-22] [INFO] [1793184394.818870379] [global_costmap.global_costmap]: 
+[planner_server-22] 	global_costmap lifecycle node launched. 
+[planner_server-22] 	Waiting on external lifecycle transitions to activate
+[planner_server-22] 	See https://design.ros2.org/articles/node_lifecycle.html for more information.
+[planner_server-22] [INFO] [1793184394.821144790] [global_costmap.global_costmap]: Creating Costmap
+[lifecycle_manager-30] [INFO] [1793184394.820490985] [lifecycle_manager_navigation]: [34m[1mCreating and initializing lifecycle service clients[0m[0m
+[bt_navigator-25] [INFO] [1793184394.832030803] [bt_navigator]: 
+[bt_navigator-25] 	bt_navigator lifecycle node launched. 
+[bt_navigator-25] 	Waiting on external lifecycle transitions to activate
+[bt_navigator-25] 	See https://design.ros2.org/articles/node_lifecycle.html for more information.
+[bt_navigator-25] [INFO] [1793184394.832185397] [bt_navigator]: Creating
+[behavior_server-24] [INFO] [1793184394.886862417] [behavior_server]: 
+[behavior_server-24] 	behavior_server lifecycle node launched. 
+[behavior_server-24] 	Waiting on external lifecycle transitions to activate
+[behavior_server-24] 	See https://design.ros2.org/articles/node_lifecycle.html for more information.
+[lifecycle_manager-29] [INFO] [1793184394.959379774] [lifecycle_manager_localization]: [34m[1mStarting managed nodes bringup...[0m[0m
+[lifecycle_manager-29] [INFO] [1793184394.959451264] [lifecycle_manager_localization]: [34m[1mConfiguring map_server[0m[0m
+[map_server-19] [INFO] [1793184394.960265684] [map_server]: Configuring
+[map_server-19] [INFO] [1793184394.960325652] [map_io]: Loading yaml file: /home/thanh/ros_ws/forklift/src/forklift_navigation/maps/warehouse.yaml
+[map_server-19] [INFO] [1793184394.960531306] [map_io]: resolution: 0.04
+[map_server-19] [INFO] [1793184394.960536199] [map_io]: origin[0]: -3.08
+[map_server-19] [INFO] [1793184394.960539146] [map_io]: origin[1]: -3.15
+[map_server-19] [INFO] [1793184394.960541710] [map_io]: origin[2]: 0
+[map_server-19] [INFO] [1793184394.960544545] [map_io]: free_thresh: 0.25
+[map_server-19] [INFO] [1793184394.960547273] [map_io]: occupied_thresh: 0.65
+[map_server-19] [INFO] [1793184394.960550263] [map_io]: mode: trinary
+[map_server-19] [INFO] [1793184394.960553485] [map_io]: negate: 0
+[map_server-19] [INFO] [1793184394.960705885] [map_io]: Loading image_file: /home/thanh/ros_ws/forklift/src/forklift_navigation/maps/warehouse.pgm
+[map_server-19] [INFO] [1793184394.965245425] [map_io]: Read map /home/thanh/ros_ws/forklift/src/forklift_navigation/maps/warehouse.pgm: 158 X 156 map @ 0.04 m/cell
+[lifecycle_manager-29] [INFO] [1793184394.984372371] [lifecycle_manager_localization]: [34m[1mConfiguring amcl[0m[0m
+[amcl-20] [INFO] [1793184394.984672234] [amcl]: Configuring
+[amcl-20] [INFO] [1793184394.984764945] [amcl]: initTransforms
+[amcl-20] [INFO] [1793184395.018463916] [amcl]: initPubSub
+[amcl-20] [INFO] [1793184395.047287077] [amcl]: Subscribed to map topic.
+[lifecycle_manager-29] [INFO] [1793184395.073310745] [lifecycle_manager_localization]: [34m[1mActivating map_server[0m[0m
+[map_server-19] [INFO] [1793184395.077439843] [map_server]: Activating
+[map_server-19] [INFO] [1793184395.077728584] [map_server]: Creating bond (map_server) to lifecycle manager.
+[amcl-20] [INFO] [1793184395.078490632] [amcl]: Received a 158 X 156 map @ 0.040 m/pix
+[lifecycle_manager-29] [INFO] [1793184395.191538507] [lifecycle_manager_localization]: Server map_server connected with bond.
+[lifecycle_manager-29] [INFO] [1793184395.191603003] [lifecycle_manager_localization]: [34m[1mActivating amcl[0m[0m
+[amcl-20] [INFO] [1793184395.192612991] [amcl]: Activating
+[amcl-20] [INFO] [1793184395.192673016] [amcl]: initialPoseReceived
+[amcl-20] [INFO] [1793184395.192817141] [amcl]: Setting pose (4.494000): 0.000 0.000 0.000
+[amcl-20] [INFO] [1793184395.194152505] [amcl]: Creating bond (amcl) to lifecycle manager.
+[lifecycle_manager-29] [INFO] [1793184395.319065137] [lifecycle_manager_localization]: Server amcl connected with bond.
+[lifecycle_manager-29] [INFO] [1793184395.319157574] [lifecycle_manager_localization]: [34m[1mManaged nodes are active[0m[0m
+[lifecycle_manager-29] [INFO] [1793184395.319171704] [lifecycle_manager_localization]: [34m[1mCreating bond timer...[0m[0m
+[lifecycle_manager-30] [INFO] [1793184395.388150474] [lifecycle_manager_navigation]: [34m[1mStarting managed nodes bringup...[0m[0m
+[lifecycle_manager-30] [INFO] [1793184395.388228838] [lifecycle_manager_navigation]: [34m[1mConfiguring controller_server[0m[0m
+[controller_server-21] [INFO] [1793184395.391659981] [controller_server]: Configuring controller interface
+[controller_server-21] [INFO] [1793184395.391891976] [controller_server]: getting goal checker plugins..
+[controller_server-21] [INFO] [1793184395.392015417] [controller_server]: Controller frequency set to 20.0000Hz
+[controller_server-21] [INFO] [1793184395.392044893] [local_costmap.local_costmap]: Configuring
+[controller_server-21] [INFO] [1793184395.426051458] [local_costmap.local_costmap]: Using plugin "obstacle_layer"
+[controller_server-21] [INFO] [1793184395.430617696] [local_costmap.local_costmap]: Subscribed to Topics: scan
+[controller_server-21] [INFO] [1793184395.444772383] [local_costmap.local_costmap]: Initialized plugin "obstacle_layer"
+[controller_server-21] [INFO] [1793184395.449073904] [local_costmap.local_costmap]: Using plugin "inflation_layer"
+[controller_server-21] [INFO] [1793184395.459399763] [local_costmap.local_costmap]: Initialized plugin "inflation_layer"
+[amcl-20] [INFO] [1793184395.558420679] [amcl]: createLaserObject
+[controller_server-21] [INFO] [1793184395.584204810] [controller_server]: Created progress_checker : progress_checker of type nav2_controller::SimpleProgressChecker
+[controller_server-21] [INFO] [1793184395.587024299] [controller_server]: Created goal checker : general_goal_checker of type nav2_controller::SimpleGoalChecker
+[controller_server-21] [INFO] [1793184395.592703187] [controller_server]: Controller Server has general_goal_checker  goal checkers available.
+[controller_server-21] [INFO] [1793184395.599007117] [controller_server]: Created controller : FollowPath of type forklift_navigation/GuardedMPPIController
+[controller_server-21] [INFO] [1793184395.618432243] [controller_server]: Controller period is equal to model dt. Control sequence shifting is ON
+[controller_server-21] [INFO] [1793184395.620434884] [controller_server]: ConstraintCritic instantiated with 1 power and 4.000000 weight.
+[controller_server-21] [INFO] [1793184395.621461062] [controller_server]: Critic loaded : mppi::critics::ConstraintCritic
+[controller_server-21] [INFO] [1793184395.630022070] [controller_server]: InflationCostCritic instantiated with 1 power and 300.000000 / 0.015000 weights. Critic will collision check based on footprint cost.
+[controller_server-21] [INFO] [1793184395.630096591] [controller_server]: Critic loaded : mppi::critics::CostCritic
+[controller_server-21] [INFO] [1793184395.635445361] [controller_server]: GoalCritic instantiated with 1 power and 8.000000 weight.
+[controller_server-21] [INFO] [1793184395.635733940] [controller_server]: Critic loaded : mppi::critics::GoalCritic
+[controller_server-21] [INFO] [1793184395.647782096] [controller_server]: GoalAngleCritic instantiated with 1 power, 3.000000 weight, and 0.035000 angular threshold.
+[controller_server-21] [INFO] [1793184395.647853577] [controller_server]: Critic loaded : mppi::critics::GoalAngleCritic
+[controller_server-21] [INFO] [1793184395.661696976] [controller_server]: ReferenceTrajectoryCritic instantiated with 1 power and 10.000000 weight
+[controller_server-21] [INFO] [1793184395.661748071] [controller_server]: Critic loaded : mppi::critics::PathAlignCritic
+[controller_server-21] [INFO] [1793184395.661964156] [controller_server]: Critic loaded : mppi::critics::PathFollowCritic
+[controller_server-21] [INFO] [1793184395.662154256] [controller_server]: PathAngleCritic instantiated with 1 power and 3.000000 weight. Reversing allowed.
+[controller_server-21] [INFO] [1793184395.662168000] [controller_server]: Critic loaded : mppi::critics::PathAngleCritic
+[controller_server-21] [INFO] [1793184395.664633574] [controller_server]: Optimizer reset
+[controller_server-21] [INFO] [1793184395.727793856] [MPPIController]: Configured MPPI Controller: FollowPath
+[controller_server-21] [INFO] [1793184395.727835722] [controller_server]: Controller Server has FollowPath  controllers available.
+[lifecycle_manager-30] [INFO] [1793184395.781712736] [lifecycle_manager_navigation]: [34m[1mConfiguring planner_server[0m[0m
+[planner_server-22] [INFO] [1793184395.782808660] [planner_server]: Configuring
+[planner_server-22] [INFO] [1793184395.782866969] [global_costmap.global_costmap]: Configuring
+[planner_server-22] [INFO] [1793184395.809986669] [global_costmap.global_costmap]: Using plugin "static_layer"
+[planner_server-22] [INFO] [1793184395.814219542] [global_costmap.global_costmap]: Subscribing to the map topic (/map) with transient local durability
+[planner_server-22] [INFO] [1793184395.816249513] [global_costmap.global_costmap]: Initialized plugin "static_layer"
+[planner_server-22] [INFO] [1793184395.816296559] [global_costmap.global_costmap]: Using plugin "obstacle_layer"
+[planner_server-22] [INFO] [1793184395.816581946] [global_costmap.global_costmap]: Subscribed to Topics: scan
+[planner_server-22] [INFO] [1793184395.826224104] [global_costmap.global_costmap]: Initialized plugin "obstacle_layer"
+[planner_server-22] [INFO] [1793184395.826277767] [global_costmap.global_costmap]: Using plugin "inflation_layer"
+[planner_server-22] [INFO] [1793184395.827061717] [global_costmap.global_costmap]: Initialized plugin "inflation_layer"
+[planner_server-22] [INFO] [1793184395.878613004] [global_costmap.global_costmap]: StaticLayer: Resizing costmap to 158 X 156 at 0.040000 m/pix
+[planner_server-22] [INFO] [1793184395.887772781] [planner_server]: Created global planner plugin GridBased of type forklift_navigation/TerminalApproachPlanner
+[planner_server-22] [INFO] [1793184395.888318248] [planner_server]: Configuring GridBased of type SmacPlannerHybrid
+[planner_server-22] [INFO] [1793184395.889697862] [planner_server]: Even sized heuristic lookup table size set 100.000000, increasing size by 1 to make odd
+[lift_supervisor.py-15] [INFO] [1793184396.370234440] [lift_supervisor]: SIM auto-home started (configured once at startup)
+[ign-1] [INFO] [1793184396.373913645] [lift_controller]: Received new action goal
+[ign-1] [INFO] [1793184396.374028255] [lift_controller]: Accepted new action goal
+[planner_server-22] [INFO] [1793184397.448610080] [planner_server]: Configured plugin GridBased of type SmacPlannerHybrid with maximum iterations 1000000, max on approach iterations 1000, and not allowing unknown traversal. Tolerance 0.02.Using motion model: Reeds-Shepp.
+[planner_server-22] [INFO] [1793184397.449497016] [planner_server]: Created global planner plugin Pallet of type forklift_navigation/TerminalApproachPlanner
+[planner_server-22] [INFO] [1793184397.449600325] [planner_server]: Configuring Pallet of type SmacPlannerHybrid
+[planner_server-22] [INFO] [1793184397.450001946] [planner_server]: Even sized heuristic lookup table size set 100.000000, increasing size by 1 to make odd
+[ign-1] [INFO] [1793184398.300667117] [lift_controller]: Goal reached, success!
+[ign-1] [INFO] [1793184398.552854428] [lift_controller]: Received new action goal
+[ign-1] [INFO] [1793184398.552906685] [lift_controller]: Accepted new action goal
+[planner_server-22] [INFO] [1793184398.975381744] [planner_server]: Configured plugin Pallet of type SmacPlannerHybrid with maximum iterations 1000000, max on approach iterations 1000, and not allowing unknown traversal. Tolerance 0.02.Using motion model: Reeds-Shepp.
+[planner_server-22] [INFO] [1793184398.976752299] [planner_server]: Created global planner plugin Pallet11 of type forklift_navigation/TerminalApproachPlanner
+[planner_server-22] [INFO] [1793184398.976946928] [planner_server]: Configuring Pallet11 of type SmacPlannerHybrid
+[planner_server-22] [INFO] [1793184398.981871473] [planner_server]: Even sized heuristic lookup table size set 100.000000, increasing size by 1 to make odd
+[planner_server-22] [INFO] [1793184400.391854938] [planner_server]: Configured plugin Pallet11 of type SmacPlannerHybrid with maximum iterations 1000000, max on approach iterations 1000, and not allowing unknown traversal. Tolerance 0.02.Using motion model: Reeds-Shepp.
+[planner_server-22] [INFO] [1793184400.393574858] [planner_server]: Created global planner plugin Pallet13 of type forklift_navigation/TerminalApproachPlanner
+[planner_server-22] [INFO] [1793184400.394974275] [planner_server]: Configuring Pallet13 of type SmacPlannerHybrid
+[planner_server-22] [INFO] [1793184400.396532329] [planner_server]: Even sized heuristic lookup table size set 100.000000, increasing size by 1 to make odd
+[ign-1] [INFO] [1793184400.817083237] [lift_controller]: Got request to cancel goal
+[ign-1] [INFO] [1793184400.817184174] [lift_controller]: Canceling active action goal because cancel callback received.
+[lift_supervisor.py-15] [INFO] [1793184401.011400136] [lift_supervisor]: Internal home result: {'success': True, 'code': 'HOMED', 'canceled': False, 'height': 0.0, 'homed': True}
+[task_manager.py-8] [INFO] [1793184401.149021198] [task_manager]: P6 CHECK_READY
+[planner_server-22] [INFO] [1793184401.790698599] [planner_server]: Configured plugin Pallet13 of type SmacPlannerHybrid with maximum iterations 1000000, max on approach iterations 1000, and not allowing unknown traversal. Tolerance 0.02.Using motion model: Reeds-Shepp.
+[planner_server-22] [INFO] [1793184401.792648106] [planner_server]: Created global planner plugin Pallet15 of type forklift_navigation/TerminalApproachPlanner
+[planner_server-22] [INFO] [1793184401.793745304] [planner_server]: Configuring Pallet15 of type SmacPlannerHybrid
+[planner_server-22] [INFO] [1793184401.813462261] [planner_server]: Even sized heuristic lookup table size set 100.000000, increasing size by 1 to make odd
+[task_manager.py-8] [INFO] [1793184402.483812468] [task_manager]: P6 LOWER_FOR_PICK
+[planner_server-22] [INFO] [1793184402.913249096] [planner_server]: Configured plugin Pallet15 of type SmacPlannerHybrid with maximum iterations 1000000, max on approach iterations 1000, and not allowing unknown traversal. Tolerance 0.02.Using motion model: Reeds-Shepp.
+[planner_server-22] [INFO] [1793184402.913383254] [planner_server]: Planner Server has GridBased Pallet Pallet11 Pallet13 Pallet15  planners available.
+[ign-1] [INFO] [1793184402.913332991] [lift_controller]: Received new action goal
+[ign-1] [INFO] [1793184402.913382934] [lift_controller]: Accepted new action goal
+[lifecycle_manager-30] [INFO] [1793184402.961754065] [lifecycle_manager_navigation]: [34m[1mConfiguring smoother_server[0m[0m
+[smoother_server-23] [INFO] [1793184402.962151745] [smoother_server]: Configuring smoother server
+[smoother_server-23] [INFO] [1793184403.006314551] [smoother_server]: Created smoother : simple_smoother of type nav2_smoother::SimpleSmoother
+[smoother_server-23] [INFO] [1793184403.011758893] [smoother_server]: Smoother Server has simple_smoother  smoothers available.
+[lifecycle_manager-30] [INFO] [1793184403.036836664] [lifecycle_manager_navigation]: [34m[1mConfiguring behavior_server[0m[0m
+[behavior_server-24] [INFO] [1793184403.037532923] [behavior_server]: Configuring
+[ign-1] [INFO] [1793184403.073202942] [lift_controller]: Got request to cancel goal
+[ign-1] [INFO] [1793184403.073293740] [lift_controller]: Canceling active action goal because cancel callback received.
+[behavior_server-24] [INFO] [1793184403.075997679] [behavior_server]: Creating behavior plugin spin of type nav2_behaviors/Spin
+[behavior_server-24] [INFO] [1793184403.076832010] [behavior_server]: Configuring spin
+[behavior_server-24] [INFO] [1793184403.107412872] [behavior_server]: Creating behavior plugin backup of type nav2_behaviors/BackUp
+[behavior_server-24] [INFO] [1793184403.108463887] [behavior_server]: Configuring backup
+[behavior_server-24] [INFO] [1793184403.132318547] [behavior_server]: Creating behavior plugin drive_on_heading of type nav2_behaviors/DriveOnHeading
+[behavior_server-24] [INFO] [1793184403.133306053] [behavior_server]: Configuring drive_on_heading
+[behavior_server-24] [INFO] [1793184403.162734423] [behavior_server]: Creating behavior plugin assisted_teleop of type nav2_behaviors/AssistedTeleop
+[behavior_server-24] [INFO] [1793184403.167064175] [behavior_server]: Configuring assisted_teleop
+[behavior_server-24] [INFO] [1793184403.213221684] [behavior_server]: Creating behavior plugin wait of type nav2_behaviors/Wait
+[behavior_server-24] [INFO] [1793184403.214140883] [behavior_server]: Configuring wait
+[lifecycle_manager-30] [INFO] [1793184403.246970990] [lifecycle_manager_navigation]: [34m[1mConfiguring bt_navigator[0m[0m
+[bt_navigator-25] [INFO] [1793184403.248520724] [bt_navigator]: Configuring
+[task_manager.py-8] [INFO] [1793184403.445054321] [task_manager]: P6 PLAN_MISSION
+[lifecycle_manager-30] [INFO] [1793184403.566226566] [lifecycle_manager_navigation]: [34m[1mConfiguring waypoint_follower[0m[0m
+[waypoint_follower-26] [INFO] [1793184403.568192203] [waypoint_follower]: Configuring
+[waypoint_follower-26] [INFO] [1793184403.604560065] [waypoint_follower]: Created waypoint_task_executor : wait_at_waypoint of type nav2_waypoint_follower::WaitAtWaypoint
+[waypoint_follower-26] [INFO] [1793184403.607533430] [waypoint_follower]: Waypoint pause duration is set to zero, disabling task executor plugin.
+[lifecycle_manager-30] [INFO] [1793184403.609708402] [lifecycle_manager_navigation]: [34m[1mConfiguring velocity_smoother[0m[0m
+[velocity_smoother-27] [INFO] [1793184403.611209862] [velocity_smoother]: Configuring velocity smoother
+[lifecycle_manager-30] [INFO] [1793184403.625534961] [lifecycle_manager_navigation]: [34m[1mActivating controller_server[0m[0m
+[controller_server-21] [INFO] [1793184403.626232663] [controller_server]: Activating
+[controller_server-21] [INFO] [1793184403.626286628] [local_costmap.local_costmap]: Activating
+[controller_server-21] [INFO] [1793184403.626300543] [local_costmap.local_costmap]: Checking transform
+[controller_server-21] [INFO] [1793184403.626566426] [local_costmap.local_costmap]: start
+[controller_server-21] [WARN] [1793184403.732816548] [controller_server]: Parameter controller_server.verbose not found
+[controller_server-21] [INFO] [1793184403.734447903] [controller_server]: Optimizer reset
+[controller_server-21] [INFO] [1793184403.734732641] [MPPIController]: Activated MPPI Controller: FollowPath
+[controller_server-21] [INFO] [1793184403.734765264] [controller_server]: Creating bond (controller_server) to lifecycle manager.
+[lifecycle_manager-30] [INFO] [1793184403.857599216] [lifecycle_manager_navigation]: Server controller_server connected with bond.
+[lifecycle_manager-30] [INFO] [1793184403.857673299] [lifecycle_manager_navigation]: [34m[1mActivating planner_server[0m[0m
+[planner_server-22] [INFO] [1793184403.860460674] [planner_server]: Activating
+[planner_server-22] [INFO] [1793184403.860541738] [global_costmap.global_costmap]: Activating
+[planner_server-22] [INFO] [1793184403.860565583] [global_costmap.global_costmap]: Checking transform
+[planner_server-22] [INFO] [1793184403.860736165] [global_costmap.global_costmap]: start
+[planner_server-22] [INFO] [1793184404.367769578] [planner_server]: Activating plugin Pallet15 of type SmacPlannerHybrid
+[planner_server-22] [INFO] [1793184404.367829048] [planner_server]: Activating plugin Pallet11 of type SmacPlannerHybrid
+[planner_server-22] [INFO] [1793184404.367839461] [planner_server]: Activating plugin Pallet13 of type SmacPlannerHybrid
+[planner_server-22] [INFO] [1793184404.367847985] [planner_server]: Activating plugin Pallet of type SmacPlannerHybrid
+[planner_server-22] [INFO] [1793184404.367855943] [planner_server]: Activating plugin GridBased of type SmacPlannerHybrid
+[planner_server-22] [INFO] [1793184404.374867177] [planner_server]: Creating bond (planner_server) to lifecycle manager.
+[lifecycle_manager-30] [INFO] [1793184404.496536004] [lifecycle_manager_navigation]: Server planner_server connected with bond.
+[lifecycle_manager-30] [INFO] [1793184404.496622469] [lifecycle_manager_navigation]: [34m[1mActivating smoother_server[0m[0m
+[smoother_server-23] [INFO] [1793184404.497760818] [smoother_server]: Activating
+[smoother_server-23] [INFO] [1793184404.497828603] [smoother_server]: Creating bond (smoother_server) to lifecycle manager.
+[task_manager.py-8] [INFO] [1793184404.540627252] [task_manager]: Full mission route planned before NAV_PICK: 9 segments
+[task_manager.py-8] [INFO] [1793184404.541002195] [task_manager]: P6 NAV_PICK
+[lifecycle_manager-30] [INFO] [1793184404.608291974] [lifecycle_manager_navigation]: Server smoother_server connected with bond.
+[lifecycle_manager-30] [INFO] [1793184404.608356173] [lifecycle_manager_navigation]: [34m[1mActivating behavior_server[0m[0m
+[behavior_server-24] [INFO] [1793184404.610073599] [behavior_server]: Activating
+[behavior_server-24] [INFO] [1793184404.610126920] [behavior_server]: Activating spin
+[behavior_server-24] [INFO] [1793184404.610142379] [behavior_server]: Activating backup
+[behavior_server-24] [INFO] [1793184404.610151661] [behavior_server]: Activating drive_on_heading
+[behavior_server-24] [INFO] [1793184404.610161495] [behavior_server]: Activating assisted_teleop
+[behavior_server-24] [INFO] [1793184404.610170104] [behavior_server]: Activating wait
+[behavior_server-24] [INFO] [1793184404.610184820] [behavior_server]: Creating bond (behavior_server) to lifecycle manager.
+[lifecycle_manager-30] [INFO] [1793184404.726224446] [lifecycle_manager_navigation]: Server behavior_server connected with bond.
+[lifecycle_manager-30] [INFO] [1793184404.726305135] [lifecycle_manager_navigation]: [34m[1mActivating bt_navigator[0m[0m
+[bt_navigator-25] [INFO] [1793184404.726857861] [bt_navigator]: Activating
+[bt_navigator-25] [INFO] [1793184405.052933948] [bt_navigator]: Creating bond (bt_navigator) to lifecycle manager.
+[lifecycle_manager-30] [INFO] [1793184405.172480485] [lifecycle_manager_navigation]: Server bt_navigator connected with bond.
+[lifecycle_manager-30] [INFO] [1793184405.172555166] [lifecycle_manager_navigation]: [34m[1mActivating waypoint_follower[0m[0m
+[waypoint_follower-26] [INFO] [1793184405.173071497] [waypoint_follower]: Activating
+[waypoint_follower-26] [INFO] [1793184405.173132296] [waypoint_follower]: Creating bond (waypoint_follower) to lifecycle manager.
+[lifecycle_manager-30] [INFO] [1793184405.286978084] [lifecycle_manager_navigation]: Server waypoint_follower connected with bond.
+[lifecycle_manager-30] [INFO] [1793184405.287052792] [lifecycle_manager_navigation]: [34m[1mActivating velocity_smoother[0m[0m
+[velocity_smoother-27] [INFO] [1793184405.287915434] [velocity_smoother]: Activating
+[velocity_smoother-27] [INFO] [1793184405.288002363] [velocity_smoother]: Creating bond (velocity_smoother) to lifecycle manager.
+[lifecycle_manager-30] [INFO] [1793184405.403805502] [lifecycle_manager_navigation]: Server velocity_smoother connected with bond.
+[lifecycle_manager-30] [INFO] [1793184405.403883668] [lifecycle_manager_navigation]: [34m[1mManaged nodes are active[0m[0m
+[lifecycle_manager-30] [INFO] [1793184405.403901908] [lifecycle_manager_navigation]: [34m[1mCreating bond timer...[0m[0m
+[task_manager.py-8] [INFO] [1793184405.708986824] [task_manager]: Following approved NAV_PICK path; sha256=03741c8f78dde757e60094dccb06f7505c7de98ed5d6e5edcd461b532d19e9aa
+[controller_server-21] [INFO] [1793184406.072936222] [controller_server]: Received a goal, begin computing control effort.
+[controller_server-21] [INFO] [1793184406.075200284] [controller_server]: Optimizer reset
+[controller_server-21] [INFO] [1793184406.076804803] [controller_server]: Optimizer reset
+[controller_server-21] [INFO] [1793184406.088857037] [MPPIController]: Guarded MPPI compute 13.394 ms
+[controller_server-21] [INFO] [1793184407.535003245] [MPPIController]: Guarded MPPI compute 9.492 ms
+[controller_server-21] [INFO] [1793184408.928688286] [MPPIController]: Guarded MPPI compute 3.047 ms
+[controller_server-21] [INFO] [1793184410.478292900] [MPPIController]: Guarded MPPI compute 2.737 ms
+[controller_server-21] [INFO] [1793184411.982801496] [MPPIController]: Guarded MPPI compute 5.537 ms
+[controller_server-21] [INFO] [1793184413.532673257] [MPPIController]: Guarded MPPI compute 7.085 ms
+[controller_server-21] [INFO] [1793184414.935919990] [MPPIController]: Guarded MPPI compute 9.589 ms
+[controller_server-21] [INFO] [1793184416.394893574] [MPPIController]: Guarded MPPI compute 19.119 ms
+[controller_server-21] [INFO] [1793184417.787596613] [MPPIController]: Guarded MPPI compute 11.412 ms
+[controller_server-21] [INFO] [1793184419.189898906] [MPPIController]: Guarded MPPI compute 13.505 ms
+[ign-1] NodeShared::Publish() Error: Interrupted system call
+[controller_server-21] [INFO] [1793184420.729528220] [MPPIController]: Guarded MPPI compute 3.224 ms
+[controller_server-21] [INFO] [1793184422.190995926] [MPPIController]: Guarded MPPI compute 13.864 ms
+[controller_server-21] [INFO] [1793184422.577584709] [MPPIController]: MPPI endpoint heading recovery: brake before correcting 0.150 rad
+[controller_server-21] [INFO] [1793184425.925876365] [MPPIController]: MPPI endpoint heading recovered; resume selected path
+[controller_server-21] [INFO] [1793184425.976996188] [controller_server]: Optimizer reset
+[controller_server-21] [INFO] [1793184425.981498117] [MPPIController]: Guarded MPPI compute 5.808 ms
+[controller_server-21] [INFO] [1793184427.528765109] [MPPIController]: Guarded MPPI compute 2.740 ms
+[controller_server-21] [INFO] [1793184428.880550844] [MPPIController]: Guarded MPPI compute 4.911 ms
+[controller_server-21] [INFO] [1793184429.476018027] [MPPIController]: MPPI endpoint heading recovery: brake before correcting -0.080 rad
+[controller_server-21] [INFO] [1793184431.575532965] [MPPIController]: MPPI endpoint heading recovered; resume selected path
+[controller_server-21] [INFO] [1793184431.626958152] [controller_server]: Optimizer reset
+[controller_server-21] [INFO] [1793184431.634643083] [MPPIController]: Guarded MPPI compute 9.163 ms
+[controller_server-21] [INFO] [1793184433.129825233] [MPPIController]: Guarded MPPI compute 4.347 ms
+[controller_server-21] [INFO] [1793184434.629050587] [MPPIController]: Guarded MPPI compute 3.157 ms
+[controller_server-21] [INFO] [1793184436.083972952] [MPPIController]: Guarded MPPI compute 6.032 ms
+[controller_server-21] [INFO] [1793184437.536598615] [MPPIController]: Guarded MPPI compute 11.117 ms
+[controller_server-21] [INFO] [1793184438.996026232] [MPPIController]: Guarded MPPI compute 19.268 ms
+[controller_server-21] [INFO] [1793184440.528807394] [MPPIController]: Guarded MPPI compute 3.088 ms
+[controller_server-21] [INFO] [1793184440.777578637] [MPPIController]: MPPI endpoint heading recovery: brake before correcting -0.080 rad
+[controller_server-21] [INFO] [1793184442.627093045] [MPPIController]: MPPI endpoint heading recovered; resume selected path
+[controller_server-21] [INFO] [1793184442.676628197] [controller_server]: Optimizer reset
+[controller_server-21] [INFO] [1793184442.685134104] [MPPIController]: Guarded MPPI compute 9.480 ms
+[controller_server-21] [INFO] [1793184444.181123990] [MPPIController]: Guarded MPPI compute 5.610 ms
+[controller_server-21] [INFO] [1793184445.685007498] [MPPIController]: Guarded MPPI compute 9.505 ms
+[controller_server-21] [INFO] [1793184447.133160342] [MPPIController]: Guarded MPPI compute 6.863 ms
+[controller_server-21] [INFO] [1793184448.582823051] [MPPIController]: Guarded MPPI compute 5.792 ms
+[controller_server-21] [INFO] [1793184449.983842490] [MPPIController]: Guarded MPPI compute 6.603 ms
+[controller_server-21] [ERROR] [1793184450.676709124] [controller_server]: Failed to make progress
+[controller_server-21] [WARN] [1793184450.676833965] [controller_server]: [follow_path] [ActionServer] Aborting handle.
+[task_manager.py-8] [INFO] [1793184450.703317886] [task_manager]: P6 FAULT
+[task_manager.py-8] [ERROR] [1793184450.706855469] [task_manager]: P6 ACTION_FAILED_6
+[WARNING] [launch]: user interrupted with ctrl-c (SIGINT)
+[INFO] [lifecycle_manager-30]: sending signal 'SIGINT' to process[lifecycle_manager-30]
+[INFO] [lifecycle_manager-29]: sending signal 'SIGINT' to process[lifecycle_manager-29]
+[INFO] [navigation_guard.py-28]: sending signal 'SIGINT' to process[navigation_guard.py-28]
+[INFO] [velocity_smoother-27]: sending signal 'SIGINT' to process[velocity_smoother-27]
+[ERROR] [lifecycle_manager-29]: process has died [pid 3243955, exit code -2, cmd '/opt/ros/humble/lib/nav2_lifecycle_manager/lifecycle_manager --ros-args -r __node:=lifecycle_manager_localization --params-file /tmp/launch_params_h5n2qjmo --params-file /tmp/launch_params_8w5mmdev'].
+[INFO] [waypoint_follower-26]: sending signal 'SIGINT' to process[waypoint_follower-26]
+[ERROR] [navigation_guard.py-28]: process has died [pid 3243949, exit code -2, cmd '/home/thanh/ros_ws/forklift/install/forklift_navigation/lib/forklift_navigation/navigation_guard.py --ros-args --params-file /tmp/launch_params_wqhru4v7 --params-file /tmp/launch_params_6lga8mnx'].
+[ERROR] [velocity_smoother-27]: process has died [pid 3243939, exit code -2, cmd '/opt/ros/humble/lib/nav2_velocity_smoother/velocity_smoother --ros-args -r __node:=velocity_smoother --params-file /tmp/forklift_nav2_aaulqnn7.yaml --params-file /tmp/launch_params_84_e1og6 -r cmd_vel:=/nav/cmd_vel_selected -r cmd_vel_smoothed:=/nav/cmd_vel_smoothed'].
+[INFO] [bt_navigator-25]: sending signal 'SIGINT' to process[bt_navigator-25]
+[INFO] [behavior_server-24]: sending signal 'SIGINT' to process[behavior_server-24]
+[ERROR] [waypoint_follower-26]: process has died [pid 3243936, exit code -2, cmd '/opt/ros/humble/lib/nav2_waypoint_follower/waypoint_follower --ros-args -r __node:=waypoint_follower --params-file /tmp/forklift_nav2_aaulqnn7.yaml --params-file /tmp/launch_params_dr_ixlcq'].
+[INFO] [parameter_bridge-3]: process has finished cleanly [pid 3243500]
+[INFO] [smoother_server-23]: sending signal 'SIGINT' to process[smoother_server-23]
+[INFO] [parameter_bridge-6]: process has finished cleanly [pid 3243506]
+[INFO] [robot_state_publisher-2]: process has finished cleanly [pid 3243498]
+[INFO] [planner_server-22]: sending signal 'SIGINT' to process[planner_server-22]
+[ERROR] [behavior_server-24]: process has died [pid 3243925, exit code -2, cmd '/opt/ros/humble/lib/nav2_behaviors/behavior_server --ros-args -r __node:=behavior_server --params-file /tmp/forklift_nav2_aaulqnn7.yaml --params-file /tmp/launch_params_nbq84l51 -r cmd_vel:=/nav/cmd_vel_raw'].
+[INFO] [controller_server-21]: sending signal 'SIGINT' to process[controller_server-21]
+[INFO] [contact_throttle-5]: process has finished cleanly [pid 3243504]
+[INFO] [ekf_node-17]: process has finished cleanly [pid 3243858]
+[INFO] [map_server-19]: process has finished cleanly [pid 3243862]
+[ERROR] [smoother_server-23]: process has died [pid 3243922, exit code -2, cmd '/opt/ros/humble/lib/nav2_smoother/smoother_server --ros-args -r __node:=smoother_server --params-file /tmp/forklift_nav2_aaulqnn7.yaml --params-file /tmp/launch_params_8hv7imc_'].
+[INFO] [amcl-20]: sending signal 'SIGINT' to process[amcl-20]
+[INFO] [amcl-20]: process has finished cleanly [pid 3243864]
+[INFO] [scan_relay.py-18]: sending signal 'SIGINT' to process[scan_relay.py-18]
+[ERROR] [controller_server-21]: process has died [pid 3243866, exit code -2, cmd '/opt/ros/humble/lib/nav2_controller/controller_server --ros-args -r __node:=controller_server --params-file /tmp/forklift_nav2_aaulqnn7.yaml --params-file /tmp/launch_params_hz22d095 -r cmd_vel:=/nav/cmd_vel_raw'].
+[INFO] [imu_adapter.py-16]: sending signal 'SIGINT' to process[imu_adapter.py-16]
+[INFO] [lift_supervisor.py-15]: sending signal 'SIGINT' to process[lift_supervisor.py-15]
+[ERROR] [scan_relay.py-18]: process has died [pid 3243860, exit code -2, cmd '/home/thanh/ros_ws/forklift/install/forklift_navigation/lib/forklift_navigation/scan_relay.py --ros-args --params-file /tmp/launch_params_mkbghyli --params-file /tmp/launch_params_7yg1wq9v'].
+[INFO] [lift_sim_io.py-14]: sending signal 'SIGINT' to process[lift_sim_io.py-14]
+[INFO] [command_gate.py-13]: sending signal 'SIGINT' to process[command_gate.py-13]
+[ERROR] [imu_adapter.py-16]: process has died [pid 3243856, exit code -2, cmd '/home/thanh/ros_ws/forklift/install/forklift_control/lib/forklift_control/imu_adapter.py --ros-args --params-file /tmp/launch_params_a9twivj3'].
+[INFO] [mission_input.py-9]: sending signal 'SIGINT' to process[mission_input.py-9]
+[ERROR] [lift_supervisor.py-15]: process has died [pid 3243854, exit code -2, cmd '/home/thanh/ros_ws/forklift/install/forklift_lift/lib/forklift_lift/lift_supervisor.py --ros-args --params-file /home/thanh/ros_ws/forklift/install/forklift_lift/share/forklift_lift/config/lift.yaml --params-file /tmp/launch_params_nvbqy2fg --params-file /tmp/launch_params_tm0ubiuw'].
+[INFO] [task_manager.py-8]: sending signal 'SIGINT' to process[task_manager.py-8]
+[INFO] [lifecycle_manager-30]: process has finished cleanly [pid 3243957]
+[ERROR] [lift_sim_io.py-14]: process has died [pid 3243852, exit code -2, cmd '/home/thanh/ros_ws/forklift/install/forklift_lift/lib/forklift_lift/lift_sim_io.py --ros-args --params-file /home/thanh/ros_ws/forklift/install/forklift_lift/share/forklift_lift/config/lift.yaml --params-file /tmp/launch_params_8b3mzfb5'].
+[ERROR] [command_gate.py-13]: process has died [pid 3243850, exit code -2, cmd '/home/thanh/ros_ws/forklift/install/forklift_control/lib/forklift_control/command_gate.py --ros-args --params-file /home/thanh/ros_ws/forklift/install/forklift_control/share/forklift_control/config/command_gate.yaml --params-file /tmp/launch_params_lw1qsuvn'].
+[INFO] [motion_mux.py-7]: sending signal 'SIGINT' to process[motion_mux.py-7]
+[ERROR] [mission_input.py-9]: process has died [pid 3243512, exit code -2, cmd '/home/thanh/ros_ws/forklift/install/forklift_task_manager/lib/forklift_task_manager/mission_input.py --ros-args --params-file /tmp/launch_params_1sa_wxye'].
+[ERROR] [task_manager.py-8]: process has died [pid 3243510, exit code -2, cmd '/home/thanh/ros_ws/forklift/install/forklift_task_manager/lib/forklift_task_manager/task_manager.py --ros-args --params-file /tmp/launch_params_5h2hoytr'].
+[ERROR] [motion_mux.py-7]: process has died [pid 3243508, exit code -2, cmd '/home/thanh/ros_ws/forklift/install/forklift_task_manager/lib/forklift_task_manager/motion_mux.py --ros-args --params-file /tmp/launch_params_4wsc1u0q'].
+[INFO] [ign-1]: sending signal 'SIGINT' to process[ign-1]
+[ekf_node-17] [INFO] [1793184452.062784616] [rclcpp]: signal_handler(SIGINT/SIGTERM)
+[contact_throttle-5] [INFO] [1793184452.062886412] [rclcpp]: signal_handler(SIGINT/SIGTERM)
+[parameter_bridge-6] [INFO] [1793184452.062908480] [rclcpp]: signal_handler(SIGINT/SIGTERM)
+[robot_state_publisher-2] [INFO] [1793184452.062927080] [rclcpp]: signal_handler(SIGINT/SIGTERM)
+[map_server-19] [INFO] [1793184452.062963109] [rclcpp]: signal_handler(SIGINT/SIGTERM)
+[map_server-19] [INFO] [1793184452.063080214] [map_server]: Running Nav2 LifecycleNode rcl preshutdown (map_server)
+[map_server-19] [INFO] [1793184452.063161805] [map_server]: Deactivating
+[map_server-19] [INFO] [1793184452.063174481] [map_server]: Destroying bond (map_server) to lifecycle manager.
+[map_server-19] [INFO] [1793184452.075228833] [map_server]: Cleaning up
+[map_server-19] [INFO] [1793184452.075303823] [map_server]: Destroying bond (map_server) to lifecycle manager.
+[map_server-19] [INFO] [1793184452.121025429] [map_server]: Destroying
+[bt_navigator-25] [INFO] [1793184452.063022767] [rclcpp]: signal_handler(SIGINT/SIGTERM)
+[bt_navigator-25] [INFO] [1793184452.063084294] [bt_navigator]: Running Nav2 LifecycleNode rcl preshutdown (bt_navigator)
+[bt_navigator-25] [INFO] [1793184452.063155916] [bt_navigator]: Deactivating
+[bt_navigator-25] [INFO] [1793184452.063174410] [bt_navigator]: Destroying bond (bt_navigator) to lifecycle manager.
+[bt_navigator-25] [INFO] [1793184452.073453285] [bt_navigator]: Cleaning up
+[waypoint_follower-26] [INFO] [1793184452.063027666] [rclcpp]: signal_handler(SIGINT/SIGTERM)
+[waypoint_follower-26] [INFO] [1793184452.063115254] [waypoint_follower]: Running Nav2 LifecycleNode rcl preshutdown (waypoint_follower)
+[waypoint_follower-26] [INFO] [1793184452.063185505] [waypoint_follower]: Deactivating
+[waypoint_follower-26] [INFO] [1793184452.063202207] [waypoint_follower]: Destroying bond (waypoint_follower) to lifecycle manager.
+[waypoint_follower-26] [INFO] [1793184452.083476350] [waypoint_follower]: Cleaning up
+[waypoint_follower-26] [INFO] [1793184452.111542768] [waypoint_follower]: Destroying bond (waypoint_follower) to lifecycle manager.
+[behavior_server-24] [INFO] [1793184452.063031544] [rclcpp]: signal_handler(SIGINT/SIGTERM)
+[behavior_server-24] [INFO] [1793184452.063107237] [behavior_server]: Running Nav2 LifecycleNode rcl preshutdown (behavior_server)
+[behavior_server-24] [INFO] [1793184452.063169778] [behavior_server]: Deactivating
+[behavior_server-24] [INFO] [1793184452.063204095] [behavior_server]: Destroying bond (behavior_server) to lifecycle manager.
+[behavior_server-24] [INFO] [1793184452.077831772] [behavior_server]: Cleaning up
+[velocity_smoother-27] [INFO] [1793184452.063063163] [rclcpp]: signal_handler(SIGINT/SIGTERM)
+[velocity_smoother-27] [INFO] [1793184452.063159878] [velocity_smoother]: Running Nav2 LifecycleNode rcl preshutdown (velocity_smoother)
+[velocity_smoother-27] [INFO] [1793184452.063235623] [velocity_smoother]: Deactivating
+[velocity_smoother-27] [INFO] [1793184452.063255133] [velocity_smoother]: Destroying bond (velocity_smoother) to lifecycle manager.
+[velocity_smoother-27] [INFO] [1793184452.083526280] [velocity_smoother]: Cleaning up
+[velocity_smoother-27] [INFO] [1793184452.083581735] [velocity_smoother]: Destroying bond (velocity_smoother) to lifecycle manager.
+[velocity_smoother-27] [INFO] [1793184452.109130235] [velocity_smoother]: Destroying
+[controller_server-21] [INFO] [1793184452.063176137] [rclcpp]: signal_handler(SIGINT/SIGTERM)
+[controller_server-21] [INFO] [1793184452.063229776] [controller_server]: Running Nav2 LifecycleNode rcl preshutdown (controller_server)
+[controller_server-21] [INFO] [1793184452.063291107] [controller_server]: Deactivating
+[controller_server-21] [INFO] [1793184452.063317214] [MPPIController]: Deactivated MPPI Controller: FollowPath
+[controller_server-21] [INFO] [1793184452.063335927] [local_costmap.local_costmap]: Deactivating
+[smoother_server-23] [INFO] [1793184452.063438271] [rclcpp]: signal_handler(SIGINT/SIGTERM)
+[smoother_server-23] [INFO] [1793184452.063523803] [smoother_server]: Running Nav2 LifecycleNode rcl preshutdown (smoother_server)
+[smoother_server-23] [INFO] [1793184452.063594392] [smoother_server]: Deactivating
+[smoother_server-23] [INFO] [1793184452.063611370] [smoother_server]: Destroying bond (smoother_server) to lifecycle manager.
+[smoother_server-23] [INFO] [1793184452.085304954] [smoother_server]: Cleaning up
+[lifecycle_manager-30] [INFO] [1793184452.063607415] [rclcpp]: signal_handler(SIGINT/SIGTERM)
+[lifecycle_manager-30] [INFO] [1793184452.063682851] [lifecycle_manager_navigation]: Running Nav2 LifecycleManager rcl preshutdown (lifecycle_manager_navigation)
+[lifecycle_manager-30] [INFO] [1793184452.063869046] [lifecycle_manager_navigation]: [34m[1mTerminating bond timer...[0m[0m
+[parameter_bridge-3] [INFO] [1793184452.064041301] [rclcpp]: signal_handler(SIGINT/SIGTERM)
+[lifecycle_manager-29] [INFO] [1793184452.066213171] [rclcpp]: signal_handler(SIGINT/SIGTERM)
+[lifecycle_manager-29] [INFO] [1793184452.066307718] [lifecycle_manager_localization]: Running Nav2 LifecycleManager rcl preshutdown (lifecycle_manager_localization)
+[lifecycle_manager-29] [INFO] [1793184452.066345602] [lifecycle_manager_localization]: [34m[1mTerminating bond timer...[0m[0m
+[lifecycle_manager-29] [INFO] [1793184452.125848347] [lifecycle_manager_localization]: Destroying lifecycle_manager_localization
+[planner_server-22] [INFO] [1793184452.066574705] [rclcpp]: signal_handler(SIGINT/SIGTERM)
+[planner_server-22] [INFO] [1793184452.066661447] [planner_server]: Running Nav2 LifecycleNode rcl preshutdown (planner_server)
+[planner_server-22] [INFO] [1793184452.066730466] [planner_server]: Deactivating
+[planner_server-22] [INFO] [1793184452.066763104] [global_costmap.global_costmap]: Deactivating
+[amcl-20] [INFO] [1793184452.066849724] [rclcpp]: signal_handler(SIGINT/SIGTERM)
+[amcl-20] [INFO] [1793184452.066912313] [amcl]: Running Nav2 LifecycleNode rcl preshutdown (amcl)
+[amcl-20] [INFO] [1793184452.066970026] [amcl]: Deactivating
+[amcl-20] [INFO] [1793184452.066987859] [amcl]: Destroying bond (amcl) to lifecycle manager.
+[amcl-20] [INFO] [1793184452.079324688] [amcl]: Cleaning up
+[controller_server-21] [INFO] [1793184452.128777627] [controller_server]: Destroying bond (controller_server) to lifecycle manager.
+[controller_server-21] [INFO] [1793184452.149119397] [controller_server]: Cleaning up
+[controller_server-21] [INFO] [1793184452.149231665] [MPPIController]: Cleaned up MPPI Controller: FollowPath
+[controller_server-21] [INFO] [1793184452.149967854] [local_costmap.local_costmap]: Cleaning up
+[amcl-20] [INFO] [1793184452.129781539] [amcl]: Destroying bond (amcl) to lifecycle manager.
+[amcl-20] [INFO] [1793184452.146448775] [amcl]: Destroying
+[ign-1] [INFO] [1793184452.133129842] [rclcpp]: signal_handler(SIGINT/SIGTERM)
+[ign-1] [INFO] [1793184452.133285535] [controller_manager]: Shutdown request received....
+[ign-1] [INFO] [1793184452.133585063] [controller_manager]: Shutting down all controllers in the controller manager.
+[ign-1] [INFO] [1793184452.133612062] [controller_manager]: Deactivating controller 'joint_state_broadcaster'
+[ign-1] [INFO] [1793184452.133652415] [controller_manager]: Shutting down controller 'joint_state_broadcaster'
+[ign-1] [INFO] [1793184452.133684217] [controller_manager]: Deactivating controller 'lift_controller'
+[ign-1] [INFO] [1793184452.133712616] [controller_manager]: Shutting down controller 'lift_controller'
+[ign-1] [INFO] [1793184452.134932165] [controller_manager]: Deactivating controller 'base_controller'
+[ign-1] [INFO] [1793184452.135526849] [controller_manager]: Shutting down controller 'base_controller'
+[ign-1] [INFO] [1793184452.135596570] [resource_manager]: 'deactivate' hardware 'ForkliftSimSystem' 
+[ign-1] [INFO] [1793184452.135613537] [resource_manager]: Successful 'deactivate' of hardware 'ForkliftSimSystem'
+[ign-1] [INFO] [1793184452.135616584] [resource_manager]: 'shutdown' hardware 'ForkliftSimSystem' 
+[ign-1] [INFO] [1793184452.135621178] [resource_manager]: Successful 'shutdown' of hardware 'ForkliftSimSystem'
+[ign-1] [INFO] [1793184452.135624965] [controller_manager]: Shutting down the controller manager.
+[smoother_server-23] [INFO] [1793184452.137273735] [smoother_server]: Destroying bond (smoother_server) to lifecycle manager.
+[smoother_server-23] [INFO] [1793184452.146891837] [smoother_server]: Destroying
+[waypoint_follower-26] [INFO] [1793184452.139121972] [waypoint_follower]: Destroying
+[behavior_server-24] [INFO] [1793184452.180516265] [behavior_server]: Destroying bond (behavior_server) to lifecycle manager.
+[lifecycle_manager-30] [INFO] [1793184452.209909664] [rclcpp]: signal_handler(SIGINT/SIGTERM)
+[controller_server-21] [INFO] [1793184452.218858410] [controller_server]: Destroying bond (controller_server) to lifecycle manager.
+[controller_server-21] [INFO] [1793184452.230589973] [local_costmap.local_costmap]: Destroying
+[behavior_server-24] [INFO] [1793184452.224021106] [behavior_server]: Destroying
+[lifecycle_manager-30] [INFO] [1793184452.224513032] [lifecycle_manager_navigation]: Destroying lifecycle_manager_navigation
+[controller_server-21] [INFO] [1793184452.261635450] [controller_server]: Destroying
+[bt_navigator-25] [INFO] [1793184452.331121377] [bt_navigator]: Completed Cleaning up
+[bt_navigator-25] [INFO] [1793184452.331210316] [bt_navigator]: Destroying bond (bt_navigator) to lifecycle manager.
+[bt_navigator-25] [INFO] [1793184452.333781640] [rclcpp]: signal_handler(SIGINT/SIGTERM)
+[bt_navigator-25] [INFO] [1793184452.342432092] [bt_navigator]: Destroying
+[planner_server-22] [INFO] [1793184452.361163107] [planner_server]: Deactivating plugin Pallet15 of type SmacPlannerHybrid
+[planner_server-22] [INFO] [1793184452.361223283] [planner_server]: Deactivating plugin Pallet11 of type SmacPlannerHybrid
+[planner_server-22] [INFO] [1793184452.361233954] [planner_server]: Deactivating plugin Pallet13 of type SmacPlannerHybrid
+[planner_server-22] [INFO] [1793184452.361242742] [planner_server]: Deactivating plugin Pallet of type SmacPlannerHybrid
+[planner_server-22] [INFO] [1793184452.361252159] [planner_server]: Deactivating plugin GridBased of type SmacPlannerHybrid
+[planner_server-22] [INFO] [1793184452.361269594] [planner_server]: Destroying bond (planner_server) to lifecycle manager.
+[planner_server-22] [INFO] [1793184452.371789762] [planner_server]: Cleaning up
+[planner_server-22] [INFO] [1793184452.378314648] [global_costmap.global_costmap]: Cleaning up
+[planner_server-22] [INFO] [1793184452.381437719] [planner_server]: Cleaning up plugin Pallet15 of type SmacPlannerHybrid
+[planner_server-22] [INFO] [1793184452.381877443] [planner_server]: Destroying plugin Pallet15 of type SmacPlannerHybrid
+[planner_server-22] [INFO] [1793184452.381924301] [planner_server]: Cleaning up plugin Pallet11 of type SmacPlannerHybrid
+[planner_server-22] [INFO] [1793184452.382059424] [planner_server]: Destroying plugin Pallet11 of type SmacPlannerHybrid
+[planner_server-22] [INFO] [1793184452.382073528] [planner_server]: Cleaning up plugin Pallet13 of type SmacPlannerHybrid
+[planner_server-22] [INFO] [1793184452.382189343] [planner_server]: Destroying plugin Pallet13 of type SmacPlannerHybrid
+[planner_server-22] [INFO] [1793184452.382204101] [planner_server]: Cleaning up plugin Pallet of type SmacPlannerHybrid
+[planner_server-22] [INFO] [1793184452.382338505] [planner_server]: Destroying plugin Pallet of type SmacPlannerHybrid
+[planner_server-22] [INFO] [1793184452.382352694] [planner_server]: Cleaning up plugin GridBased of type SmacPlannerHybrid
+[planner_server-22] [INFO] [1793184452.382449725] [planner_server]: Destroying plugin GridBased of type SmacPlannerHybrid
+[planner_server-22] [INFO] [1793184452.385731053] [planner_server]: Destroying bond (planner_server) to lifecycle manager.
+[planner_server-22] [INFO] [1793184452.386848043] [rclcpp]: signal_handler(SIGINT/SIGTERM)
+[planner_server-22] [INFO] [1793184452.388886274] [global_costmap.global_costmap]: Destroying
+[planner_server-22] [INFO] [1793184452.393048292] [planner_server]: Destroying
+[INFO] [bt_navigator-25]: process has finished cleanly [pid 3243932]
+[INFO] [planner_server-22]: process has finished cleanly [pid 3243879]
+[ERROR] [ign-1]: process has died [pid 3243496, exit code -11, cmd 'ign gazebo -r -v 2 -s /home/thanh/ros_ws/forklift/install/forklift_gazebo/share/forklift_gazebo/worlds/p6.sdf'].

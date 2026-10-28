@@ -1,0 +1,99 @@
+{
+  "passed": true,
+  "checks_passed": 220,
+  "checks_total": 220,
+  "runs": {
+    "nominal": {
+      "passed": true,
+      "checks_passed": 26,
+      "checks_total": 26,
+      "scenario": "nominal",
+      "physical_hardware_used": false,
+      "cleanup_empty": true
+    },
+    "user_drop": {
+      "passed": true,
+      "checks_passed": 26,
+      "checks_total": 26,
+      "scenario": "user_drop",
+      "physical_hardware_used": false,
+      "cleanup_empty": true
+    },
+    "rotated": {
+      "passed": true,
+      "checks_passed": 26,
+      "checks_total": 26,
+      "scenario": "rotated",
+      "physical_hardware_used": false,
+      "cleanup_empty": true
+    },
+    "legacy": {
+      "passed": true,
+      "missions_expected": 1,
+      "missions_completed": 1,
+      "scenario": "nominal",
+      "checks_passed": 29,
+      "checks_total": 29,
+      "physical_hardware_used": false,
+      "firmware_flashed": false,
+      "cleanup_empty": true
+    },
+    "invalid_pick": {
+      "passed": true,
+      "checks_passed": 14,
+      "checks_total": 14,
+      "scenario": "invalid_pick",
+      "physical_hardware_used": false,
+      "cleanup_empty": true
+    },
+    "invalid_drop": {
+      "passed": true,
+      "checks_passed": 14,
+      "checks_total": 14,
+      "scenario": "invalid_drop",
+      "physical_hardware_used": false,
+      "cleanup_empty": true
+    },
+    "cancel": {
+      "passed": true,
+      "checks_passed": 17,
+      "checks_total": 17,
+      "scenario": "cancel",
+      "physical_hardware_used": false,
+      "cleanup_empty": true
+    },
+    "scan_loss": {
+      "passed": true,
+      "checks_passed": 17,
+      "checks_total": 17,
+      "scenario": "scan_loss",
+      "physical_hardware_used": false,
+      "cleanup_empty": true
+    },
+    "missing_pallet": {
+      "passed": true,
+      "checks_passed": 17,
+      "checks_total": 17,
+      "scenario": "missing_pallet",
+      "physical_hardware_used": false,
+      "cleanup_empty": true
+    },
+    "cancel_loaded": {
+      "passed": true,
+      "checks_passed": 17,
+      "checks_total": 17,
+      "scenario": "cancel_loaded",
+      "physical_hardware_used": false,
+      "cleanup_empty": true
+    },
+    "cancel_retreat": {
+      "passed": true,
+      "checks_passed": 17,
+      "checks_total": 17,
+      "scenario": "cancel_retreat",
+      "physical_hardware_used": false,
+      "cleanup_empty": true
+    }
+  },
+  "physical_hardware_used": false
+}

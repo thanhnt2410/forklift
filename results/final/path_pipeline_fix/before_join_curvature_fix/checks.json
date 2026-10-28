@@ -1,0 +1,142 @@
+[
+  {
+    "test": "startup_ready",
+    "passed": true
+  },
+  {
+    "test": "start_without_poses_rejected",
+    "passed": true
+  },
+  {
+    "test": "invalid_frame_rejected",
+    "passed": true
+  },
+  {
+    "test": "both_rviz_inputs_received",
+    "passed": true
+  },
+  {
+    "test": "start_service_accepted",
+    "passed": true
+  },
+  {
+    "test": "concurrent_start_rejected",
+    "passed": true
+  },
+  {
+    "test": "clear_while_active_rejected",
+    "passed": true
+  },
+  {
+    "test": "stopped_at_end",
+    "passed": true
+  },
+  {
+    "test": "single_velocity_owner",
+    "passed": true
+  },
+  {
+    "test": "no_return_home",
+    "passed": true
+  },
+  {
+    "test": "no_navigate_to_pose_recovery",
+    "passed": true
+  },
+  {
+    "test": "whole_route_before_motion",
+    "passed": true
+  },
+  {
+    "test": "legacy_candidate_selection",
+    "passed": true
+  },
+  {
+    "test": "active_path_published",
+    "passed": true
+  },
+  {
+    "test": "mission_succeeded",
+    "passed": false,
+    "code": "ACTION_FAILED_6"
+  },
+  {
+    "test": "lidar_refinement_executed",
+    "passed": true
+  },
+  {
+    "test": "coarse_pose_corrected",
+    "passed": true,
+    "refinement": {
+      "initial": [
+        0.35,
+        0.7,
+        0.060000000000000005
+      ],
+      "corrected": [
+        0.43302693549591065,
+        0.6232513278618274,
+        -0.02895315527699633
+      ],
+      "face": [
+        1.0827545118372746,
+        0.6044344061800784,
+        -0.02895315527699633
+      ],
+      "samples": 5
+    }
+  },
+  {
+    "test": "refined_navigation_executed",
+    "passed": true
+  },
+  {
+    "test": "physical_pick_alignment",
+    "passed": false
+  },
+  {
+    "test": "physically_carried",
+    "passed": false
+  },
+  {
+    "test": "straight_insertion",
+    "passed": false
+  },
+  {
+    "test": "release_at_requested_map_pose",
+    "passed": false,
+    "map_error_m": Infinity
+  },
+  {
+    "test": "pallet_in_delivery_region",
+    "passed": false,
+    "x": 0.95,
+    "y": 0.65,
+    "z": -1.8797065771958278e-11,
+    "error_m": 2.6030467157986337,
+    "region_radius_m": 0.15
+  },
+  {
+    "test": "withdrawal_clearance",
+    "passed": false,
+    "distance": 0.0
+  },
+  {
+    "test": "released",
+    "passed": true
+  },
+  {
+    "test": "phase_order",
+    "passed": false,
+    "events": [
+      "IDLE",
+      "CHECK_READY",
+      "LOWER_FOR_PICK",
+      "PLAN_MISSION",
+      "NAV_PICK",
+      "DETECT_PICK",
+      "REFINE_PICK",
+      "FAULT"
+    ]
+  }
+]

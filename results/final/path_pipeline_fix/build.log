@@ -1,0 +1,24 @@
+Starting >>> forklift_interfaces
+Starting >>> forklift_description
+Starting >>> forklift_gazebo
+Starting >>> forklift_rviz
+Finished <<< forklift_description [0.37s]
+Starting >>> forklift_navigation
+Finished <<< forklift_gazebo [0.41s]
+Finished <<< forklift_rviz [0.61s]
+Finished <<< forklift_navigation [1.21s]
+[Processing: forklift_interfaces]
+Finished <<< forklift_interfaces [31.7s]
+Starting >>> forklift_control
+Starting >>> forklift_lift
+Starting >>> forklift_task_manager
+Finished <<< forklift_control [0.27s]
+Starting >>> forklift_hardware
+Finished <<< forklift_lift [1.26s]
+Finished <<< forklift_hardware [1.04s]
+Finished <<< forklift_task_manager [1.33s]
+Starting >>> forklift_bringup
+[Processing: forklift_bringup]
+Finished <<< forklift_bringup [30.1s]
+
+Summary: 10 packages finished [1min 4s]

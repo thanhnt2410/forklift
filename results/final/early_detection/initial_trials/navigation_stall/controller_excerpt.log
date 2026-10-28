@@ -1,0 +1,10 @@
+[task_manager.py-8] [INFO] [1793191452.932599412] [task_manager]: P6 CHECK_READY
+[task_manager.py-8] [INFO] [1793191453.738245738] [task_manager]: P6 LOWER_FOR_PICK
+[task_manager.py-8] [INFO] [1793191454.698483110] [task_manager]: P6 DETECT_PICK_INITIAL
+[task_manager.py-8] [INFO] [1793191455.663078380] [task_manager]: P6 PLAN_MISSION
+[task_manager.py-8] [INFO] [1793191458.119275211] [task_manager]: P6 NAV_PICK
+[controller_server-21] [INFO] [1793191470.543514438] [MPPIController]: MPPI endpoint heading recovery: brake before correcting 0.177 rad
+[controller_server-21] [INFO] [1793191472.794614451] [MPPIController]: MPPI endpoint heading recovered; resume selected path
+[controller_server-21] [ERROR] [1793191495.343961415] [controller_server]: Failed to make progress
+[task_manager.py-8] [INFO] [1793191495.358993882] [task_manager]: P6 FAULT
+[task_manager.py-8] [ERROR] [1793191495.359842372] [task_manager]: P6 ACTION_FAILED_6

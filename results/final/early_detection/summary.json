@@ -1,0 +1,139 @@
+{
+  "passed": true,
+  "checks_passed": 373,
+  "checks_total": 373,
+  "runs": {
+    "early_direct": {
+      "passed": true,
+      "checks_passed": 32,
+      "checks_total": 32,
+      "scenario": "early_direct",
+      "physical_hardware_used": false,
+      "cleanup_empty": true
+    },
+    "early_fallback": {
+      "passed": true,
+      "checks_passed": 31,
+      "checks_total": 31,
+      "scenario": "early_fallback",
+      "physical_hardware_used": false,
+      "cleanup_empty": true
+    },
+    "moved_pallet": {
+      "passed": true,
+      "checks_passed": 32,
+      "checks_total": 32,
+      "scenario": "moved_pallet",
+      "physical_hardware_used": false,
+      "cleanup_empty": true
+    },
+    "nominal": {
+      "passed": true,
+      "checks_passed": 31,
+      "checks_total": 31,
+      "scenario": "nominal",
+      "physical_hardware_used": false,
+      "cleanup_empty": true
+    },
+    "user_drop": {
+      "passed": true,
+      "checks_passed": 31,
+      "checks_total": 31,
+      "scenario": "user_drop",
+      "physical_hardware_used": false,
+      "cleanup_empty": true
+    },
+    "rotated": {
+      "passed": true,
+      "checks_passed": 31,
+      "checks_total": 31,
+      "scenario": "rotated",
+      "physical_hardware_used": false,
+      "cleanup_empty": true
+    },
+    "legacy": {
+      "passed": true,
+      "missions_expected": 1,
+      "missions_completed": 1,
+      "scenario": "nominal",
+      "checks_passed": 29,
+      "checks_total": 29,
+      "physical_hardware_used": false,
+      "firmware_flashed": false,
+      "cleanup_empty": true
+    },
+    "invalid_pick": {
+      "passed": true,
+      "checks_passed": 15,
+      "checks_total": 15,
+      "scenario": "invalid_pick",
+      "physical_hardware_used": false,
+      "cleanup_empty": true
+    },
+    "invalid_drop": {
+      "passed": true,
+      "checks_passed": 15,
+      "checks_total": 15,
+      "scenario": "invalid_drop",
+      "physical_hardware_used": false,
+      "cleanup_empty": true
+    },
+    "cancel_initial": {
+      "passed": true,
+      "checks_passed": 18,
+      "checks_total": 18,
+      "scenario": "cancel_initial",
+      "physical_hardware_used": false,
+      "cleanup_empty": true
+    },
+    "scan_loss_initial": {
+      "passed": true,
+      "checks_passed": 18,
+      "checks_total": 18,
+      "scenario": "scan_loss_initial",
+      "physical_hardware_used": false,
+      "cleanup_empty": true
+    },
+    "cancel": {
+      "passed": true,
+      "checks_passed": 18,
+      "checks_total": 18,
+      "scenario": "cancel",
+      "physical_hardware_used": false,
+      "cleanup_empty": true
+    },
+    "scan_loss": {
+      "passed": true,
+      "checks_passed": 18,
+      "checks_total": 18,
+      "scenario": "scan_loss",
+      "physical_hardware_used": false,
+      "cleanup_empty": true
+    },
+    "missing_pallet": {
+      "passed": true,
+      "checks_passed": 18,
+      "checks_total": 18,
+      "scenario": "missing_pallet",
+      "physical_hardware_used": false,
+      "cleanup_empty": true
+    },
+    "cancel_loaded": {
+      "passed": true,
+      "checks_passed": 18,
+      "checks_total": 18,
+      "scenario": "cancel_loaded",
+      "physical_hardware_used": false,
+      "cleanup_empty": true
+    },
+    "cancel_retreat": {
+      "passed": true,
+      "checks_passed": 18,
+      "checks_total": 18,
+      "scenario": "cancel_retreat",
+      "physical_hardware_used": false,
+      "cleanup_empty": true
+    }
+  },
+  "physical_hardware_used": false
+}
