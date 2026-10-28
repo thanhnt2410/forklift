@@ -1,0 +1,157 @@
+Starting >>> forklift_control
+--- output: forklift_control
+-- Found ament_cmake: 1.3.14 (/opt/ros/humble/share/ament_cmake/cmake)
+-- Override CMake install command with custom implementation using symlinks instead of copying resources
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /home/thanh/ros_ws/forklift/build/forklift_control
+-- Install configuration: ""
+-- Execute custom install script
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_control/share/forklift_control/config/command_gate.yaml
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_control/share/forklift_control/config/controllers.yaml
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_control/share/forklift_control/config/ekf.yaml
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_control/share/forklift_control/config/ps4.yaml
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_control/lib/forklift_control/command_gate.py
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_control/lib/forklift_control/lift_sim.py
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_control/lib/forklift_control/imu_adapter.py
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_control/lib/forklift_control/ps4_teleop.py
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_control/lib/forklift_control/arrow_teleop.py
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_control/share/forklift_control/LICENSE
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_control/share/ament_index/resource_index/package_run_dependencies/forklift_control
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_control/share/ament_index/resource_index/parent_prefix_path/forklift_control
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_control/share/forklift_control/environment/ament_prefix_path.sh
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_control/share/forklift_control/environment/ament_prefix_path.dsv
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_control/share/forklift_control/environment/path.sh
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_control/share/forklift_control/environment/path.dsv
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_control/share/forklift_control/local_setup.bash
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_control/share/forklift_control/local_setup.sh
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_control/share/forklift_control/local_setup.zsh
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_control/share/forklift_control/local_setup.dsv
+-- Symlinking: /home/thanh/ros_ws/forklift/install/forklift_control/share/forklift_control/package.dsv
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_control/share/ament_index/resource_index/packages/forklift_control
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_control/share/forklift_control/cmake/forklift_controlConfig.cmake
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_control/share/forklift_control/cmake/forklift_controlConfig-version.cmake
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_control/share/forklift_control/package.xml
+---
+Finished <<< forklift_control [0.23s]
+Starting >>> forklift_hardware
+--- output: forklift_hardware
+-- Found ament_cmake: 1.3.14 (/opt/ros/humble/share/ament_cmake/cmake)
+-- Override CMake install command with custom implementation using symlinks instead of copying resources
+-- Found hardware_interface: 2.53.1 (/opt/ros/humble/share/hardware_interface/cmake)
+-- Found rosidl_generator_c: 3.1.8 (/opt/ros/humble/share/rosidl_generator_c/cmake)
+-- Found rosidl_adapter: 3.1.8 (/opt/ros/humble/share/rosidl_adapter/cmake)
+-- Found rosidl_generator_cpp: 3.1.8 (/opt/ros/humble/share/rosidl_generator_cpp/cmake)
+-- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+-- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+-- Found rmw_implementation_cmake: 6.1.2 (/opt/ros/humble/share/rmw_implementation_cmake/cmake)
+-- Found rmw_fastrtps_cpp: 6.2.10 (/opt/ros/humble/share/rmw_fastrtps_cpp/cmake)
+-- Found TinyXML2 via Config file: TinyXML2_DIR-NOTFOUND
+-- Found TinyXML2 via Config file: TinyXML2_DIR-NOTFOUND
+-- Found TinyXML2 via Config file: TinyXML2_DIR-NOTFOUND
+-- Found TinyXML2 via Config file: TinyXML2_DIR-NOTFOUND
+-- Using RMW implementation 'rmw_fastrtps_cpp' as default
+-- Found diagnostic_msgs: 4.9.1 (/opt/ros/humble/share/diagnostic_msgs/cmake)
+-- Found ament_cmake_gtest: 1.3.14 (/opt/ros/humble/share/ament_cmake_gtest/cmake)
+-- Found gtest sources under '/opt/ros/humble/src/gtest_vendor': C++ tests using 'Google Test' will be built
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /home/thanh/ros_ws/forklift/build/forklift_hardware
+Consolidate compiler generated dependencies of target gtest
+Consolidate compiler generated dependencies of target gtest_main
+Consolidate compiler generated dependencies of target forklift_pty_system
+[ 20%] Built target gtest
+[ 40%] Built target gtest_main
+[ 60%] Built target forklift_pty_system
+Consolidate compiler generated dependencies of target protocol_test
+Consolidate compiler generated dependencies of target pty_safety_test
+[ 80%] Built target protocol_test
+[100%] Built target pty_safety_test
+-- Install configuration: ""
+-- Execute custom install script
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_hardware/share/forklift_hardware//forklift_hardware.xml
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_hardware/lib/libforklift_pty_system.so
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_hardware/include/forklift_hardware/protocol.hpp
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_hardware/include/forklift_hardware/pty_system.hpp
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_hardware/share/forklift_hardware/launch/__pycache__/mock_hardware.launch.cpython-310.pyc
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_hardware/share/forklift_hardware/launch/mock_hardware.launch.py
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_hardware/share/forklift_hardware/config/esp32.yaml
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_hardware/share/forklift_hardware/config/ydlidar.yaml
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_hardware/lib/forklift_hardware/mock_mcu.py
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_hardware/lib/forklift_hardware/esp32_bridge.py
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_hardware/lib/forklift_hardware/esp32_serial_auto.py
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_hardware/share/forklift_hardware/LICENSE
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_hardware/share/ament_index/resource_index/package_run_dependencies/forklift_hardware
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_hardware/share/ament_index/resource_index/parent_prefix_path/forklift_hardware
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_hardware/share/forklift_hardware/environment/ament_prefix_path.sh
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_hardware/share/forklift_hardware/environment/ament_prefix_path.dsv
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_hardware/share/forklift_hardware/environment/path.sh
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_hardware/share/forklift_hardware/environment/path.dsv
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_hardware/share/forklift_hardware/local_setup.bash
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_hardware/share/forklift_hardware/local_setup.sh
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_hardware/share/forklift_hardware/local_setup.zsh
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_hardware/share/forklift_hardware/local_setup.dsv
+-- Symlinking: /home/thanh/ros_ws/forklift/install/forklift_hardware/share/forklift_hardware/package.dsv
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_hardware/share/ament_index/resource_index/packages/forklift_hardware
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_hardware/share/ament_index/resource_index/hardware_interface__pluginlib__plugin/forklift_hardware
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_hardware/share/forklift_hardware/cmake/forklift_hardwareConfig.cmake
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_hardware/share/forklift_hardware/cmake/forklift_hardwareConfig-version.cmake
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_hardware/share/forklift_hardware/package.xml
+---
+Finished <<< forklift_hardware [0.49s]
+Starting >>> forklift_bringup
+[Processing: forklift_bringup]
+[Processing: forklift_bringup]
+--- output: forklift_bringup
+-- Found ament_cmake: 1.3.14 (/opt/ros/humble/share/ament_cmake/cmake)
+-- Override CMake install command with custom implementation using symlinks instead of copying resources
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /home/thanh/ros_ws/forklift/build/forklift_bringup
+-- Install configuration: ""
+-- Execute custom install script
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_bringup/share/forklift_bringup/launch/__pycache__/mapping.launch.cpython-310.pyc
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_bringup/share/forklift_bringup/launch/__pycache__/mission.launch.cpython-310.pyc
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_bringup/share/forklift_bringup/launch/__pycache__/navigation.launch.cpython-310.pyc
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_bringup/share/forklift_bringup/launch/__pycache__/navigation_real.launch.cpython-310.pyc
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_bringup/share/forklift_bringup/launch/__pycache__/p5.launch.cpython-310.pyc
+-- Symlinking: /home/thanh/ros_ws/forklift/install/forklift_bringup/share/forklift_bringup/launch/__pycache__/p6.launch.cpython-310.pyc
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_bringup/share/forklift_bringup/launch/__pycache__/real.launch.cpython-310.pyc
+-- Symlinking: /home/thanh/ros_ws/forklift/install/forklift_bringup/share/forklift_bringup/launch/__pycache__/sim.launch.cpython-310.pyc
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_bringup/share/forklift_bringup/launch/lidar.launch.py
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_bringup/share/forklift_bringup/launch/mapping.launch.py
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_bringup/share/forklift_bringup/launch/mapping_real.launch.py
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_bringup/share/forklift_bringup/launch/mission.launch.py
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_bringup/share/forklift_bringup/launch/navigation.launch.py
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_bringup/share/forklift_bringup/launch/navigation_real.launch.py
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_bringup/share/forklift_bringup/launch/p5.launch.py
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_bringup/share/forklift_bringup/launch/p6.launch.py
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_bringup/share/forklift_bringup/launch/ps4.launch.py
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_bringup/share/forklift_bringup/launch/real.launch.py
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_bringup/share/forklift_bringup/launch/sim.launch.py
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_bringup/share/forklift_bringup/rviz/mapping_real.rviz
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_bringup/share/forklift_bringup/rviz/mission.rviz
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_bringup/share/forklift_bringup/rviz/navigation.rviz
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_bringup/share/forklift_bringup/rviz/p5.rviz
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_bringup/share/forklift_bringup/rviz/sim.rviz
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_bringup/lib/forklift_bringup/resume_loaded_sim.py
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_bringup/share/forklift_bringup/LICENSE
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_bringup/share/ament_index/resource_index/package_run_dependencies/forklift_bringup
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_bringup/share/ament_index/resource_index/parent_prefix_path/forklift_bringup
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_bringup/share/forklift_bringup/environment/ament_prefix_path.sh
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_bringup/share/forklift_bringup/environment/ament_prefix_path.dsv
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_bringup/share/forklift_bringup/environment/path.sh
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_bringup/share/forklift_bringup/environment/path.dsv
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_bringup/share/forklift_bringup/local_setup.bash
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_bringup/share/forklift_bringup/local_setup.sh
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_bringup/share/forklift_bringup/local_setup.zsh
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_bringup/share/forklift_bringup/local_setup.dsv
+-- Symlinking: /home/thanh/ros_ws/forklift/install/forklift_bringup/share/forklift_bringup/package.dsv
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_bringup/share/ament_index/resource_index/packages/forklift_bringup
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_bringup/share/forklift_bringup/cmake/forklift_bringupConfig.cmake
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_bringup/share/forklift_bringup/cmake/forklift_bringupConfig-version.cmake
+-- Up-to-date symlink: /home/thanh/ros_ws/forklift/install/forklift_bringup/share/forklift_bringup/package.xml
+---
+Finished <<< forklift_bringup [1min 0s]
+
+Summary: 3 packages finished [1min 1s]

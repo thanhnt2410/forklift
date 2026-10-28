@@ -1,0 +1,77 @@
+[
+  {
+    "name": "prototype_drop_tolerance",
+    "local_trial": "results/dynamic_mission/nominal_2",
+    "summary": {
+      "passed": false,
+      "checks_passed": 20,
+      "checks_total": 21,
+      "scenario": "nominal",
+      "physical_hardware_used": false
+    },
+    "end_state": {
+      "state": "DONE",
+      "code": "SUCCEEDED",
+      "active": false
+    }
+  },
+  {
+    "name": "lift_startup_fault",
+    "local_trial": "results/dynamic_mission/scan_loss",
+    "summary": {
+      "passed": false,
+      "checks_passed": 0,
+      "checks_total": 1,
+      "scenario": "scan_loss",
+      "physical_hardware_used": false
+    }
+  },
+  {
+    "name": "scan_tf_ordering",
+    "local_trial": "results/dynamic_mission/final_scan_loss",
+    "summary": {
+      "passed": false,
+      "checks_passed": 11,
+      "checks_total": 13,
+      "scenario": "scan_loss",
+      "physical_hardware_used": false
+    },
+    "end_state": {
+      "state": "FAULT",
+      "code": "PALLET_DETECTION_NOT_STABLE",
+      "active": false
+    }
+  },
+  {
+    "name": "near_lateral_goal",
+    "local_trial": "results/dynamic_mission/verified_cancel_loaded",
+    "summary": {
+      "passed": false,
+      "checks_passed": 11,
+      "checks_total": 13,
+      "scenario": "cancel_loaded",
+      "physical_hardware_used": false
+    },
+    "end_state": {
+      "state": "FAULT",
+      "code": "ACTION_OR_SERVICE_TIMEOUT",
+      "active": false
+    }
+  },
+  {
+    "name": "uncommanded_feedback_stale",
+    "local_trial": "results/dynamic_mission/acceptance_cancel_retreat",
+    "summary": {
+      "passed": false,
+      "checks_passed": 11,
+      "checks_total": 13,
+      "scenario": "cancel_retreat",
+      "physical_hardware_used": false
+    },
+    "end_state": {
+      "state": "FAULT",
+      "code": "FEEDBACK_OR_NAVIGATION_FAULT",
+      "active": false
+    }
+  }
+]

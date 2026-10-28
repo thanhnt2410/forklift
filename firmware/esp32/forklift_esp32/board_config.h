@@ -33,6 +33,9 @@ constexpr int motor_sign[4] = {1, -1, 1, -1};
 constexpr bool base_enable_hardwired_high = true;
 constexpr int base_enable_pin = -1;
 constexpr bool stop_base_on_fault = false;
+// Encoder spikes are discarded and reported in the wheel warning mask.
+constexpr bool encoder_spikes_warn_only = true;
+// Optional in the user-selected manual-cutoff/single-lower bench profile.
 constexpr int estop_pin = -1;
 
 // =============================================================================
@@ -108,6 +111,7 @@ inline forklift_mcu::Config control_config() {
   c.home_seek_max_steps = home_seek_max_steps;
   c.home_release_max_steps = home_release_max_steps;
   c.stop_base_on_fault = stop_base_on_fault;
+  c.encoder_spikes_warn_only = encoder_spikes_warn_only;
   c.encoder_cpr.fill(nominal_encoder_cpr);
   for (unsigned i = 0; i < 4; ++i) c.gains[i] = wheel_pi[i];
   c.max_wheel_rad_s = 10.;

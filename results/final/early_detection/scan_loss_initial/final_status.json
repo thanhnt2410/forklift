@@ -1,0 +1,34 @@
+{
+  "dynamic": true,
+  "refinement": null,
+  "initial_detection": null,
+  "route_ready": false,
+  "route_revision": 0,
+  "state": "FAULT",
+  "code": "FEEDBACK_OR_NAVIGATION_FAULT",
+  "active": false,
+  "load_detected": false,
+  "carrying": false,
+  "contacts": [],
+  "contact_messages": 0,
+  "face": null,
+  "elapsed": 3.95473089592997,
+  "events": [
+    {
+      "state": "CHECK_READY",
+      "wall_time": 525142.981876175
+    },
+    {
+      "state": "LOWER_FOR_PICK",
+      "wall_time": 525144.097963198
+    },
+    {
+      "state": "DETECT_PICK_INITIAL",
+      "wall_time": 525145.057047468
+    },
+    {
+      "state": "FAULT",
+      "wall_time": 525145.897463764
+    }
+  ]
+}

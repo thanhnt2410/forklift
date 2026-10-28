@@ -1,0 +1,41 @@
+{
+  "dynamic": true,
+  "refinement": null,
+  "route_ready": true,
+  "route_revision": 1,
+  "state": "FAULT",
+  "code": "PALLET_DETECTION_NOT_STABLE",
+  "active": false,
+  "load_detected": false,
+  "carrying": false,
+  "contacts": [],
+  "contact_messages": 0,
+  "face": null,
+  "elapsed": 37.36088559002383,
+  "events": [
+    {
+      "state": "CHECK_READY",
+      "wall_time": 518950.153220482
+    },
+    {
+      "state": "LOWER_FOR_PICK",
+      "wall_time": 518951.536634082
+    },
+    {
+      "state": "PLAN_MISSION",
+      "wall_time": 518952.499253695
+    },
+    {
+      "state": "NAV_PICK",
+      "wall_time": 518956.094923221
+    },
+    {
+      "state": "DETECT_PICK",
+      "wall_time": 518981.074560585
+    },
+    {
+      "state": "FAULT",
+      "wall_time": 518986.495622643
+    }
+  ]
+}

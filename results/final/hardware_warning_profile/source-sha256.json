@@ -1,0 +1,12 @@
+{
+  "firmware/esp32/forklift_esp32/firmware_core.h": "77e7e75e46fbb963b39a639149cb6d0b6e68cac75d14525c55c0087b9b5f6fa8",
+  "firmware/esp32/forklift_esp32/firmware_core.cpp": "c4d7606eca976624c2cdfce4345ce1b15fd7376dfbf8af1587451225ce11c3c6",
+  "firmware/esp32/forklift_esp32/board_config.h": "0bd14362c70d6057f3ccb955c70844fbc61e23e697f60048dc59d93e806a3987",
+  "src/forklift_control/scripts/command_gate.py": "c649b9782b5a04762533493f61f5edddfbfa3f0e4c1aaf84b9611552e1eb88e2",
+  "src/forklift_bringup/launch/real.launch.py": "e0272489085a048d55d9f81d69d37aa540015e2c82613b0f4a531a45de01da2b",
+  "src/forklift_hardware/scripts/esp32_bridge.py": "6af01f604832314f727b73ae31270f84830d32e6689bcd1f75dc1c6f86604fb1",
+  "src/forklift_hardware/config/esp32.yaml": "5b9599a68805fdd04562c65edb19e597d44f96e17cfc896821e0b4d0c402e15f",
+  "tests/test_command_gate.py": "061cd04335e6c68699c818f26cdaac85ecaf73b78b09f1f0432001cb3a3c21dc",
+  "tests/test_esp32_warning_profile.py": "1a5d294b15f617b952137a3b8e7a052b1573572ae7337fe43b4ac6ddb7db4fc8",
+  "firmware/esp32/tests/core_tests.cpp": "b3b58b3df67e63035c138717a2a6ca7231c2bf43a0d62433b804d10bf74853ef"
+}

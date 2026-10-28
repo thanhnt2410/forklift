@@ -1,0 +1,49 @@
+planner_server_3221386_1793182103617.log
+[WARN] [1793182445.630261536] [planner_server]: GridBased plugin failed to plan calculation to (0.89, 0.57): "Goal-aligned approach corridor or connecting path is blocked"
+[WARN] [1793182445.630312844] [planner_server]: [compute_path_to_pose] [ActionServer] Aborting handle.
+[WARN] [1793182445.900579573] [planner_server]: GridBased plugin failed to plan calculation to (0.89, 0.57): "Goal-aligned approach corridor or connecting path is blocked"
+[WARN] [1793182445.900646688] [planner_server]: [compute_path_to_pose] [ActionServer] Aborting handle.
+[WARN] [1793182446.400579266] [planner_server]: GridBased plugin failed to plan calculation to (0.89, 0.57): "Goal-aligned approach corridor or connecting path is blocked"
+[WARN] [1793182446.400631113] [planner_server]: [compute_path_to_pose] [ActionServer] Aborting handle.
+[WARN] [1793182446.900659108] [planner_server]: GridBased plugin failed to plan calculation to (0.89, 0.57): "Goal-aligned approach corridor or connecting path is blocked"
+[WARN] [1793182446.900728455] [planner_server]: [compute_path_to_pose] [ActionServer] Aborting handle.
+[WARN] [1793182455.049585246] [planner_server]: GridBased plugin failed to plan calculation to (0.89, 0.57): "Goal-aligned approach corridor or connecting path is blocked"
+[WARN] [1793182455.049630527] [planner_server]: [compute_path_to_pose] [ActionServer] Aborting handle.
+[WARN] [1793182455.400403438] [planner_server]: GridBased plugin failed to plan calculation to (0.89, 0.57): "Goal-aligned approach corridor or connecting path is blocked"
+[WARN] [1793182455.400472171] [planner_server]: [compute_path_to_pose] [ActionServer] Aborting handle.
+[WARN] [1793182460.549613036] [planner_server]: GridBased plugin failed to plan calculation to (0.89, 0.57): "Goal-aligned approach corridor or connecting path is blocked"
+[WARN] [1793182460.549649910] [planner_server]: [compute_path_to_pose] [ActionServer] Aborting handle.
+[WARN] [1793182460.899937880] [planner_server]: GridBased plugin failed to plan calculation to (0.89, 0.57): "Goal-aligned approach corridor or connecting path is blocked"
+[WARN] [1793182460.899998169] [planner_server]: [compute_path_to_pose] [ActionServer] Aborting handle.
+[WARN] [1793182467.150428978] [planner_server]: GridBased plugin failed to plan calculation to (0.89, 0.57): "Goal-aligned approach corridor or connecting path is blocked"
+[WARN] [1793182467.150499012] [planner_server]: [compute_path_to_pose] [ActionServer] Aborting handle.
+[WARN] [1793182467.410073251] [planner_server]: GridBased plugin failed to plan calculation to (0.89, 0.57): "Goal-aligned approach corridor or connecting path is blocked"
+[WARN] [1793182467.410162297] [planner_server]: [compute_path_to_pose] [ActionServer] Aborting handle.
+[WARN] [1793182467.900383840] [planner_server]: GridBased plugin failed to plan calculation to (0.89, 0.57): "Goal-aligned approach corridor or connecting path is blocked"
+[WARN] [1793182467.900453026] [planner_server]: [compute_path_to_pose] [ActionServer] Aborting handle.
+[WARN] [1793182468.410682453] [planner_server]: GridBased plugin failed to plan calculation to (0.89, 0.57): "Goal-aligned approach corridor or connecting path is blocked"
+[WARN] [1793182468.413160020] [planner_server]: [compute_path_to_pose] [ActionServer] Aborting handle.
+[WARN] [1793182476.659850636] [planner_server]: GridBased plugin failed to plan calculation to (0.89, 0.57): "Goal-aligned approach corridor or connecting path is blocked"
+[WARN] [1793182476.659913992] [planner_server]: [compute_path_to_pose] [ActionServer] Aborting handle.
+[WARN] [1793182476.900749714] [planner_server]: GridBased plugin failed to plan calculation to (0.89, 0.57): "Goal-aligned approach corridor or connecting path is blocked"
+[WARN] [1793182476.900813984] [planner_server]: [compute_path_to_pose] [ActionServer] Aborting handle.
+bt_navigator_3221392_1793182103623.log
+[WARN] [1793182476.928958056] [bt_navigator]: [navigate_to_pose] [ActionServer] Aborting handle.
+[ERROR] [1793182476.929142245] [bt_navigator]: Goal failed
+behavior_server_3221390_1793182103617.log
+[INFO] [1793182105.061886324] [behavior_server]: Creating behavior plugin spin of type nav2_behaviors/Spin
+[INFO] [1793182105.062837238] [behavior_server]: Configuring spin
+[INFO] [1793182105.073916425] [behavior_server]: Creating behavior plugin backup of type nav2_behaviors/BackUp
+[INFO] [1793182105.075727736] [behavior_server]: Configuring backup
+[INFO] [1793182107.168601985] [behavior_server]: Activating spin
+[INFO] [1793182107.168614541] [behavior_server]: Activating backup
+[INFO] [1793182446.919593415] [behavior_server]: Running spin
+[INFO] [1793182446.919753085] [behavior_server]: Turning 1.57 for spin behavior.
+[INFO] [1793182455.020517910] [behavior_server]: spin completed successfully
+[INFO] [1793182455.419593998] [behavior_server]: Running wait
+[INFO] [1793182460.519778483] [behavior_server]: wait completed successfully
+[INFO] [1793182460.919548099] [behavior_server]: Running backup
+[INFO] [1793182467.119940442] [behavior_server]: backup completed successfully
+[INFO] [1793182468.435137995] [behavior_server]: Running spin
+[INFO] [1793182468.435247184] [behavior_server]: Turning 1.57 for spin behavior.
+[INFO] [1793182476.635615758] [behavior_server]: spin completed successfully

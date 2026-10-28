@@ -1,0 +1,21 @@
+Arguments (pass arguments as '<name>:=<value>'):
+
+    'port':
+        Default: port from ESP32 YAML; override with a serial path or auto
+        (default: '')
+
+    'config':
+        no description given
+        (default: '/home/thanh/ros_ws/forklift/install/forklift_hardware/share/forklift_hardware/config/esp32.yaml')
+
+    'lidar_params_file':
+        Reserve this LiDAR serial port during ESP32 detection
+        (default: '/home/thanh/ros_ws/forklift/install/forklift_hardware/share/forklift_hardware/config/ydlidar.yaml')
+
+    'auto_arm':
+        Automatically arm once at startup after healthy telemetry and zero input. Valid choices are: ['true', 'false']
+        (default: 'true')
+
+    'enforce_transport_height':
+        False: raised stationary forks warn without blocking driving. Valid choices are: ['true', 'false']
+        (default: 'false')

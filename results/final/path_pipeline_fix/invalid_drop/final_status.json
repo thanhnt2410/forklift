@@ -1,0 +1,33 @@
+{
+  "dynamic": true,
+  "refinement": null,
+  "route_ready": false,
+  "route_revision": 0,
+  "state": "FAULT",
+  "code": "NO_VALID_PATH_NAV_DROP",
+  "active": false,
+  "load_detected": false,
+  "carrying": false,
+  "contacts": [],
+  "contact_messages": 0,
+  "face": null,
+  "elapsed": 5.424866993038449,
+  "events": [
+    {
+      "state": "CHECK_READY",
+      "wall_time": 518807.022716111
+    },
+    {
+      "state": "LOWER_FOR_PICK",
+      "wall_time": 518807.910692806
+    },
+    {
+      "state": "PLAN_MISSION",
+      "wall_time": 518809.290179527
+    },
+    {
+      "state": "FAULT",
+      "wall_time": 518811.428745839
+    }
+  ]
+}

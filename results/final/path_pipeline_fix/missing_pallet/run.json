@@ -1,0 +1,10 @@
+{
+  "domain": 188,
+  "partition": "forklift_p6_3270756",
+  "dynamic": true,
+  "repetitions": 1,
+  "scenario": "missing_pallet",
+  "controller": "mppi",
+  "gui": false,
+  "physical_hardware_used": false
+}

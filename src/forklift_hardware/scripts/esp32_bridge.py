@@ -129,6 +129,19 @@ def forward(wheels, radius, k):
             radius*(-fl+fr-rl+rr)/(4*k))
 
 
+def encoder_motion(ticks, previous, dt, cpr, limit):
+    """Discard impossible count jumps per wheel; caller advances raw baseline."""
+    delta = []
+    warning = 0
+    for i, (current, old) in enumerate(zip(ticks, previous)):
+        angle = (current-old)*math.tau/cpr
+        if not math.isfinite(angle) or abs(angle) > limit*dt:
+            warning |= 1 << i
+            angle = 0.
+        delta.append(angle)
+    return tuple(delta), warning
+
+
 class SerialPort:
     """Nonblocking raw 8N1 serial, with exclusive ownership and bounded framing."""
     def __init__(self, path, baud):
@@ -209,7 +222,7 @@ class Esp32Bridge(Node):
         super().__init__('esp32_bridge')
         defaults = dict(port='/dev/serial/by-id/SET_ESP32_PORT', lidar_port='', baud=115200, serial_protocol='simple',
                         wheel_radius=.05, kinematic_sum=.260145, encoder_cpr=937.2,
-                        max_wheel_speed=2., state_timeout=.25, command_timeout=.3,
+                        max_wheel_speed=2., encoder_velocity_limit=25., state_timeout=.25, command_timeout=.3,
                         ack_timeout=.25, lift_steps_per_m=0., lift_max_height=0.,
                         lift_tolerance=.002, publish_odom_tf=True, auto_arm=False,
                         lift_preset_mode=False, lift_raise_steps=2000, lift_max_steps=2000)
@@ -221,7 +234,7 @@ class Esp32Bridge(Node):
         self.simple = self.p['serial_protocol'] == 'simple'
         self.sent_after = {}
         self.simple_rx_seq = self.simple_boot = 0
-        positive = ('wheel_radius', 'kinematic_sum', 'encoder_cpr', 'max_wheel_speed',
+        positive = ('wheel_radius', 'kinematic_sum', 'encoder_cpr', 'max_wheel_speed', 'encoder_velocity_limit',
                     'state_timeout', 'command_timeout', 'ack_timeout', 'lift_tolerance')
         if any(not math.isfinite(self.p[k]) or self.p[k] <= 0 for k in positive):
             raise ValueError('Geometry, timing and speed parameters must be finite and positive')
@@ -255,6 +268,8 @@ class Esp32Bridge(Node):
         self.await_command_zero = True
         self.input_zero = False
         self.wheel_velocity = (0.,)*4
+        self.encoder_warning_mask = 0
+        self.encoder_warning_until = self.last_encoder_warning = -math.inf
         self.height = self.lift_velocity = 0.
         self.hold_height = 0.
         self.pose = [0., 0., 0.]
@@ -562,8 +577,8 @@ class Esp32Bridge(Node):
                 wheels = ', '.join(name for i, name in enumerate(('FL', 'FR', 'RL', 'RR'))
                                    if state.warnings & (1 << i))
                 self.get_logger().warning(
-                    f'WHEEL_TRACKING_WARNING [{wheels}]: stalled/low-speed or opposite '
-                    'encoder feedback; control remains enabled, check motor torque and encoder')
+                    f'WHEEL_TRACKING_WARNING [{wheels}]: stalled/low-speed, opposite '
+                    'or noisy encoder feedback; control remains enabled, check motor torque and encoder')
             else:
                 self.get_logger().info('Wheel tracking warning cleared')
         self.pending_tx = [(seq, at) for seq, at in self.pending_tx if seq > state.ack]
@@ -589,9 +604,21 @@ class Esp32Bridge(Node):
             self.hold_after_stop_seq = None
         self.lift_velocity = 0.
         dt = 0. if first else (state.us-old.us)/1e6
-        delta = tuple(0. if first else (n-p)*math.tau/self.p['encoder_cpr'] for n, p in zip(state.ticks, state.ticks if first else old.ticks))
+        delta, spike_mask = ((0.,)*4, 0) if first else encoder_motion(
+            state.ticks, old.ticks, dt, self.p['encoder_cpr'], self.p['encoder_velocity_limit'])
+        if self.received_at >= self.encoder_warning_until:
+            self.encoder_warning_mask = 0
+        if spike_mask:
+            self.encoder_warning_mask |= spike_mask
+            self.encoder_warning_until = self.received_at + .5
+            if self.received_at-self.last_encoder_warning >= 5.:
+                self.get_logger().warning(
+                    f'ENCODER_SPIKE_WARNING mask={spike_mask}: discarded impossible count jumps; '
+                    'driving remains enabled, odometry is degraded')
+                self.last_encoder_warning = self.received_at
         if dt:
-            self.wheel_velocity = tuple(d/dt for d in delta)
+            self.wheel_velocity = tuple(self.wheel_velocity[i] if spike_mask & (1 << i) else d/dt
+                                        for i, d in enumerate(delta))
             # A home latch resets step position; it must not appear as physical velocity.
             if self.lift_configured() and old.homed and state.homed:
                 self.lift_velocity = (state.steps-old.steps)/self.p['lift_steps_per_m']/dt
@@ -661,7 +688,8 @@ class Esp32Bridge(Node):
             height=self.height, target=self.op['target'] if self.op else self.hold_height,
             lower_active=bool(s and s.low), upper_active=bool(s and s.high)))
         label = 'ARMED' if self.armed else ('ARMING' if self.arming else 'DISARMED')
-        warning = s.warnings if s else 0
+        warning = (s.warnings if s else 0) | (
+            self.encoder_warning_mask if now < self.encoder_warning_until else 0)
         status = (f'{label}; host={fault or "OK"}; mcu={MODES[s.mode] if s else "UNKNOWN"}; '
                   f'fault={s.fault if s else "?"}; capabilities={s.capabilities if s else "?"}; '
                   f'handshake={self.handshake}; ack={s.ack if s else "?"}/{self.seq}; '

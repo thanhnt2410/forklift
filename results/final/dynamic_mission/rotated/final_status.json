@@ -1,0 +1,119 @@
+{
+  "dynamic": true,
+  "refinement": {
+    "initial": [
+      0.35,
+      0.7,
+      0.060000000000000005
+    ],
+    "corrected": [
+      0.41978006978188753,
+      0.576494858499092,
+      0.05789239486326579
+    ],
+    "face": [
+      1.0686911269187174,
+      0.6141038989755779,
+      0.05789239486326579
+    ],
+    "samples": 5
+  },
+  "route_ready": false,
+  "route_revision": 0,
+  "state": "DONE",
+  "code": "SUCCEEDED",
+  "active": false,
+  "load_detected": false,
+  "carrying": false,
+  "contacts": [
+    {
+      "a": "p6_pallet::load::deck_collision",
+      "b": "forklift::lift_carriage::lift_carriage_fixed_joint_lump__fork_right_collision_collision_1",
+      "aid": 63,
+      "bid": 102
+    },
+    {
+      "a": "p6_pallet::load::deck_collision",
+      "b": "forklift::lift_carriage::lift_carriage_fixed_joint_lump__fork_left_collision_collision_2",
+      "aid": 63,
+      "bid": 103
+    }
+  ],
+  "contact_messages": 1952,
+  "face": {
+    "x": 0.28228999864351345,
+    "y": -1.6561657456672162e-06,
+    "yaw": 3.255679816497925e-05,
+    "width": 0.2369151654843592,
+    "residual": 0.00013596147164737866,
+    "points": 92,
+    "map_pose": [
+      1.0561637142201061,
+      0.6111171051247533,
+      0.05284893138437836
+    ]
+  },
+  "elapsed": 113.87303415400675,
+  "events": [
+    {
+      "state": "CHECK_READY",
+      "wall_time": 505494.486580963
+    },
+    {
+      "state": "LOWER_FOR_PICK",
+      "wall_time": 505495.300135253
+    },
+    {
+      "state": "NAV_PICK",
+      "wall_time": 505496.260696733
+    },
+    {
+      "state": "DETECT_PICK",
+      "wall_time": 505516.180371786
+    },
+    {
+      "state": "REFINE_PICK",
+      "wall_time": 505516.96164856
+    },
+    {
+      "state": "ORIENT_PICK",
+      "wall_time": 505529.320114911
+    },
+    {
+      "state": "ALIGN",
+      "wall_time": 505531.322206562
+    },
+    {
+      "state": "INSERT",
+      "wall_time": 505537.263565041
+    },
+    {
+      "state": "LIFT_PICK",
+      "wall_time": 505557.182392916
+    },
+    {
+      "state": "VERIFY_LOAD",
+      "wall_time": 505559.460654859
+    },
+    {
+      "state": "RETREAT_PICK",
+      "wall_time": 505560.28023886
+    },
+    {
+      "state": "NAV_DROP",
+      "wall_time": 505568.860051967
+    },
+    {
+      "state": "LOWER_RELEASE",
+      "wall_time": 505596.460417328
+    },
+    {
+      "state": "RETREAT_DROP",
+      "wall_time": 505598.439956423
+    },
+    {
+      "state": "DONE",
+      "wall_time": 505607.339779502
+    }
+  ]
+}

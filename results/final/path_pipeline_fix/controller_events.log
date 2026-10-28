@@ -1,0 +1,97 @@
+=== nominal ===
+[task_manager.py-8] [INFO] [1793186060.463980670] [task_manager]: P6 CHECK_READY
+[task_manager.py-8] [INFO] [1793186061.868726944] [task_manager]: P6 LOWER_FOR_PICK
+[task_manager.py-8] [INFO] [1793186063.307266926] [task_manager]: P6 PLAN_MISSION
+[task_manager.py-8] [INFO] [1793186065.788731778] [task_manager]: P6 NAV_PICK
+[task_manager.py-8] [INFO] [1793186066.829968826] [task_manager]: Following planned NAV_PICK path; sha256=
+[controller_server-21] [INFO] [1793186081.373102234] [MPPIController]: MPPI endpoint heading recovery: brake before correcting 0.235 rad
+[controller_server-21] [INFO] [1793186085.019795712] [MPPIController]: MPPI endpoint heading recovered; resume selected path
+[task_manager.py-8] [INFO] [1793186094.374095053] [task_manager]: P6 DETECT_PICK
+[task_manager.py-8] [INFO] [1793186095.397076775] [task_manager]: P6 REFINE_PICK
+[task_manager.py-8] [INFO] [1793186097.232880580] [task_manager]: Following planned REFINE_PICK path; sha256=
+[task_manager.py-8] [INFO] [1793186113.248466233] [task_manager]: P6 ORIENT_PICK
+[task_manager.py-8] [INFO] [1793186116.231470695] [task_manager]: P6 ALIGN
+[task_manager.py-8] [INFO] [1793186125.761215521] [task_manager]: P6 INSERT
+[task_manager.py-8] [INFO] [1793186156.404354836] [task_manager]: P6 LIFT_PICK
+[task_manager.py-8] [INFO] [1793186158.508063545] [task_manager]: P6 VERIFY_LOAD
+[task_manager.py-8] [INFO] [1793186159.327501789] [task_manager]: P6 RETREAT_PICK
+[task_manager.py-8] [INFO] [1793186171.471781832] [task_manager]: P6 NAV_DROP
+[task_manager.py-8] [INFO] [1793186173.355033028] [task_manager]: Following planned NAV_DROP path; sha256=
+[controller_server-21] [INFO] [1793186195.883864169] [MPPIController]: MPPI endpoint heading recovery: brake before correcting -0.250 rad
+[controller_server-21] [INFO] [1793186199.833338514] [MPPIController]: MPPI endpoint heading recovered; resume selected path
+[task_manager.py-8] [INFO] [1793186210.368193574] [task_manager]: P6 LOWER_RELEASE
+[task_manager.py-8] [INFO] [1793186212.768735885] [task_manager]: P6 RETREAT_DROP
+[task_manager.py-8] [INFO] [1793186224.447993679] [task_manager]: P6 DONE
+=== user_drop ===
+[task_manager.py-8] [INFO] [1793185870.699092231] [task_manager]: P6 CHECK_READY
+[task_manager.py-8] [INFO] [1793185871.619465918] [task_manager]: P6 LOWER_FOR_PICK
+[task_manager.py-8] [INFO] [1793185872.636819110] [task_manager]: P6 PLAN_MISSION
+[task_manager.py-8] [INFO] [1793185875.114033132] [task_manager]: P6 NAV_PICK
+[task_manager.py-8] [INFO] [1793185876.155001060] [task_manager]: Following planned NAV_PICK path; sha256=
+[controller_server-21] [INFO] [1793185890.971209561] [MPPIController]: MPPI endpoint heading recovery: brake before correcting 0.229 rad
+[controller_server-21] [INFO] [1793185894.570890379] [MPPIController]: MPPI endpoint heading recovered; resume selected path
+[task_manager.py-8] [INFO] [1793185904.036290329] [task_manager]: P6 DETECT_PICK
+[task_manager.py-8] [INFO] [1793185905.461254518] [task_manager]: P6 REFINE_PICK
+[task_manager.py-8] [INFO] [1793185907.313484803] [task_manager]: Following planned REFINE_PICK path; sha256=
+[controller_server-21] [INFO] [1793185915.329593174] [MPPIController]: MPPI endpoint heading recovery: brake before correcting -0.154 rad
+[controller_server-21] [INFO] [1793185918.531067595] [MPPIController]: MPPI endpoint heading recovered; resume selected path
+[task_manager.py-8] [INFO] [1793185925.935669748] [task_manager]: P6 ORIENT_PICK
+[task_manager.py-8] [INFO] [1793185928.721623757] [task_manager]: P6 ALIGN
+[task_manager.py-8] [INFO] [1793185937.858399840] [task_manager]: P6 INSERT
+[task_manager.py-8] [INFO] [1793185974.221219445] [task_manager]: P6 LIFT_PICK
+[task_manager.py-8] [INFO] [1793185976.674664908] [task_manager]: P6 VERIFY_LOAD
+[task_manager.py-8] [INFO] [1793185977.495379697] [task_manager]: P6 RETREAT_PICK
+[task_manager.py-8] [INFO] [1793185990.657802317] [task_manager]: P6 NAV_DROP
+[task_manager.py-8] [INFO] [1793185992.501647497] [task_manager]: Following planned NAV_DROP path; sha256=
+[task_manager.py-8] [INFO] [1793186023.156799258] [task_manager]: P6 LOWER_RELEASE
+[task_manager.py-8] [INFO] [1793186026.094402863] [task_manager]: P6 RETREAT_DROP
+[task_manager.py-8] [INFO] [1793186038.494267254] [task_manager]: P6 DONE
+=== rotated ===
+[task_manager.py-8] [INFO] [1793186247.225267489] [task_manager]: P6 CHECK_READY
+[task_manager.py-8] [INFO] [1793186248.384922366] [task_manager]: P6 LOWER_FOR_PICK
+[task_manager.py-8] [INFO] [1793186249.341409131] [task_manager]: P6 PLAN_MISSION
+[task_manager.py-8] [INFO] [1793186252.666961477] [task_manager]: P6 NAV_PICK
+[task_manager.py-8] [INFO] [1793186253.706622360] [task_manager]: Following planned NAV_PICK path; sha256=
+[controller_server-21] [INFO] [1793186268.791461065] [MPPIController]: MPPI endpoint heading recovery: brake before correcting 0.173 rad
+[controller_server-21] [INFO] [1793186271.692340901] [MPPIController]: MPPI endpoint heading recovered; resume selected path
+[task_manager.py-8] [INFO] [1793186280.720648032] [task_manager]: P6 DETECT_PICK
+[task_manager.py-8] [INFO] [1793186282.163194950] [task_manager]: P6 REFINE_PICK
+[task_manager.py-8] [INFO] [1793186284.025863190] [task_manager]: Following planned REFINE_PICK path; sha256=
+[task_manager.py-8] [INFO] [1793186299.561571167] [task_manager]: P6 ORIENT_PICK
+[task_manager.py-8] [INFO] [1793186303.443410049] [task_manager]: P6 ALIGN
+[task_manager.py-8] [INFO] [1793186312.709363261] [task_manager]: P6 INSERT
+[task_manager.py-8] [INFO] [1793186344.072200175] [task_manager]: P6 LIFT_PICK
+[task_manager.py-8] [INFO] [1793186346.183880189] [task_manager]: P6 VERIFY_LOAD
+[task_manager.py-8] [INFO] [1793186347.000434597] [task_manager]: P6 RETREAT_PICK
+[task_manager.py-8] [INFO] [1793186358.941182924] [task_manager]: P6 NAV_DROP
+[task_manager.py-8] [INFO] [1793186360.785188765] [task_manager]: Following planned NAV_DROP path; sha256=
+[controller_server-21] [INFO] [1793186381.064918993] [MPPIController]: MPPI endpoint heading recovery: brake before correcting -0.308 rad
+[controller_server-21] [INFO] [1793186385.418146354] [MPPIController]: MPPI endpoint heading recovered; resume selected path
+[task_manager.py-8] [INFO] [1793186394.300761089] [task_manager]: P6 LOWER_RELEASE
+[task_manager.py-8] [INFO] [1793186396.342379566] [task_manager]: P6 RETREAT_DROP
+[task_manager.py-8] [INFO] [1793186408.009183837] [task_manager]: P6 DONE
+=== legacy ===
+[task_manager.py-8] [INFO] [1793186425.101850730] [task_manager]: P6 CHECK_READY
+[task_manager.py-8] [INFO] [1793186426.180417656] [task_manager]: P6 LOWER_FOR_PICK
+[task_manager.py-8] [INFO] [1793186428.037055537] [task_manager]: P6 PLAN_MISSION
+[task_manager.py-8] [INFO] [1793186429.128711347] [task_manager]: P6 NAV_PICK
+[task_manager.py-8] [INFO] [1793186430.184148652] [task_manager]: Following approved NAV_PICK path; sha256=03741c8f78dde757e60094dccb06f7505c7de98ed5d6e5edcd461b532d19e9aa
+[task_manager.py-8] [INFO] [1793186458.321932322] [task_manager]: P6 ORIENT_PICK
+[task_manager.py-8] [INFO] [1793186459.164982702] [task_manager]: P6 ALIGN
+[task_manager.py-8] [INFO] [1793186468.565317341] [task_manager]: P6 INSERT
+[task_manager.py-8] [INFO] [1793186495.149000306] [task_manager]: P6 LIFT_PICK
+[task_manager.py-8] [INFO] [1793186497.259254257] [task_manager]: P6 VERIFY_LOAD
+[task_manager.py-8] [INFO] [1793186498.080810373] [task_manager]: P6 RETREAT_PICK
+[task_manager.py-8] [INFO] [1793186511.281609456] [task_manager]: P6 NAV_DROP
+[task_manager.py-8] [INFO] [1793186512.299189694] [task_manager]: Following approved NAV_DROP path; sha256=03741c8f78dde757e60094dccb06f7505c7de98ed5d6e5edcd461b532d19e9aa
+[controller_server-21] [INFO] [1793186535.982903365] [MPPIController]: MPPI endpoint heading recovery: brake before correcting -0.174 rad
+[controller_server-21] [INFO] [1793186539.181344650] [MPPIController]: MPPI endpoint heading recovered; resume selected path
+[task_manager.py-8] [INFO] [1793186547.177959084] [task_manager]: P6 ORIENT_DROP
+[task_manager.py-8] [INFO] [1793186549.511346362] [task_manager]: P6 ALIGN
+[task_manager.py-8] [INFO] [1793186557.825298196] [task_manager]: P6 INSERT
+[task_manager.py-8] [INFO] [1793186584.442505530] [task_manager]: P6 LOWER_RELEASE
+[task_manager.py-8] [INFO] [1793186586.601406049] [task_manager]: P6 RETREAT_DROP
+[task_manager.py-8] [INFO] [1793186598.343057608] [task_manager]: P6 RETURN_HOME
+[task_manager.py-8] [INFO] [1793186599.384282471] [task_manager]: Following approved RETURN_HOME path; sha256=03741c8f78dde757e60094dccb06f7505c7de98ed5d6e5edcd461b532d19e9aa
+[controller_server-21] [INFO] [1793186611.215873619] [MPPIController]: MPPI endpoint heading recovery: brake before correcting 0.261 rad
+[task_manager.py-8] [INFO] [1793186614.985595306] [task_manager]: P6 DONE

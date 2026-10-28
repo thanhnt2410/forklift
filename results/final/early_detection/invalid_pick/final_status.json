@@ -1,0 +1,45 @@
+{
+  "dynamic": true,
+  "refinement": null,
+  "initial_detection": {
+    "outcome": "UNAVAILABLE",
+    "initial": [
+      0.892022,
+      0.570133,
+      -0.087618
+    ]
+  },
+  "route_ready": false,
+  "route_revision": 0,
+  "state": "FAULT",
+  "code": "NO_VALID_PATH_NAV_PICK",
+  "active": false,
+  "load_detected": false,
+  "carrying": false,
+  "contacts": [],
+  "contact_messages": 0,
+  "face": null,
+  "elapsed": 8.074840424000286,
+  "events": [
+    {
+      "state": "CHECK_READY",
+      "wall_time": 525086.13626459
+    },
+    {
+      "state": "LOWER_FOR_PICK",
+      "wall_time": 525087.251319546
+    },
+    {
+      "state": "DETECT_PICK_INITIAL",
+      "wall_time": 525088.57175708
+    },
+    {
+      "state": "PLAN_MISSION",
+      "wall_time": 525091.031413286
+    },
+    {
+      "state": "FAULT",
+      "wall_time": 525093.172102862
+    }
+  ]
+}

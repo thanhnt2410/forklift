@@ -1,0 +1,132 @@
+=== early_direct ===
+[task_manager.py-8] [INFO] [1793191883.342813730] [task_manager]: P6 CHECK_READY
+[task_manager.py-8] [INFO] [1793191884.127190948] [task_manager]: P6 LOWER_FOR_PICK
+[task_manager.py-8] [INFO] [1793191885.086884946] [task_manager]: P6 DETECT_PICK_INITIAL
+[task_manager.py-8] [INFO] [1793191886.409902198] [task_manager]: P6 PLAN_MISSION
+[task_manager.py-8] [INFO] [1793191888.556239155] [task_manager]: Full mission route planned before NAV_PICK: 6 segments
+[task_manager.py-8] [INFO] [1793191888.866930494] [task_manager]: P6 NAV_PICK
+[task_manager.py-8] [INFO] [1793191889.907525087] [task_manager]: Following planned NAV_PICK path; sha256=
+[task_manager.py-8] [INFO] [1793191910.326790602] [task_manager]: P6 DETECT_PICK
+[task_manager.py-8] [INFO] [1793191911.286692727] [task_manager]: P6 ORIENT_PICK
+[task_manager.py-8] [INFO] [1793191913.428963220] [task_manager]: P6 ALIGN
+[task_manager.py-8] [INFO] [1793191923.329505192] [task_manager]: P6 INSERT
+[task_manager.py-8] [INFO] [1793191950.389214119] [task_manager]: P6 LIFT_PICK
+[task_manager.py-8] [INFO] [1793191952.186838330] [task_manager]: P6 VERIFY_LOAD
+[task_manager.py-8] [INFO] [1793191953.007732868] [task_manager]: P6 RETREAT_PICK
+[task_manager.py-8] [INFO] [1793191961.586821063] [task_manager]: P6 NAV_DROP
+[task_manager.py-8] [INFO] [1793191963.055007156] [task_manager]: Full mission route planned before NAV_PICK: 6 segments
+[task_manager.py-8] [INFO] [1793191963.427537723] [task_manager]: Following planned NAV_DROP path; sha256=
+[task_manager.py-8] [INFO] [1793191987.646626221] [task_manager]: P6 LOWER_RELEASE
+[task_manager.py-8] [INFO] [1793191990.286891639] [task_manager]: P6 RETREAT_DROP
+[task_manager.py-8] [INFO] [1793191999.306865763] [task_manager]: P6 DONE
+=== early_fallback ===
+[task_manager.py-8] [INFO] [1793192127.812376181] [task_manager]: P6 CHECK_READY
+[task_manager.py-8] [INFO] [1793192128.970618402] [task_manager]: P6 LOWER_FOR_PICK
+[task_manager.py-8] [INFO] [1793192130.529978883] [task_manager]: P6 DETECT_PICK_INITIAL
+[task_manager.py-8] [INFO] [1793192132.989890872] [task_manager]: P6 PLAN_MISSION
+[task_manager.py-8] [INFO] [1793192135.377806346] [task_manager]: Full mission route planned before NAV_PICK: 6 segments
+[task_manager.py-8] [INFO] [1793192135.689264693] [task_manager]: P6 NAV_PICK
+[task_manager.py-8] [INFO] [1793192136.730098426] [task_manager]: Following planned NAV_PICK path; sha256=
+[task_manager.py-8] [INFO] [1793192157.289452152] [task_manager]: P6 DETECT_PICK
+[task_manager.py-8] [INFO] [1793192158.491177090] [task_manager]: P6 REFINE_PICK
+[task_manager.py-8] [INFO] [1793192159.957669820] [task_manager]: Full mission route planned before NAV_PICK: 7 segments
+[task_manager.py-8] [INFO] [1793192160.330101606] [task_manager]: Following planned REFINE_PICK path; sha256=
+[task_manager.py-8] [INFO] [1793192171.889476750] [task_manager]: P6 ORIENT_PICK
+[task_manager.py-8] [INFO] [1793192172.313196161] [task_manager]: P6 ALIGN
+[task_manager.py-8] [INFO] [1793192181.011887161] [task_manager]: P6 INSERT
+[task_manager.py-8] [INFO] [1793192208.552968415] [task_manager]: P6 LIFT_PICK
+[task_manager.py-8] [INFO] [1793192210.350160780] [task_manager]: P6 VERIFY_LOAD
+[task_manager.py-8] [INFO] [1793192211.169894319] [task_manager]: P6 RETREAT_PICK
+[task_manager.py-8] [INFO] [1793192219.749781565] [task_manager]: P6 NAV_DROP
+[task_manager.py-8] [INFO] [1793192221.198114777] [task_manager]: Full mission route planned before NAV_PICK: 7 segments
+[task_manager.py-8] [INFO] [1793192221.570172712] [task_manager]: Following planned NAV_DROP path; sha256=
+[task_manager.py-8] [INFO] [1793192247.409685081] [task_manager]: P6 LOWER_RELEASE
+[task_manager.py-8] [INFO] [1793192249.209787933] [task_manager]: P6 RETREAT_DROP
+[task_manager.py-8] [INFO] [1793192258.229392418] [task_manager]: P6 DONE
+=== moved_pallet ===
+[task_manager.py-8] [INFO] [1793192270.517157747] [task_manager]: P6 CHECK_READY
+[task_manager.py-8] [INFO] [1793192271.985276966] [task_manager]: P6 LOWER_FOR_PICK
+[task_manager.py-8] [INFO] [1793192272.944871141] [task_manager]: P6 DETECT_PICK_INITIAL
+[task_manager.py-8] [INFO] [1793192274.506419668] [task_manager]: P6 PLAN_MISSION
+[task_manager.py-8] [INFO] [1793192276.654523881] [task_manager]: Full mission route planned before NAV_PICK: 6 segments
+[task_manager.py-8] [INFO] [1793192276.964998671] [task_manager]: P6 NAV_PICK
+[task_manager.py-8] [INFO] [1793192278.005090280] [task_manager]: Following planned NAV_PICK path; sha256=
+[task_manager.py-8] [INFO] [1793192297.584991830] [task_manager]: P6 DETECT_PICK
+[task_manager.py-8] [INFO] [1793192298.908698959] [task_manager]: P6 REFINE_PICK
+[task_manager.py-8] [INFO] [1793192300.377284465] [task_manager]: Full mission route planned before NAV_PICK: 7 segments
+[task_manager.py-8] [INFO] [1793192300.745404017] [task_manager]: Following planned REFINE_PICK path; sha256=
+[task_manager.py-8] [INFO] [1793192314.464703219] [task_manager]: P6 ORIENT_PICK
+[task_manager.py-8] [INFO] [1793192317.266587771] [task_manager]: P6 ALIGN
+[task_manager.py-8] [INFO] [1793192323.388347222] [task_manager]: P6 INSERT
+[task_manager.py-8] [INFO] [1793192342.887913703] [task_manager]: P6 LIFT_PICK
+[task_manager.py-8] [INFO] [1793192344.685338999] [task_manager]: P6 VERIFY_LOAD
+[task_manager.py-8] [INFO] [1793192345.504718693] [task_manager]: P6 RETREAT_PICK
+[task_manager.py-8] [INFO] [1793192354.805062234] [task_manager]: P6 NAV_DROP
+[task_manager.py-8] [INFO] [1793192356.276168089] [task_manager]: Full mission route planned before NAV_PICK: 7 segments
+[task_manager.py-8] [INFO] [1793192356.644981153] [task_manager]: Following planned NAV_DROP path; sha256=
+[task_manager.py-8] [INFO] [1793192382.244729145] [task_manager]: P6 LOWER_RELEASE
+[task_manager.py-8] [INFO] [1793192384.165118920] [task_manager]: P6 RETREAT_DROP
+[task_manager.py-8] [INFO] [1793192393.064948873] [task_manager]: P6 DONE
+=== nominal ===
+[task_manager.py-8] [INFO] [1793192405.441409586] [task_manager]: P6 CHECK_READY
+[task_manager.py-8] [INFO] [1793192406.542002426] [task_manager]: P6 LOWER_FOR_PICK
+[task_manager.py-8] [INFO] [1793192407.501897583] [task_manager]: P6 DETECT_PICK_INITIAL
+[task_manager.py-8] [INFO] [1793192408.344079470] [task_manager]: P6 PLAN_MISSION
+[task_manager.py-8] [INFO] [1793192411.210320575] [task_manager]: Full mission route planned before NAV_PICK: 6 segments
+[task_manager.py-8] [INFO] [1793192411.521675841] [task_manager]: P6 NAV_PICK
+[task_manager.py-8] [INFO] [1793192412.562797479] [task_manager]: Following planned NAV_PICK path; sha256=
+[task_manager.py-8] [INFO] [1793192432.581180569] [task_manager]: P6 DETECT_PICK
+[task_manager.py-8] [INFO] [1793192433.541540471] [task_manager]: P6 ORIENT_PICK
+[task_manager.py-8] [INFO] [1793192435.683129391] [task_manager]: P6 ALIGN
+[task_manager.py-8] [INFO] [1793192445.163994573] [task_manager]: P6 INSERT
+[task_manager.py-8] [INFO] [1793192464.664703421] [task_manager]: P6 LIFT_PICK
+[task_manager.py-8] [INFO] [1793192466.461608173] [task_manager]: P6 VERIFY_LOAD
+[task_manager.py-8] [INFO] [1793192467.281625415] [task_manager]: P6 RETREAT_PICK
+[task_manager.py-8] [INFO] [1793192475.863296368] [task_manager]: P6 NAV_DROP
+[task_manager.py-8] [INFO] [1793192477.327637144] [task_manager]: Full mission route planned before NAV_PICK: 6 segments
+[task_manager.py-8] [INFO] [1793192477.701879054] [task_manager]: Following planned NAV_DROP path; sha256=
+[task_manager.py-8] [INFO] [1793192502.101339580] [task_manager]: P6 LOWER_RELEASE
+[task_manager.py-8] [INFO] [1793192503.902002895] [task_manager]: P6 RETREAT_DROP
+[task_manager.py-8] [INFO] [1793192513.521308441] [task_manager]: P6 DONE
+=== user_drop ===
+[task_manager.py-8] [INFO] [1793192528.136390416] [task_manager]: P6 CHECK_READY
+[task_manager.py-8] [INFO] [1793192529.108330820] [task_manager]: P6 LOWER_FOR_PICK
+[task_manager.py-8] [INFO] [1793192531.328440903] [task_manager]: P6 DETECT_PICK_INITIAL
+[task_manager.py-8] [INFO] [1793192532.289774719] [task_manager]: P6 PLAN_MISSION
+[task_manager.py-8] [INFO] [1793192534.437820408] [task_manager]: Full mission route planned before NAV_PICK: 6 segments
+[task_manager.py-8] [INFO] [1793192534.747757967] [task_manager]: P6 NAV_PICK
+[task_manager.py-8] [INFO] [1793192535.769374769] [task_manager]: Following planned NAV_PICK path; sha256=
+[task_manager.py-8] [INFO] [1793192554.467824832] [task_manager]: P6 DETECT_PICK
+[task_manager.py-8] [INFO] [1793192555.367955690] [task_manager]: P6 ORIENT_PICK
+[task_manager.py-8] [INFO] [1793192562.650107161] [task_manager]: P6 ALIGN
+[task_manager.py-8] [INFO] [1793192573.990164869] [task_manager]: P6 INSERT
+[task_manager.py-8] [INFO] [1793192597.750317238] [task_manager]: P6 LIFT_PICK
+[task_manager.py-8] [INFO] [1793192599.548148049] [task_manager]: P6 VERIFY_LOAD
+[task_manager.py-8] [INFO] [1793192600.368018775] [task_manager]: P6 RETREAT_PICK
+[task_manager.py-8] [INFO] [1793192609.008218467] [task_manager]: P6 NAV_DROP
+[task_manager.py-8] [INFO] [1793192610.475336667] [task_manager]: Full mission route planned before NAV_PICK: 6 segments
+[task_manager.py-8] [INFO] [1793192610.849362045] [task_manager]: Following planned NAV_DROP path; sha256=
+[task_manager.py-8] [INFO] [1793192636.207814503] [task_manager]: P6 LOWER_RELEASE
+[task_manager.py-8] [INFO] [1793192638.187747833] [task_manager]: P6 RETREAT_DROP
+[task_manager.py-8] [INFO] [1793192647.087762919] [task_manager]: P6 DONE
+=== rotated ===
+[task_manager.py-8] [INFO] [1793192659.374942052] [task_manager]: P6 CHECK_READY
+[task_manager.py-8] [INFO] [1793192661.608850153] [task_manager]: P6 LOWER_FOR_PICK
+[task_manager.py-8] [INFO] [1793192662.570253519] [task_manager]: P6 DETECT_PICK_INITIAL
+[task_manager.py-8] [INFO] [1793192663.471197515] [task_manager]: P6 PLAN_MISSION
+[task_manager.py-8] [INFO] [1793192665.618637922] [task_manager]: Full mission route planned before NAV_PICK: 6 segments
+[task_manager.py-8] [INFO] [1793192665.929000486] [task_manager]: P6 NAV_PICK
+[task_manager.py-8] [INFO] [1793192666.969629197] [task_manager]: Following planned NAV_PICK path; sha256=
+[task_manager.py-8] [INFO] [1793192685.189814870] [task_manager]: P6 DETECT_PICK
+[task_manager.py-8] [INFO] [1793192686.089328686] [task_manager]: P6 ORIENT_PICK
+[task_manager.py-8] [INFO] [1793192686.511079622] [task_manager]: P6 ALIGN
+[task_manager.py-8] [INFO] [1793192694.311408725] [task_manager]: P6 INSERT
+[task_manager.py-8] [INFO] [1793192713.811924930] [task_manager]: P6 LIFT_PICK
+[task_manager.py-8] [INFO] [1793192715.608883684] [task_manager]: P6 VERIFY_LOAD
+[task_manager.py-8] [INFO] [1793192716.429551232] [task_manager]: P6 RETREAT_PICK
+[task_manager.py-8] [INFO] [1793192725.908965778] [task_manager]: P6 NAV_DROP
+[task_manager.py-8] [INFO] [1793192727.380178233] [task_manager]: Full mission route planned before NAV_PICK: 6 segments
+[task_manager.py-8] [INFO] [1793192727.751118664] [task_manager]: Following planned NAV_DROP path; sha256=
+[task_manager.py-8] [INFO] [1793192751.969306856] [task_manager]: P6 LOWER_RELEASE
+[task_manager.py-8] [INFO] [1793192753.769688270] [task_manager]: P6 RETREAT_DROP
+[task_manager.py-8] [INFO] [1793192762.909253429] [task_manager]: P6 DONE

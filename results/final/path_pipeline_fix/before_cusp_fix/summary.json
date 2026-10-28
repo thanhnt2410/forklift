@@ -1,0 +1,7 @@
+{
+  "passed": false,
+  "checks_passed": 20,
+  "checks_total": 26,
+  "scenario": "nominal",
+  "physical_hardware_used": false
+}

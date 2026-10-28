@@ -6,6 +6,20 @@
 #include "forklift_navigation/terminal_path.hpp"
 
 namespace forklift_navigation {
+// Use the vehicle quaternion, including on a reverse leg. The direction of
+// travel at a cusp is not the required vehicle heading.
+inline bool endpoint_heading_correction(
+  const geometry_msgs::msg::Pose & pose,const nav_msgs::msg::Path & reference,double & error,
+  double position_tolerance=.07)
+{
+  if(reference.poses.empty())return false;
+  const auto & end=reference.poses.back().pose;
+  error=wrap_angle(tf2::getYaw(end.orientation)-tf2::getYaw(pose.orientation));
+  // Stay inside MPPI's 0.08 m inversion tolerance before rotating. Braking
+  // outside that region can strand the robot beside a cusp: correcting yaw
+  // alone cannot satisfy the outstanding lateral position error.
+  return std::hypot(pose.position.x-end.position.x,pose.position.y-end.position.y)<position_tolerance && std::abs(error)>.08;
+}
 // Humble applies a Savitzky-Golay filter after optimizer constraints. Bound
 // the filtered command as well, preserving curvature rather than clipping axes.
 inline bool limit_route_command(geometry_msgs::msg::Twist & command) {

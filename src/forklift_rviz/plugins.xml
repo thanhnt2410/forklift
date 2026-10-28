@@ -1,0 +1,5 @@
+<library path="mission_plugins">
+  <class name="forklift_rviz/PickA" type="forklift_rviz::PickA" base_class_type="rviz_common::Tool"><description>Approximate robot staging pose facing pallet A.</description></class>
+  <class name="forklift_rviz/DropB" type="forklift_rviz::DropB" base_class_type="rviz_common::Tool"><description>Final robot pose when releasing pallet at B.</description></class>
+  <class name="forklift_rviz/MissionPanel" type="forklift_rviz::MissionPanel" base_class_type="rviz_common::Panel"><description>Start, stop and clear A/B pallet missions.</description></class>
+</library>

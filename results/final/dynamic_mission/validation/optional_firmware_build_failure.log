@@ -1,0 +1,45 @@
+Starting >>> forklift_interfaces
+Starting >>> forklift_description
+Starting >>> forklift_gazebo
+Starting >>> forklift_rviz
+Starting >>> forklift_esp32_core
+Finished <<< forklift_description [0.07s]
+Starting >>> forklift_navigation
+Finished <<< forklift_gazebo [0.09s]
+Finished <<< forklift_rviz [0.10s]
+Finished <<< forklift_interfaces [0.33s]
+Starting >>> forklift_control
+Starting >>> forklift_lift
+Starting >>> forklift_task_manager
+Finished <<< forklift_control [0.17s]
+Starting >>> forklift_hardware
+Finished <<< forklift_task_manager [0.31s]
+Finished <<< forklift_lift [0.33s]
+Finished <<< forklift_hardware [0.54s]
+--- stderr: forklift_esp32_core
+In file included from /usr/include/gtest/gtest.h:62,
+                 from /home/thanh/ros_ws/forklift/firmware/esp32/tests/core_tests.cpp:4:
+/home/thanh/ros_ws/forklift/firmware/esp32/tests/core_tests.cpp: In member function ‘virtual void {anonymous}::ManualCutoffBench_WatchdogReportsFaultButHoldsPwmUntilExplicitStop_Test::TestBody()’:
+/home/thanh/ros_ws/forklift/firmware/esp32/tests/core_tests.cpp:61:35: error: ‘Watchdog’ was not declared in this scope
+   61 |   ASSERT_TRUE(controller.faults()&Watchdog);
+      |                                   ^~~~~~~~
+/home/thanh/ros_ws/forklift/firmware/esp32/tests/core_tests.cpp: In member function ‘virtual void {anonymous}::Bench_DuplicateCommandsDoNotFeedWatchdog_Test::TestBody()’:
+/home/thanh/ros_ws/forklift/firmware/esp32/tests/core_tests.cpp:198:35: error: ‘Watchdog’ was not declared in this scope
+  198 |   EXPECT_TRUE(controller.faults()&Watchdog);EXPECT_FALSE(controller.outputs().base_enable);
+      |                                   ^~~~~~~~
+/home/thanh/ros_ws/forklift/firmware/esp32/tests/core_tests.cpp: In member function ‘virtual void {anonymous}::Bench_HomingStillRequiresHostHeartbeat_Test::TestBody()’:
+/home/thanh/ros_ws/forklift/firmware/esp32/tests/core_tests.cpp:273:35: error: ‘Watchdog’ was not declared in this scope
+  273 |   EXPECT_TRUE(controller.faults()&Watchdog);EXPECT_EQ(controller.outputs().lift_steps_s,0.);
+      |                                   ^~~~~~~~
+gmake[2]: *** [CMakeFiles/core_tests.dir/build.make:76: CMakeFiles/core_tests.dir/tests/core_tests.cpp.o] Error 1
+gmake[1]: *** [CMakeFiles/Makefile2:867: CMakeFiles/core_tests.dir/all] Error 2
+gmake: *** [Makefile:101: all] Error 2
+---
+Failed   <<< forklift_esp32_core [1.26s, exited with code 2]
+Aborted  <<< forklift_navigation [1.39s]
+
+Summary: 8 packages finished [1.66s]
+  1 package failed: forklift_esp32_core
+  1 package aborted: forklift_navigation
+  1 package had stderr output: forklift_esp32_core
+  1 package not processed

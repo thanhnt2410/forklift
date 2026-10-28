@@ -1,0 +1,10 @@
+{
+  "passed": true,
+  "missions_expected": 1,
+  "missions_completed": 1,
+  "scenario": "nominal",
+  "checks_passed": 29,
+  "checks_total": 29,
+  "physical_hardware_used": false,
+  "firmware_flashed": false
+}

@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: Apache-2.0
-"""P6 SIM: scan docking, actual deck contacts and a bounded action sequence.
+"""Pallet missions: legacy SIM route or dynamic A/B with LiDAR refinement.
 No Gazebo world pose subscription, teleport or attach/detach in the controller.
+Real deployments must provide calibrated lift and external load feedback.
 """
 import json
 import os
@@ -29,7 +30,9 @@ from tf2_ros import Buffer, TransformListener
 from forklift_interfaces.action import RunMission, MoveLift, HomeLift
 from forklift_interfaces.msg import LiftState
 from forklift_task_manager.docking import detect_face, clamp, wrap, can_advance
-from forklift_task_manager.mission_route import station_poses, straight_samples, load_approved_route
+from forklift_task_manager.mission_route import (station_poses, straight_samples, load_approved_route,
+    DYNAMIC_PLANNERS, path_statistics, choose_navigation_candidate)
+from forklift_task_manager.dynamic_mission import pose_values, station_from_approach, compose, inverse, stable_face, refined_approach, needs_pick_replan, alignment_samples
 
 
 def yaw(q):return math.atan2(2*(q.w*q.z+q.x*q.y),1-2*(q.y*q.y+q.z*q.z))
@@ -47,6 +50,19 @@ class TaskManager(Node):
         filename=self.get_parameter('approved_route_file').value
         self.approved_file=Path(filename) if filename else None
         self.approved_sha256=''
+        self.declare_parameter('scan_topic','/scan_raw')
+        self.declare_parameter('load_feedback','contacts')
+        self.load_feedback=self.get_parameter('load_feedback').value
+        if self.load_feedback not in ('contacts','external'):raise ValueError('Invalid load_feedback')
+        self.declare_parameter('staging_distance',.65)
+        self.declare_parameter('pallet_face_width',.24)
+        self.staging_distance=float(self.get_parameter('staging_distance').value)
+        self.pallet_width=float(self.get_parameter('pallet_face_width').value)
+        self.declare_parameter('initial_detection_timeout',2.)
+        self.initial_detection_timeout=float(self.get_parameter('initial_detection_timeout').value)
+        if not 0.<=self.initial_detection_timeout<=5.:raise ValueError('Invalid initial_detection_timeout')
+        if not .60<=self.staging_distance<=1.2 or not .10<=self.pallet_width<=1.5:raise ValueError('Invalid pallet geometry')
+        self.dynamic=False;self.refinement=None;self.initial_detection=None;self.dynamic_segments={}
         self.tf=Buffer();self.listener=TransformListener(self.tf,self)
         self.data={};self.stamps={};self.sleepers=[];self.active=False;self.failed=False
         self.state='IDLE';self.code='';self.mission_goal=None;self.client_goal=None
@@ -56,11 +72,14 @@ class TaskManager(Node):
         self.status=self.create_publisher(String,'/mission/status',10)
         self.loaded=self.create_publisher(Bool,'/mission/loaded',QoSProfile(depth=1,durability=DurabilityPolicy.TRANSIENT_LOCAL))
         latched=QoSProfile(depth=1,durability=DurabilityPolicy.TRANSIENT_LOCAL)
-        for cls,topic,key,qos in [(LaserScan,'/scan_raw','scan',qos_profile_sensor_data),
+        for cls,topic,key,qos in [(LaserScan,self.get_parameter('scan_topic').value,'scan',qos_profile_sensor_data),
                 (Odometry,'/odom','odom',10),(LiftState,'/lift/state','lift',latched),
                 (Bool,'/navigation/ready','ready',10),(Bool,'/safety/estop','estop',latched)]:
             self.create_subscription(cls,topic,lambda m,k=key:self.receive(k,m),qos)
         self.create_subscription(Contacts,'/p6/contacts',self.contacts,10)
+        self.create_subscription(Bool,'/pallet/load_detected',lambda m:self.receive('load',m),10)
+        self.detected_pose=self.create_publisher(PoseStamped,'/mission/pallet_pose',latched)
+        self.corrected_pose=self.create_publisher(PoseStamped,'/mission/refined_pick_pose',latched)
         self.nav_cancel=self.create_client(CancelGoal,'/navigate_to_pose/_action/cancel_goal')
         self.route_segments=[];self.route_revision=0
         self.route_path=self.create_publisher(NavPath,'/mission/route',latched)
@@ -93,13 +112,23 @@ class TaskManager(Node):
         if any('forklift' in c.collision1.name+c.collision2.name and
                ('fork_' in c.collision1.name+c.collision2.name or 'lift_carriage' in c.collision1.name+c.collision2.name)
                for c in msg.contacts):self.contact_time=time.monotonic()
-    def has_load(self):return time.monotonic()-self.contact_time<.3
+    def has_load(self):
+        if getattr(self,'load_feedback','contacts')=='external':
+            return self.fresh('load') and self.data['load'].data
+        return time.monotonic()-self.contact_time<.3
     def fresh(self,key,age=.6):return time.monotonic()-self.stamps.get(key,0.)<age
     def ready(self):
         return (all(self.fresh(k) for k in ['scan','odom','lift','ready']) and self.data['ready'].data
                 and not self.data.get('estop',Bool()).data and not self.data['lift'].fault_code)
     def accept(self,g):
-        if self.active or self.failed or g.mission not in ('','a_to_b') or not math.isfinite(g.timeout) or not 0<=g.timeout<=900 or not self.ready():return GoalResponse.REJECT
+        if self.active or self.failed or g.mission not in ('','a_to_b','pick_and_place') or not math.isfinite(g.timeout) or not 0<=g.timeout<=900 or not self.ready():return GoalResponse.REJECT
+        if g.mission=='pick_and_place':
+            try:
+                a,b=pose_values(g.pick_pose),pose_values(g.drop_pose)
+                if math.hypot(a[0]-b[0],a[1]-b[1])<.30:return GoalResponse.REJECT
+            except ValueError:return GoalResponse.REJECT
+        if getattr(self,'load_feedback','contacts')=='external' and not self.fresh('load'):return GoalResponse.REJECT
+        if getattr(self,'load_feedback','contacts')=='external' and g.mission!='pick_and_place':return GoalResponse.REJECT
         self.active=True;self.stop_requested=False;return GoalResponse.ACCEPT
     def stop(self,req,res):
         self.stop_requested=True;self.command();res.success=True;res.message='Stopping mission; load position held';return res
@@ -113,6 +142,7 @@ class TaskManager(Node):
         if self.stop_requested or (self.mission_goal and self.mission_goal.is_cancel_requested):raise MissionError('CANCELED')
         if time.monotonic()>self.deadline:raise MissionError('MISSION_TIMEOUT')
         if not self.ready():raise MissionError('FEEDBACK_OR_NAVIGATION_FAULT')
+        if getattr(self,'load_feedback','contacts')=='external' and not self.fresh('load'):raise MissionError('LOAD_FEEDBACK_STALE')
         if self.load_required and not self.has_load():raise MissionError('LOAD_CONTACT_LOST')
         if self.state not in ('CHECK_READY','HOME_LIFT','LOWER_FOR_PICK','LIFT_PICK','LOWER_RELEASE'):
             lift=self.data['lift']
@@ -141,7 +171,14 @@ class TaskManager(Node):
         if not client.server_is_ready():raise MissionError('ACTION_SERVER_UNAVAILABLE')
         pending=client.send_goal_async(goal)
         # Retain handle even if cancel arrives while goal acknowledgement is pending.
-        pending.add_done_callback(lambda f:setattr(self,'client_goal',f.result()) if f.result() and f.result().accepted else None)
+        owner=self.mission_goal
+        def acknowledged(f):
+            if f.exception() or not f.result() or not f.result().accepted:return
+            h=f.result()
+            if not self.active or self.stop_requested or self.mission_goal is not owner:
+                h.cancel_goal_async()
+            else:self.client_goal=h
+        pending.add_done_callback(acknowledged)
         h=await self.wait(pending,5.)
         if not h.accepted:raise MissionError('ACTION_REJECTED')
         self.client_goal=h
@@ -157,18 +194,27 @@ class TaskManager(Node):
         await self.select(True)
         await self.wait(self.nav_cancel.call_async(CancelGoal.Request()),5.)
         await self.pause(.2)
+        if self.dynamic:
+            if state!='NAV_PICK':
+                await self.update_footprint()
+                start=self.current_map_pose()
+                self.dynamic_segments[state]=await self.compute_dynamic_segment(start,pose,state)
+                self.publish_dynamic_route()
+            await self.follow_approved_route(state)
+            return
         if self.approved_file:
             await self.follow_approved_route(state)
             return
         await self.select(False)
+        await self.update_footprint()
         g=NavigateToPose.Goal();g.pose.header.frame_id='map';g.pose.header.stamp=self.get_clock().now().to_msg()
         g.pose.pose.position.x=float(pose[0]);g.pose.pose.position.y=float(pose[1]);g.pose.pose.orientation.z=math.sin(pose[2]/2);g.pose.pose.orientation.w=math.cos(pose[2]/2)
         await self.action(self.nav,g,120.);await self.select(True);await self.stationary()
-    async def follow_approved_route(self,state):
+    async def update_footprint(self,loaded=None):
         # The carried pallet extends beyond the forks. After release it is an
         # obstacle, not part of the robot: restore the CAD unloaded footprint.
         xmax=self.g['footprint_xmax'];halfwidth=self.g['footprint_halfwidth']
-        if self.load_required:
+        if self.load_required if loaded is None else loaded:
             xmax=max(xmax,self.g['loaded_xmax'])
             halfwidth=max(halfwidth,self.g['loaded_halfwidth'])
         polygon=Polygon(points=[Point32(x=float(x),y=float(y)) for x,y in
@@ -176,8 +222,10 @@ class TaskManager(Node):
              (xmax,halfwidth),(self.g['footprint_xmin'],halfwidth)]])
         for publisher in self.footprints:publisher.publish(polygon)
         await self.pause(.3)
+    async def follow_approved_route(self,state):
+        await TaskManager.update_footprint(self)
         segment=next((s for s in self.route_segments if s['stage']==state),None)
-        if segment is None:raise MissionError('APPROVED_SEGMENT_MISSING')
+        if segment is None:raise MissionError('PLANNED_SEGMENT_MISSING' if getattr(self,'dynamic',False) else 'APPROVED_SEGMENT_MISSING')
         path=NavPath();path.header.frame_id='map';path.header.stamp=self.get_clock().now().to_msg()
         path.poses=[self.map_pose(p) for p in segment['poses']]
         transform=self.tf.lookup_transform('map','base_link',rclpy.time.Time()).transform
@@ -187,19 +235,76 @@ class TaskManager(Node):
             if travelled>.25:break
             distance=math.hypot(p.pose.position.x-transform.translation.x,p.pose.position.y-transform.translation.y)
             if distance<best:best=distance;closest=i
-        if best>.25:raise MissionError('APPROVED_ROUTE_START_MISMATCH')
+        if best>.25:raise MissionError('PLANNED_ROUTE_START_MISMATCH' if self.dynamic else 'APPROVED_ROUTE_START_MISMATCH')
         # Preserve original vertices/tangents: never invent a cusp by anchoring
         # the first vertex to a slightly off-path localization estimate.
         path.poses=path.poses[closest:]
         if not self.path_valid.service_is_ready():raise MissionError('PATH_VALIDATION_UNAVAILABLE')
         valid=await self.wait(self.path_valid.call_async(IsPathValid.Request(path=path)),5.)
-        if not valid.is_valid:raise MissionError('APPROVED_ROUTE_BLOCKED')
+        if not valid.is_valid:raise MissionError('PLANNED_ROUTE_BLOCKED' if self.dynamic else 'APPROVED_ROUTE_BLOCKED')
         self.active_path.publish(path)
-        self.get_logger().info('Following approved '+state+' path; sha256='+self.approved_sha256)
+        self.get_logger().info('Following '+('planned ' if self.dynamic else 'approved ')+state+' path; sha256='+self.approved_sha256)
         await self.select(False)
-        goal=FollowPath.Goal(path=path,controller_id='FollowPath',goal_checker_id='general_goal_checker')
+        checker='pickup_goal_checker' if self.dynamic and state=='NAV_PICK' else 'general_goal_checker'
+        goal=FollowPath.Goal(path=path,controller_id='FollowPath',goal_checker_id=checker)
         await self.action(self.follow,goal,120.)
         await self.select(True);await self.stationary()
+    def current_map_pose(self):
+        t=self.tf.lookup_transform('map','base_link',rclpy.time.Time()).transform
+        return [t.translation.x,t.translation.y,yaw(t.rotation)]
+    async def compute_dynamic_segment(self,start,end,state):
+        candidates=[]
+        for planner in DYNAMIC_PLANNERS:
+            goal=ComputePathToPose.Goal(start=self.map_pose(start),goal=self.map_pose(end),use_start=True,planner_id=planner)
+            try:result=await self.action(self.planner,goal,12.)
+            except MissionError as error:
+                # Only a completed planner failure is a rejected candidate.
+                # Cancellation, timeouts and sensor faults must abort the mission.
+                if not str(error).startswith('ACTION_FAILED_'):raise
+                continue
+            points=[[p.pose.position.x,p.pose.position.y,yaw(p.pose.orientation)] for p in result.path.poses]
+            if len(points)<2 or any(not all(math.isfinite(v) for v in p) for p in points):continue
+            if math.hypot(points[-1][0]-end[0],points[-1][1]-end[1])>.06 or abs(wrap(points[-1][2]-end[2]))>.06:continue
+            candidates.append(dict(stage=state,kind='navigation',planner=planner,collision_checked=True,
+                poses=points,statistics=path_statistics(points)))
+        if not candidates:raise MissionError('NO_VALID_PATH_'+state)
+        return choose_navigation_candidate(candidates)
+    def dynamic_pick_geometry(self):
+        station=self.dynamic_pick;face=[*station['face'],station['approach'][2]]
+        pre=refined_approach(face,self.p['preinsert_distance'],self.p['laser_x'])
+        inserted=refined_approach(face,self.p['inserted_distance'],self.p['laser_x'])
+        retreat=compose(inserted,[-self.p['retreat_distance'],0.,0.])
+        return pre,inserted,retreat
+    async def plan_dynamic_mission(self,pick,drop):
+        self.stage('PLAN_MISSION');await self.select(True);await self.stationary()
+        await self.wait(self.nav_cancel.call_async(CancelGoal.Request()),5.)
+        self.dynamic_pick=pick;self.dynamic_drop=drop;self.dynamic_segments={};self.approved_sha256=''
+        self.clear_route_display()
+        # Preflight both legs with the conservative carried footprint, as in
+        # the old route preview. No wheel commands are enabled while planning.
+        await self.update_footprint(loaded=True)
+        self.dynamic_segments['NAV_PICK']=await self.compute_dynamic_segment(self.current_map_pose(),pick['approach'],'NAV_PICK')
+        _,_,retreat=self.dynamic_pick_geometry()
+        self.dynamic_segments['NAV_DROP']=await self.compute_dynamic_segment(retreat,drop['approach'],'NAV_DROP')
+        self.publish_dynamic_route()
+        await self.update_footprint()
+    def clear_route_display(self):
+        empty=NavPath();empty.header=self.map_pose([0.,0.,0.]).header
+        self.active_path.publish(empty);self.route_path.publish(empty)
+        clear=Marker();clear.action=Marker.DELETEALL
+        self.route_markers.publish(MarkerArray(markers=[clear]))
+        self.route_info.publish(String(data=json.dumps(dict(route_source='dynamic_planned',
+            planned_before_motion=False,segments=[],status='PLANNING'))))
+    def publish_dynamic_route(self):
+        pre,inserted,retreat=self.dynamic_pick_geometry();segments=[self.dynamic_segments['NAV_PICK']]
+        if 'REFINE_PICK' in self.dynamic_segments:segments.append(self.dynamic_segments['REFINE_PICK'])
+        def line(name,start,end):
+            segments.append(dict(stage=name,kind='lidar_docking',collision_checked=False,poses=straight_samples(start,end)))
+        line('ALIGN_PICK',self.dynamic_pick['approach'],pre);line('INSERT_PICK',pre,inserted)
+        line('RETREAT_PICK',inserted,retreat);segments.append(self.dynamic_segments['NAV_DROP'])
+        release=self.dynamic_drop['approach'];withdrawn=compose(release,[-self.p['retreat_distance'],0.,0.])
+        line('RETREAT_DROP',release,withdrawn)
+        self.publish_route(segments,segments[0]['poses'][0],inserted,release)
     def map_pose(self, values):
         pose=PoseStamped();pose.header.frame_id='map';pose.header.stamp=self.get_clock().now().to_msg()
         pose.pose.position.x=float(values[0]);pose.pose.position.y=float(values[1])
@@ -240,7 +345,7 @@ class TaskManager(Node):
         self.route_segments=segments;self.route_revision+=1
         combined=NavPath();combined.header=self.map_pose(start).header
         markers=MarkerArray();clear=Marker();clear.action=Marker.DELETEALL;markers.markers.append(clear)
-        palette={'NAV_PICK':(.2,.65,1.),'NAV_DROP':(.2,1.,.3),'RETURN_HOME':(.8,.3,1.)}
+        palette={'NAV_PICK':(.2,.65,1.),'REFINE_PICK':(1.,.9,.1),'NAV_DROP':(.2,1.,.3),'RETURN_HOME':(.8,.3,1.)}
         for index,segment in enumerate(segments):
             poses=segment['poses'];combined.poses.extend(self.map_pose(p) for p in poses)
             color=palette.get(segment['stage'],(1.,.5,.05) if 'RETREAT' in segment['stage'] else (.15,.9,.9))
@@ -253,8 +358,8 @@ class TaskManager(Node):
             label.pose.position=Point(x=float(poses[len(poses)//2][0]),y=float(poses[len(poses)//2][1]),z=.18+.04*(index%3))
             label.scale.z=.075;label.color.r=label.color.g=label.color.b=label.color.a=1.;label.text=f'{index+1}. '+segment['stage'];markers.markers.append(label)
         self.route_path.publish(combined);self.route_markers.publish(markers)
-        self.route_info.publish(String(data=json.dumps(dict(revision=self.route_revision,planned_before_motion=True,
-            route_source='approved_preview' if self.approved_file else 'live_planner',approved_sha256=self.approved_sha256,withdrawal_clearance=self.p['retreat_distance'],home=self.p['home'],docking_uses_live_lidar=True,terminal_distance=self.p.get('terminal_distance',.5),retreat_minimum=self.p['retreat_distance'],turn_setup_distance=self.p.get('turn_setup_distance',0.),lift_at=ai,release_at=bi,segments=segments))))
+        self.route_info.publish(String(data=json.dumps(dict(revision=self.route_revision,planned_before_motion=self.state=='PLAN_MISSION',
+            route_source='dynamic_planned' if self.dynamic else ('approved_preview' if self.approved_file else 'live_planner'),approved_sha256=self.approved_sha256,withdrawal_clearance=self.p['retreat_distance'],home=None if self.dynamic else self.p['home'],docking_uses_live_lidar=True,terminal_distance=self.p.get('terminal_distance',.5),retreat_minimum=self.p['retreat_distance'],turn_setup_distance=self.p.get('turn_setup_distance',0.),lift_at=ai,release_at=bi,segments=segments))))
         self.get_logger().info('Full mission route planned before NAV_PICK: '+str(len(segments))+' segments')
     async def stationary(self):
         self.command();end=time.monotonic()+4.;stable=None
@@ -272,6 +377,7 @@ class TaskManager(Node):
         await self.action(self.lift,MoveLift.Goal(height=q-offset,timeout=15.),20.)
         await self.pause(.35)
     def observation(self,station):
+        if self.dynamic:return self.dynamic_observation(station)
         try:t=self.tf.lookup_transform('map','base_link',rclpy.time.Time()).transform
         except Exception:return None
         a=yaw(t.rotation);dx=station['face'][0]+station['marker_offset_x']-t.translation.x;dy=station['face'][1]+station['marker_offset_y']-t.translation.y
@@ -296,6 +402,101 @@ class TaskManager(Node):
             try:Path('/tmp/forklift_p6_docking_'+os.environ.get('ROS_DOMAIN_ID','0')+'.json').write_text(json.dumps(debug))
             except OSError:pass
         return f
+    def dynamic_observation(self,station):
+        # Use the actual scan frame, including sensor translation and yaw.
+        scan=self.data['scan']
+        try:
+            t=self.tf.lookup_transform('map',scan.header.frame_id,
+                rclpy.time.Time.from_msg(scan.header.stamp)).transform
+            base=self.tf.lookup_transform('base_link',scan.header.frame_id,rclpy.time.Time()).transform
+        except Exception:return None
+        sensor=[t.translation.x,t.translation.y,yaw(t.rotation)]
+        expected=compose(inverse(sensor),[*station['face'],station['approach'][2]])
+        f=detect_face(scan,expected[:2],station['width'],expected[2])
+        if f is None:self.face=None;return None
+        map_face=compose(sensor,[f['x'],f['y'],f['yaw']])
+        local=compose([base.translation.x,base.translation.y,yaw(base.rotation)],[f['x'],f['y'],f['yaw']])
+        f.update(x=local[0]-self.p['laser_x'],y=local[1],yaw=local[2],map_pose=map_face)
+        stamp=(scan.header.stamp.sec,scan.header.stamp.nanosec)
+        previous=getattr(self,'filtered_face',None)
+        if stamp!=getattr(self,'fit_stamp',None):
+            if previous is not None:
+                for key in ('x','y'):f[key]=.5*f[key]+.5*previous[key]
+                f['yaw']=wrap(previous['yaw']+.5*wrap(f['yaw']-previous['yaw']))
+            self.filtered_face=f;self.fit_stamp=stamp
+        else:f=self.filtered_face
+        self.face=f
+        return f
+    async def collect_pick_face(self,station,timeout):
+        self.filtered_face=None;self.fit_stamp=None
+        samples=[];sample_times=[]
+        stamp=self.data['scan'].header.stamp
+        last_stamp=(stamp.sec,stamp.nanosec);end=time.monotonic()+timeout
+        while time.monotonic()<end:
+            f=self.observation(station)
+            stamp=self.data['scan'].header.stamp
+            stamp=(stamp.sec,stamp.nanosec)
+            # A scan callback can arrive before its corresponding odom TF.
+            # Retry that scan on the next tick instead of consuming its stamp
+            # and discarding otherwise valid observations on every TF delay.
+            if f is not None and stamp>last_stamp:
+                last_stamp=stamp
+                samples.append(f['map_pose']);sample_times.append(time.monotonic())
+                while sample_times and sample_times[0]<time.monotonic()-1.5:
+                    sample_times.pop(0);samples.pop(0)
+                samples=samples[-5:];sample_times=sample_times[-5:]
+                if len(samples)==5:
+                    try:return stable_face(samples),len(samples)
+                    except ValueError:pass
+            await self.pause()
+        return None
+    def pick_measurement(self,station,face,samples):
+        if math.hypot(face[0]-station['face'][0],face[1]-station['face'][1])>.25 or abs(wrap(face[2]-station['approach'][2]))>.35:
+            raise MissionError('PALLET_CORRECTION_OUT_OF_RANGE')
+        corrected=refined_approach(face,self.staging_distance,self.p['laser_x'])
+        return dict(initial=list(station['approach']),corrected=corrected,face=face,samples=samples)
+    def apply_pick_measurement(self,station,measurement):
+        face=measurement['face'];corrected=measurement['corrected']
+        self.detected_pose.publish(self.map_pose(face));self.corrected_pose.publish(self.map_pose(corrected))
+        station['face']=face[:2];station['approach']=corrected;station['marker_yaw']=face[2]
+    async def prepare_dynamic_pick(self,station):
+        self.stage('DETECT_PICK_INITIAL');await self.stationary()
+        result=await self.collect_pick_face(station,self.initial_detection_timeout)
+        if result is None:
+            self.initial_detection=dict(outcome='UNAVAILABLE',initial=list(station['approach']))
+            return
+        try:measurement=self.pick_measurement(station,*result)
+        except MissionError as error:
+            if str(error)!='PALLET_CORRECTION_OUT_OF_RANGE':raise
+            self.initial_detection=dict(outcome='OUT_OF_RANGE',initial=list(station['approach']))
+            return
+        self.initial_detection=dict(outcome='DETECTED',**measurement)
+        self.apply_pick_measurement(station,measurement)
+    async def refine_pick(self,station):
+        self.stage('DETECT_PICK');await self.stationary()
+        result=await self.collect_pick_face(station,5.)
+        if result is None:raise MissionError('PALLET_DETECTION_NOT_STABLE')
+        self.refinement=self.pick_measurement(station,*result)
+        early=(self.initial_detection or {}).get('outcome')=='DETECTED'
+        current=self.current_map_pose() if early else None
+        if early:self.refinement['arrival_error']=compose(inverse(self.refinement['corrected']),current)
+        replan=needs_pick_replan(self.refinement['initial'],self.refinement['corrected'],current)
+        self.apply_pick_measurement(station,self.refinement)
+        if early and not replan:
+            clear=await self.docking_join_valid(current,station)
+            self.refinement['alignment_path_validated']=clear
+            replan=not clear
+        self.refinement['replan_required']=replan
+        if replan:await self.nav_to(self.refinement['corrected'],'REFINE_PICK')
+    async def docking_join_valid(self,current,station):
+        if not self.path_valid.service_is_ready():return False
+        points=alignment_samples(current,station['approach'])
+        pre=refined_approach([*station['face'],station['approach'][2]],self.p['preinsert_distance'],self.p['laser_x'])
+        points+=straight_samples(points[-1],pre)[1:]
+        path=NavPath();path.header=self.map_pose(current).header
+        path.poses=[self.map_pose(p) for p in points]
+        result=await self.wait(self.path_valid.call_async(IsPathValid.Request(path=path)),5.)
+        return result.is_valid
     def clear_sweep(self,vx):
         # Check the end opposite the intended pallet. Target face is handled by
         # docking geometry; unknown points alongside the insertion corridor stop.
@@ -355,10 +556,12 @@ class TaskManager(Node):
         raise MissionError('DOCK_TIMEOUT')
     async def retreat(self,state,station):
         self.stage(state);o=self.data['odom'].pose.pose;start=(o.position.x,o.position.y,yaw(o.orientation));end=time.monotonic()+40
-        _,_,target=station_poses(self.p,station)
-        transform=self.tf.lookup_transform('map','base_link',rclpy.time.Time()).transform
-        a=station['approach'][2]
-        required=max(self.p['retreat_distance'],(transform.translation.x-target[0])*math.cos(a)+(transform.translation.y-target[1])*math.sin(a))
+        required=max(self.p['retreat_distance'],self.g['fork_tip_x']-self.p['laser_x']-self.p['inserted_distance']+.10)
+        if not self.dynamic:
+            _,_,target=station_poses(self.p,station)
+            transform=self.tf.lookup_transform('map','base_link',rclpy.time.Time()).transform
+            a=station['approach'][2]
+            required=max(required,(transform.translation.x-target[0])*math.cos(a)+(transform.translation.y-target[1])*math.sin(a))
         while time.monotonic()<end:
             o=self.data['odom'].pose.pose
             distance=-((o.position.x-start[0])*math.cos(start[2])+(o.position.y-start[1])*math.sin(start[2]))
@@ -369,29 +572,41 @@ class TaskManager(Node):
         raise MissionError('RETREAT_TIMEOUT')
     async def execute(self,handle):
         self.mission_goal=handle;self.events=[];self.code='';self.started=time.monotonic();self.deadline=self.started+(handle.request.timeout or 420.)
+        self.dynamic=handle.request.mission=='pick_and_place';self.refinement=None;self.initial_detection=None
+        self.route_segments=[]
         try:
             self.stage('CHECK_READY');self.check();await self.select(True);await self.stationary()
             if not self.data['lift'].homed:
                 self.stage('HOME_LIFT');await self.action(self.home,HomeLift.Goal(timeout=60.),65.)
             await self.move_lift(self.data['lift'].home_offset,'LOWER_FOR_PICK')
-            await self.plan_mission()
-            await self.nav_to(self.p['a']['approach'],'NAV_PICK')
-            await self.orient(self.p['a'],'ORIENT_PICK')
-            await self.dock(self.p['a']);await self.dock(self.p['a'],True)
+            if self.dynamic:
+                pick=station_from_approach(pose_values(handle.request.pick_pose),self.staging_distance,self.pallet_width,self.p['laser_x'])
+                drop=station_from_approach(pose_values(handle.request.drop_pose),self.p['inserted_distance'],self.pallet_width,self.p['laser_x'])
+                await self.prepare_dynamic_pick(pick)
+                await self.plan_dynamic_mission(pick,drop)
+            else:
+                pick,drop=self.p['a'],self.p['b']
+                await self.plan_mission()
+            await self.nav_to(pick['approach'],'NAV_PICK')
+            if self.dynamic:await self.refine_pick(pick)
+            await self.orient(pick,'ORIENT_PICK')
+            await self.dock(pick);await self.dock(pick,True)
             await self.move_lift(self.p['carry_joint_position'],'LIFT_PICK')
             if not self.has_load():raise MissionError('NO_PALLET_CONTACT')
             self.load_required=True;self.loaded.publish(Bool(data=True));self.stage('VERIFY_LOAD');await self.pause(.8)
-            await self.retreat('RETREAT_PICK',self.p['a'])
-            await self.nav_to(self.p['b']['approach'],'NAV_DROP')
-            await self.orient(self.p['b'],'ORIENT_DROP')
-            await self.dock(self.p['b']);await self.dock(self.p['b'],True)
+            await self.retreat('RETREAT_PICK',pick)
+            await self.nav_to(drop['approach'],'NAV_DROP')
+            if not self.dynamic:
+                await self.orient(drop,'ORIENT_DROP')
+                await self.dock(drop);await self.dock(drop,True)
             self.load_required=False
             await self.move_lift(self.data['lift'].home_offset,'LOWER_RELEASE')
             end=time.monotonic()+3.
             while self.has_load() and time.monotonic()<end:await self.pause()
             if self.has_load():raise MissionError('LOAD_NOT_RELEASED')
-            self.loaded.publish(Bool(data=False));await self.retreat('RETREAT_DROP',self.p['b'])
-            await self.nav_to(self.p['home'],'RETURN_HOME')
+            self.loaded.publish(Bool(data=False));await self.retreat('RETREAT_DROP',drop)
+            if not self.dynamic:await self.nav_to(self.p['home'],'RETURN_HOME')
+            await self.update_footprint()
             self.stage('DONE');self.code='SUCCEEDED';handle.succeed()
         except Exception as e:
             self.code=str(e);self.failed=True;self.stage('CANCELLED' if self.code=='CANCELED' else 'FAULT')
@@ -414,7 +629,7 @@ class TaskManager(Node):
                 self.sleepers.remove((deadline,f))
                 if not f.done():f.set_result(True)
         if not self.active:self.command()
-        msg=dict(route_ready=bool(self.route_segments),route_revision=self.route_revision,state=self.state,code=self.code,active=self.active,load_detected=self.has_load(),
+        msg=dict(dynamic=self.dynamic,refinement=self.refinement,initial_detection=self.initial_detection,route_ready=bool(self.route_segments),route_revision=self.route_revision,state=self.state,code=self.code,active=self.active,load_detected=self.has_load(),
                  carrying=self.load_required,contacts=self.contact_debug,contact_messages=self.contact_messages,face=self.face,elapsed=now-self.started if self.started else 0.,events=self.events)
         self.status.publish(String(data=json.dumps(msg)))
         if self.mission_goal is not None:

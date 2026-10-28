@@ -24,7 +24,9 @@ def setup(context):
     if not port:
         port = params['port']
     gate = {key: params[key] for key in ('wheel_radius', 'kinematic_sum', 'max_wheel_speed')}
-    gate.update(use_sim_time=False, autonomous_enabled=False, require_navigation_ready=False)
+    gate.update(use_sim_time=False, autonomous_enabled=False, require_navigation_ready=False,
+                enforce_transport_height=ParameterValue(
+                    LaunchConfiguration('enforce_transport_height'), value_type=bool))
     def shutdown(reason):
         return EmitEvent(event=Shutdown(reason=reason))
     return [
@@ -49,5 +51,7 @@ def generate_launch_description():
                               description='Reserve this LiDAR serial port during ESP32 detection'),
         DeclareLaunchArgument('auto_arm', default_value='true', choices=['true', 'false'],
                               description='Automatically arm once at startup after healthy telemetry and zero input'),
+        DeclareLaunchArgument('enforce_transport_height', default_value='false', choices=['true', 'false'],
+                              description='False: raised stationary forks warn without blocking driving'),
         OpaqueFunction(function=setup),
     ])

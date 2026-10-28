@@ -1,0 +1,22 @@
+{
+  "src/forklift_gazebo/worlds/p6.sdf": "e50d505eac48aca701931086c584c7566762d66051baa36662836b21f3fe5183",
+  "src/forklift_task_manager/config/stations.yaml": "dd3a5a3c7ea09c2f7cbe6d1671f3b8c6b635bdeb872c5d16f84b8a1678bdaad9",
+  "src/forklift_description/config/robot.yaml": "436c602109c43dd4fc3d633315457abe03f79ed5b2980080fce86f76d0f6ba7d",
+  "src/forklift_navigation/config/nav2.yaml": "626aa8a417a9015e0dcda7beba4655465ca180a2d0a14c30e2446df1e262196e",
+  "src/forklift_control/config/command_gate.yaml": "a8064ff11232bc06a4cd963879f53583687a1d0cfd8084cf923e798f5eb0f412",
+  "src/forklift_lift/config/lift.yaml": "6fbb4f9414f03956b0e461a466e880010a466555e9b036ad36fa2be1eb80487b",
+  "src/forklift_task_manager/config/approved_route.json": "03741c8f78dde757e60094dccb06f7505c7de98ed5d6e5edcd461b532d19e9aa",
+  "src/forklift_task_manager/scripts/task_manager.py": "6ed6c31dccd7b9462c77c4a4587e516f913fcc8e45a6b37f4444a0c8cdd6afcd",
+  "src/forklift_task_manager/scripts/mission_input.py": "a8572baf0599eeb96764c9fe8adb898eb7a7c4092a1bc856a80092c18e21e3d2",
+  "src/forklift_task_manager/forklift_task_manager/dynamic_mission.py": "49e2c03149bf06ec9c8c2f0285a6c92bbba35bfe3ff0fb65e69257cfdb6521e8",
+  "src/forklift_task_manager/forklift_task_manager/docking.py": "03be0ece3f97e24dd52867990deebaaa99ae9365e46e7dbf436db7b4c686df7e",
+  "src/forklift_task_manager/forklift_task_manager/mission_route.py": "e1fb4e53a9cea90fd97a4f008900ddae07128f791a29e291ebf27d4685d4f786",
+  "src/forklift_navigation/launch/navigation.launch.py": "6b839ff4d7d26170d3908d17580b717739bf43ca7cc6cef50335226c926fa9f9",
+  "src/forklift_interfaces/action/RunMission.action": "d0f07d274e0df4969d56a7b799f7c4e8d8b4c3d6454b9b81c1121c0672fc51af",
+  "src/forklift_navigation/include/forklift_navigation/terminal_path.hpp": "97ee52ee80e131b749443ac6de4a5724e72e767e619917e55b2a60a89c0c64e2",
+  "src/forklift_navigation/src/terminal_approach_planner.cpp": "e1527d1e913f8402f4e3d0344406988942f30b53c15a39ae573d5a77c66930be",
+  "src/forklift_rviz/src/mission_plugins.cpp": "1eb7ce5e27f224cc8069dde237165ed53cfb6aa70f0864444dec77fb33a8628e",
+  "src/forklift_navigation/config/nav2_mppi.yaml": "63bdd98efc23c701bf3e8e06e45fccab76a8a1e464ec66ba0b4e252783a2003e",
+  "src/forklift_navigation/src/guarded_mppi_controller.cpp": "67dec0aa225447ed901a515efb7c96df50a0959f3591ce776b4494d7097673df",
+  "src/forklift_navigation/include/forklift_navigation/route_guard.hpp": "0049f9d4aec3bc6328c5b06ab2cbd9dbf9ac0e4048f3ba4bd3b1b3f66684cabe"
+}

@@ -1,0 +1,96 @@
+Internal ctest changing into directory: /tmp/forklift-encoder-warning-build
+Test project /tmp/forklift-encoder-warning-build
+      Start  1: ManualCutoffBench.SerialSilenceKeepsControllingUntilExplicitStop
+ 1/45 Test  #1: ManualCutoffBench.SerialSilenceKeepsControllingUntilExplicitStop .............   Passed    0.01 sec
+      Start  2: ManualCutoffBench.InputFaultHoldsWheelPwmButDisabledCommandStopsIt
+ 2/45 Test  #2: ManualCutoffBench.InputFaultHoldsWheelPwmButDisabledCommandStopsIt ...........   Passed    0.00 sec
+      Start  3: ManualCutoffBench.DelayedLoopLeavesLastWheelPwmIntact
+ 3/45 Test  #3: ManualCutoffBench.DelayedLoopLeavesLastWheelPwmIntact ........................   Passed    0.01 sec
+      Start  4: ManualCutoffBench.LiftStillStopsOnFault
+ 4/45 Test  #4: ManualCutoffBench.LiftStillStopsOnFault ......................................   Passed    0.00 sec
+      Start  5: Protocol.KnownCrcVectorAndRoundTrip
+ 5/45 Test  #5: Protocol.KnownCrcVectorAndRoundTrip ..........................................   Passed    0.00 sec
+      Start  6: Protocol.RejectsCorruptionWrongVersionNonfiniteAndExtraTokens
+ 6/45 Test  #6: Protocol.RejectsCorruptionWrongVersionNonfiniteAndExtraTokens ................   Passed    0.00 sec
+      Start  7: Protocol.ReceiverRecoversAfterOverflowAndFragmentation
+ 7/45 Test  #7: Protocol.ReceiverRecoversAfterOverflowAndFragmentation .......................   Passed    0.00 sec
+      Start  8: Config.ShippedPulseLiftDrivesAndRaisesWithoutHome
+ 8/45 Test  #8: Config.ShippedPulseLiftDrivesAndRaisesWithoutHome ............................   Passed    0.00 sec
+      Start  9: Config.SingleLowerProfileRequiresPositivePulseIncrementAndTimeout
+ 9/45 Test  #9: Config.SingleLowerProfileRequiresPositivePulseIncrementAndTimeout ............   Passed    0.00 sec
+      Start 10: Config.RejectsUnknownOrInvalidCalibration
+10/45 Test #10: Config.RejectsUnknownOrInvalidCalibration ....................................   Passed    0.01 sec
+      Start 11: SingleLowerBench.MissingContactStopsAfterThreeSecondsWithoutFault
+11/45 Test #11: SingleLowerBench.MissingContactStopsAfterThreeSecondsWithoutFault ............   Passed    0.00 sec
+      Start 12: SingleLowerBench.ActiveBottomSwitchStopsLoweringImmediately
+12/45 Test #12: SingleLowerBench.ActiveBottomSwitchStopsLoweringImmediately ..................   Passed    0.00 sec
+      Start 13: SingleLowerBench.RaiseUsesRelativePulseBudgetWithoutHome
+13/45 Test #13: SingleLowerBench.RaiseUsesRelativePulseBudgetWithoutHome .....................   Passed    0.01 sec
+      Start 14: SingleLowerBench.StopInterruptsManualLift
+14/45 Test #14: SingleLowerBench.StopInterruptsManualLift ....................................   Passed    0.01 sec
+      Start 15: Bench.EnableNeedsCorrectBootAndFreshSequence
+15/45 Test #15: Bench.EnableNeedsCorrectBootAndFreshSequence .................................   Passed    0.00 sec
+      Start 16: Bench.DuplicateCommandsAreRejectedAndStopStillWorksAfterSilence
+16/45 Test #16: Bench.DuplicateCommandsAreRejectedAndStopStillWorksAfterSilence ..............   Passed    0.01 sec
+      Start 17: Bench.FaultCanResetOnlyAfterCoastingWheelsStop
+17/45 Test #17: Bench.FaultCanResetOnlyAfterCoastingWheelsStop ...............................   Passed    0.01 sec
+      Start 18: Bench.LatchedEmergencyAndBrokenIoBlockEnableAndHoming
+18/45 Test #18: Bench.LatchedEmergencyAndBrokenIoBlockEnableAndHoming ........................   Passed    0.00 sec
+      Start 19: Bench.DelayedControlCycleLatchesDeadline
+19/45 Test #19: Bench.DelayedControlCycleLatchesDeadline .....................................   Passed    0.01 sec
+      Start 20: Bench.ClockPasses32BitMicrosecondBoundary
+20/45 Test #20: Bench.ClockPasses32BitMicrosecondBoundary ....................................   Passed    0.00 sec
+      Start 21: Bench.WheelCommandBoundsAreRejectedRatherThanClipped
+21/45 Test #21: Bench.WheelCommandBoundsAreRejectedRatherThanClipped .........................   Passed    0.00 sec
+      Start 22: Bench.ReversalCoastsUntilStopped
+22/45 Test #22: Bench.ReversalCoastsUntilStopped .............................................   Passed    0.00 sec
+      Start 23: Bench.StopCannotBypassReversalInterlock
+23/45 Test #23: Bench.StopCannotBypassReversalInterlock ......................................   Passed    0.00 sec
+      Start 24: Bench.PersistentStallWarnsWithoutDisarming
+24/45 Test #24: Bench.PersistentStallWarnsWithoutDisarming ...................................   Passed    0.00 sec
+      Start 25: Bench.WrongEncoderDirectionWarnsWithoutDisarming
+25/45 Test #25: Bench.WrongEncoderDirectionWarnsWithoutDisarming .............................   Passed    0.00 sec
+      Start 26: Bench.HomingRequiresReleaseBackoffAndSecondContact
+26/45 Test #26: Bench.HomingRequiresReleaseBackoffAndSecondContact ...........................   Passed    0.01 sec
+      Start 27: Bench.HomingTimeoutDoesNotTreatStuckSwitchAsHomed
+27/45 Test #27: Bench.HomingTimeoutDoesNotTreatStuckSwitchAsHomed ............................   Passed    0.01 sec
+      Start 28: Bench.LegacyHomingDoesNotNeedPeriodicHostCommands
+28/45 Test #28: Bench.LegacyHomingDoesNotNeedPeriodicHostCommands ............................   Passed    0.00 sec
+      Start 29: Bench.ContradictoryLimitsLatchFault
+29/45 Test #29: Bench.ContradictoryLimitsLatchFault ..........................................   Passed    0.00 sec
+      Start 30: Bench.LiftRejectsConcurrentBaseMovementAndStopsAtUpperLimit
+30/45 Test #30: Bench.LiftRejectsConcurrentBaseMovementAndStopsAtUpperLimit ..................   Passed    0.00 sec
+      Start 31: Bench.SubMillimeterLiftMoveStillRejectsSimultaneousWheelCommand
+31/45 Test #31: Bench.SubMillimeterLiftMoveStillRejectsSimultaneousWheelCommand ..............   Passed    0.01 sec
+      Start 32: Bench.TelemetryFitsWithExtremeCounters
+32/45 Test #32: Bench.TelemetryFitsWithExtremeCounters .......................................   Passed    0.01 sec
+      Start 33: Bench.StrictProfileStillFaultsOnImpossibleEncoderSpeed
+33/45 Test #33: Bench.StrictProfileStillFaultsOnImpossibleEncoderSpeed .......................   Passed    0.00 sec
+      Start 34: Pid.SaturationDoesNotWindUpAndOverspeedDoesNotReverseBridge
+34/45 Test #34: Pid.SaturationDoesNotWindUpAndOverspeedDoesNotReverseBridge ..................   Passed    0.01 sec
+      Start 35: SimpleProtocol.PlainControlUsesFourWheelsAndPulseCount
+35/45 Test #35: SimpleProtocol.PlainControlUsesFourWheelsAndPulseCount .......................   Passed    0.01 sec
+      Start 36: SimpleProtocol.HumanCommandsAcceptLfAndCrLf
+36/45 Test #36: SimpleProtocol.HumanCommandsAcceptLfAndCrLf ..................................   Passed    0.00 sec
+      Start 37: SimpleProtocol.RejectsInvalidFieldsWithoutChangingCommand
+37/45 Test #37: SimpleProtocol.RejectsInvalidFieldsWithoutChangingCommand ....................   Passed    0.00 sec
+      Start 38: SimpleProtocol.ReceiverRecoversAfterOverlongLine
+38/45 Test #38: SimpleProtocol.ReceiverRecoversAfterOverlongLine .............................   Passed    0.01 sec
+      Start 39: SimpleProtocol.TelemetryIsShortCsvWithoutCrcOrIdentifiers
+39/45 Test #39: SimpleProtocol.TelemetryIsShortCsvWithoutCrcOrIdentifiers ....................   Passed    0.00 sec
+      Start 40: SimpleProtocol.ParsedControlCanEnableWithoutHome
+40/45 Test #40: SimpleProtocol.ParsedControlCanEnableWithoutHome .............................   Passed    0.00 sec
+      Start 41: EncoderWarningBench.SpikeIsDiscardedWithoutFaultAndCommandsStillWork
+41/45 Test #41: EncoderWarningBench.SpikeIsDiscardedWithoutFaultAndCommandsStillWork .........   Passed    0.01 sec
+      Start 42: EncoderWarningBench.WarningSurvivesTelemetryIntervalAndClearsAfterRecovery
+42/45 Test #42: EncoderWarningBench.WarningSurvivesTelemetryIntervalAndClearsAfterRecovery ...   Passed    0.00 sec
+      Start 43: EncoderWarningBench.SimultaneousSpikesReportAllFourWheels
+43/45 Test #43: EncoderWarningBench.SimultaneousSpikesReportAllFourWheels ....................   Passed    0.00 sec
+      Start 44: EncoderWarningBench.EmergencyStillFaultsAfterEncoderWarning
+44/45 Test #44: EncoderWarningBench.EmergencyStillFaultsAfterEncoderWarning ..................   Passed    0.00 sec
+      Start 45: EncoderWarningBench.ActualWheelMovementDuringLiftStillFaults
+45/45 Test #45: EncoderWarningBench.ActualWheelMovementDuringLiftStillFaults .................   Passed    0.01 sec
+
+100% tests passed, 0 tests failed out of 45
+
+Total Test time (real) =   0.24 sec

@@ -1,0 +1,52 @@
+Arguments (pass arguments as '<name>:=<value>'):
+
+    'map':
+        Absolute path to the saved navigation map YAML
+
+    'rviz':
+        One of: ['true', 'false']
+        (default: 'true')
+
+    'publish_robot_description':
+        One of: ['true', 'false']
+        (default: 'true')
+
+    'controller':
+        One of: ['mppi', 'rpp']
+        (default: 'mppi')
+
+    'staging_distance':
+        no description given
+        (default: '0.65')
+
+    'pallet_face_width':
+        no description given
+        (default: '0.24')
+
+    'p6':
+        One of: ['true', 'false']
+        (default: 'false')
+
+    'autostart':
+        One of: ['true', 'false']
+        (default: 'true')
+
+    'use_sim_time':
+        One of: ['true', 'false']
+        (default: 'true')
+
+    'mode':
+        One of: ['mapping', 'localization']
+        (default: 'mapping')
+
+    'use_ekf':
+        One of: ['true', 'false']
+        (default: 'true')
+
+    'scan_topic':
+        no description given
+        (default: '/scan_raw')
+
+    'load_feedback':
+        One of: ['external', 'contacts']
+        (default: 'external')

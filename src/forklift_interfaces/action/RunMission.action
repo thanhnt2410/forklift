@@ -1,6 +1,10 @@
-# SIM fixed-station mission. a_to_b; no hardware operations.
+# a_to_b: legacy fixed stations. pick_and_place: supplied map-frame poses.
 string mission
 float64 timeout
+# A: approximate robot staging pose facing the pallet.
+# B: final robot release pose in free space (not the pallet centre).
+geometry_msgs/PoseStamped pick_pose
+geometry_msgs/PoseStamped drop_pose
 ---
 bool success
 string code

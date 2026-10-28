@@ -1,0 +1,7 @@
+{
+  "passed": true,
+  "checks_passed": 32,
+  "checks_total": 32,
+  "scenario": "moved_pallet",
+  "physical_hardware_used": false
+}

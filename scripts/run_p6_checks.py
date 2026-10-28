@@ -16,15 +16,30 @@ def main():
     p=argparse.ArgumentParser();p.add_argument('--gui',action='store_true');p.add_argument('--repetitions',type=int,default=1)
     p.add_argument('--output',default='results/p6/smoke');p.add_argument('--domain',type=int,default=126)
     p.add_argument('--controller',default='mppi',choices=['rpp','mppi'])
-    p.add_argument('--scenario',default='nominal',choices=['nominal','cancel','scan_loss','scan_loss_nav','imu_loss','estop','missing_pallet','misaligned','blocked','blocked_nav','lift_fault','tf_loss','load_loss','cancel_loaded','cancel_orient','cancel_reverse'])
-    a=p.parse_args();root=Path(__file__).resolve().parents[1];out=(root/a.output).resolve();out.mkdir(parents=True,exist_ok=True)
+    p.add_argument('--dynamic',action='store_true',help='RViz A/B mission; uses the standalone dynamic checker')
+    p.add_argument('--scenario',default='nominal',choices=['nominal','rotated','user_drop','early_direct','early_fallback','moved_pallet','invalid_pick','invalid_drop','cancel_retreat','cancel','cancel_initial','scan_loss_initial','scan_loss','scan_loss_nav','imu_loss','estop','missing_pallet','misaligned','blocked','blocked_nav','lift_fault','tf_loss','load_loss','cancel_loaded','cancel_orient','cancel_reverse'])
+    a=p.parse_args()
+    if a.dynamic and (a.repetitions!=1 or a.scenario not in ('nominal','rotated','user_drop','early_direct','early_fallback','moved_pallet','invalid_pick','invalid_drop','cancel','cancel_initial','scan_loss_initial','scan_loss','missing_pallet','cancel_loaded','cancel_retreat')):
+        p.error('Dynamic checks require one repetition and a supported dynamic scenario')
+    if not a.dynamic and a.scenario in ('rotated','user_drop','early_direct','early_fallback','moved_pallet','invalid_pick','invalid_drop','cancel_retreat','cancel_initial','scan_loss_initial'):p.error('Scenario requires --dynamic')
+    root=Path(__file__).resolve().parents[1];out=(root/a.output).resolve();out.mkdir(parents=True,exist_ok=True)
     env=os.environ.copy();env.update(ROS_DOMAIN_ID=str(a.domain),ROS_LOCALHOST_ONLY='1',IGN_PARTITION=f'forklift_p6_{os.getpid()}',ROS_LOG_DIR=f'/tmp/forklift_p6_{os.getpid()}_logs')
-    (out/'run.json').write_text(json.dumps(dict(domain=a.domain,partition=env['IGN_PARTITION'],repetitions=a.repetitions,scenario=a.scenario,controller=a.controller,gui=a.gui,physical_hardware_used=False),indent=2)+'\n')
+    (out/'run.json').write_text(json.dumps(dict(domain=a.domain,partition=env['IGN_PARTITION'],dynamic=a.dynamic,repetitions=a.repetitions,scenario=a.scenario,controller=a.controller,gui=a.gui,physical_hardware_used=False),indent=2)+'\n')
     snapshot=out/'config';snapshot.mkdir(exist_ok=True)
     inputs=['src/forklift_gazebo/worlds/p6.sdf','src/forklift_task_manager/config/stations.yaml',
             'src/forklift_description/config/robot.yaml','src/forklift_navigation/config/nav2.yaml',
             'src/forklift_control/config/command_gate.yaml','src/forklift_lift/config/lift.yaml',
             'src/forklift_task_manager/config/approved_route.json']
+    inputs.extend(['src/forklift_task_manager/scripts/task_manager.py',
+                   'src/forklift_task_manager/scripts/mission_input.py',
+                   'src/forklift_task_manager/forklift_task_manager/dynamic_mission.py',
+                   'src/forklift_task_manager/forklift_task_manager/docking.py',
+                   'src/forklift_task_manager/forklift_task_manager/mission_route.py',
+                   'src/forklift_navigation/launch/navigation.launch.py',
+                   'src/forklift_interfaces/action/RunMission.action',
+                   'src/forklift_navigation/include/forklift_navigation/terminal_path.hpp',
+                   'src/forklift_navigation/src/terminal_approach_planner.cpp',
+                   'src/forklift_rviz/src/mission_plugins.cpp'])
     if a.controller=='mppi':
         inputs.extend(['src/forklift_navigation/config/nav2_mppi.yaml',
                        'src/forklift_navigation/src/guarded_mppi_controller.cpp',
@@ -38,7 +53,8 @@ def main():
         visual='true' if a.gui else 'false'
         start(['ros2','launch','forklift_bringup','p6.launch.py',f'gui:={visual}',f'rviz:={visual}',f'controller:={a.controller}'],'launch.log')
         start(['/opt/ros/humble/lib/ros_gz_bridge/parameter_bridge','/world/forklift/dynamic_pose/info@tf2_msgs/msg/TFMessage[ignition.msgs.Pose_V','--ros-args','-r','/world/forklift/dynamic_pose/info:=/test/p6_poses'],'pose_bridge.log')
-        test=start(['python3','tests/check_mission.py','--output',str(out),'--repetitions',str(a.repetitions),'--scenario',a.scenario],'test.log')
+        checker=['python3','scripts/check_dynamic_mission.py','--output',str(out),'--scenario',a.scenario] if a.dynamic else ['python3','tests/check_mission.py','--output',str(out),'--repetitions',str(a.repetitions),'--scenario',a.scenario]
+        test=start(checker,'test.log')
         code=test.wait(timeout=400*a.repetitions+120);print((out/'test.log').read_text());return code
     finally:
         # Launch may leave detached children; address this run's processes by

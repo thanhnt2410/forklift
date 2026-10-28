@@ -1,0 +1,68 @@
+{
+  "dynamic": true,
+  "refinement": null,
+  "initial_detection": {
+    "outcome": "DETECTED",
+    "initial": [
+      0.35,
+      0.7,
+      0.060000000000000005
+    ],
+    "corrected": [
+      0.3490656801982469,
+      0.6516866079249044,
+      -0.0011400723972844634
+    ],
+    "face": [
+      0.9990652577746446,
+      0.6509455610272007,
+      -0.0011400723972844634
+    ],
+    "samples": 5
+  },
+  "route_ready": false,
+  "route_revision": 0,
+  "state": "FAULT",
+  "code": "NO_VALID_PATH_NAV_DROP",
+  "active": false,
+  "load_detected": false,
+  "carrying": false,
+  "contacts": [],
+  "contact_messages": 0,
+  "face": {
+    "x": 0.9999005890357809,
+    "y": 0.6496617002403884,
+    "yaw": -0.0024245972052791445,
+    "width": 0.2242813504165635,
+    "residual": 0.0009839718360942049,
+    "points": 19,
+    "map_pose": [
+      0.9994119699347643,
+      0.6504131203046627,
+      -0.0016729188091001877
+    ]
+  },
+  "elapsed": 6.752557571046054,
+  "events": [
+    {
+      "state": "CHECK_READY",
+      "wall_time": 525105.596851915
+    },
+    {
+      "state": "LOWER_FOR_PICK",
+      "wall_time": 525106.470062441
+    },
+    {
+      "state": "DETECT_PICK_INITIAL",
+      "wall_time": 525108.089658986
+    },
+    {
+      "state": "PLAN_MISSION",
+      "wall_time": 525109.052390906
+    },
+    {
+      "state": "FAULT",
+      "wall_time": 525111.24959185
+    }
+  ]
+}
