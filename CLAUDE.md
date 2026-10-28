@@ -84,7 +84,7 @@ cho base controller). Trong REAL/PTY đó là bridge hoặc controller.
 | `62f4d36` | 24/10 21:19 | Sửa nhả modem line (DTR rồi RTS) khi mở cổng + bộ đếm RX (`rx_bytes`/`rx_lines`/`discarded_frames`) vào diagnostics |
 | `90155ce` | 24/10 22:24 | **Đơn giản hóa giao thức sang CSV từng dòng**: `simple_serial=true`, không CRC/boot ID/sequence/ACK; telemetry 20 Hz (50 ms) |
 | `7e29c99` | 25/10 23:38 | **Mapping thật + dò cổng ESP32 tự động**: `lidar.launch.py`, `mapping_real.launch.py`, `mapping_real.rviz`, `esp32_serial_auto.py`, `ydlidar.yaml`, `scripts/sync_pi.sh`, sketch test `firmware/esp32_test/` |
-| `d03ee21` | 26/01:07 | **Sửa firmware**: `Kd` 0 → 0,05 cho cả 4 bánh; `max_wheel_rad_s` 2 → 10; `max_duty` 0,25 → 0,50; **stall bánh từ fault chuyển thành warning** (thêm trường `warnings` vào telemetry); `command_gate` `max_vx` 0,25 → 0,30 và `max_vy` 0,20 → 0,30; `esp32.yaml` `max_wheel_speed` 2,0 → 6,0 và thêm `auto_arm: true` |
+| `d03ee21` | 26/01:07 | **Sửa firmware**: PI bánh `Kp=0,032; Ki=0,16; Kd=0,0`; `max_wheel_rad_s` 2 → 10; `max_duty` 0,25 → 0,50; nâng 2500 xung/s, hạ 2000 xung/s; **stall bánh từ fault chuyển thành warning** (thêm trường `warnings` vào telemetry); GPIO công tắc dưới 32 → 15; `command_gate` `max_vx` 0,25 → 0,30 và `max_vy` 0,20 → 0,30; `esp32.yaml` `max_wheel_speed` 2,0 → 6,0 và thêm `auto_arm: true` |
 
 Mạch thay đổi chung: **từ giao thức nặng có CRC sang CSV đọc bằng mắt → dò cổng
 tự động để chạy trên Pi → nới phạm vi thử bánh và hạ mức stall xuống warning.**
@@ -98,14 +98,16 @@ tự động để chạy trên Pi → nới phạm vi thử bánh và hạ mứ
 | Thông số | Giá trị | Ghi chú |
 |---|---|---|
 | Baud | **115200**, 8N1 | Giống phía ROS (`esp32.yaml:4`) — xem §6.1 |
-| PI bốn bánh | Kp=0,08; Ki=0,12; **Kd=0,05** | Giá trị khởi đầu để tuning, chưa đo trên GA25-370 |
+| PI bốn bánh (đã nạp) | **Kp=0,032; Ki=0,16; Kd=0,0** | Tất cả 4 bánh FL/FR/RL/RR; tuned từ benchmark test |
 | Chu kỳ điều khiển | 10 ms (100 Hz) | `control_period_us` |
 | Telemetry | 50 ms (**20 Hz**) | `telemetry_period_us` |
 | Trần PWM | **50 %** | `max_duty = .50` |
 | Giới hạn MCU | **10 rad/s** | `max_wheel_rad_s = 10.` |
 | Giới hạn phía ROS | **6 rad/s** (0,30 m/s với r=0,05) | `esp32.yaml: max_wheel_speed: 6.0` |
 | CPR danh nghĩa | **937,2** = 11 PPR × 4 (x4) × 21,3 | Chưa đo; `robot_measurements.yaml:36` |
-| Nâng | 1000 xung/s, accel 4000 xung/s² | |
+| **Tốc độ nâng (đã nạp)** | **2500 xung/s** | `lift_max_steps_s = 2500.` — nâng 20.000 bước chỉ mất ~8,5 giây |
+| **Gia tốc nâng (đã nạp)** | **3000 xung/s²** | `lift_accel_steps_s2 = 3000.` — khởi động dứt khoát, tránh trượt bước |
+| **Tốc độ hạ (đã nạp)** | **2000 xung/s** | `home_steps_s = 2000.` — chạy mượt mà tới công tắc đáy |
 | `steps_per_m` | 200000 danh nghĩa | 200 bước/vòng × 8 vi bước ÷ lead 8 mm; **chưa đo** |
 
 **Giao thức CSV (mặc định):**
@@ -126,7 +128,7 @@ Lệnh xuống: C,wFL,wFR,wRL,wRR,lift_steps,enabled   |   H   |   U   |   D   |
   là fault 8.
 - Khởi động **disarm**, PWM=0; nhận ngay `C,...,1` không cần `D` trước; **không còn
   timeout Serial** — im lặng trên dây không phải lỗi.
-- `H` hạ tối đa 3 s hoặc tới công tắc dưới; `U` nâng **thêm 2.000 xung** từ vị trí
+- `H` hạ tối đa 30 s hoặc tới công tắc dưới; `U` nâng **thêm 20.000 xung** (~10 cm) từ vị trí
   hiện tại; `D` dừng; `R` reset fault (khác phím `R` của bàn phím ROS — node đổi
   phím thành `U`).
 
@@ -138,7 +140,7 @@ Lệnh xuống: C,wFL,wFR,wRL,wRR,lift_steps,enabled   |   H   |   U   |   D   |
 | FR RPWM/LPWM · encoder A/B | 18/19 · **2**/14 |
 | RL RPWM/LPWM · encoder A/B | 23/22 · 5/17 |
 | RR RPWM/LPWM · encoder A/B | 21/27 · 16/4 |
-| Công tắc dưới (COM–GND, NC–GPIO) | **32** |
+| Công tắc dưới (COM–GND, NC–GPIO) | **15** |
 | TB6600 PUL+ / DIR+ | 13 / 33 |
 
 `motor_sign={1,-1,1,-1}`, `encoder_sign={1,1,1,-1}`. Công tắc trên và E-stop GPIO
@@ -190,11 +192,11 @@ Trong môi trường ptrace hiện tại phải chạy với `ASAN_OPTIONS=detec
 | Tham số | Giá trị | Nghĩa |
 |---|---|---|
 | `lift_preset_mode` | `true` | Chế độ xung, không dùng mét |
-| `lift_raise_steps` | 2000 | Phím `R` nâng thêm 2.000 xung |
-| `lift_max_steps` | 2000 | Thang goal cũ, **không** phải giới hạn hành trình |
+| `lift_raise_steps` | 20000 | Phím `R` nâng thêm **20.000 xung** (~10 cm) từ hiện tại |
+| `lift_max_steps` | 20000 | Giới hạn chiều cao tối đa **~10 cm** |
 | `lift_steps_per_m` | 200000.0 | Đổi tọa độ UART danh nghĩa, **chưa hiệu chuẩn** |
-| `lift_max_height` | 0.01 | Chuyển goal 0,01 m ↔ 2.000 xung; **không có nghĩa là 1 cm** |
-| `lift_tolerance` | 0.002 | |
+| `lift_max_height` | 0.1 | Tương ứng 20.000 xung; **chưa đo chiều cao thật** |
+| `lift_tolerance` | 0.002 | Sai số cho phép khi check đạt vị trí |
 | `publish_odom_tf` | `true` | Tắt khi có node EKF/IMU thật sở hữu `odom → base_link` |
 
 **Bàn phím `arrow_teleop.py` (dùng chung cho SIM và REAL):**
@@ -443,9 +445,24 @@ nếu đổi thì phải đổi cả hai phía cùng lúc.
 - `results/` trống trong Git → **không kiểm chứng lại "29/29", "10/10" bằng đọc
   file được**.
 
-### 6.3 Những điều tuyệt đối không suy diễn
+### 6.3 Firmware mới nhất — PID và GPIO công tắc (28/10/2026)
 
-- Firmware chưa nạp, xe thật chưa chạy, driver MPU6050 thật chưa có.
+**Thay đổi được nạp thực tế (từ code pasted 28/10):**
+- **PI bánh:** Tất cả 4 bánh `Kp=0.032, Ki=0.16, Kd=0.0` (không phải Kd=0.05 như ghi cũ)
+- **Tốc độ nâng:** 2500 xung/s; gia tốc 3000 xung/s² (hoàn thành 20.000 xung trong ~8,5 giây)
+- **Tốc độ hạ:** 2000 xung/s (mượt đến công tắc)
+- **GPIO công tắc dưới:** Thay đổi từ GPIO32 sang **GPIO15** (`INPUT_PULLUP`)
+- **Lệnh nâng R:** Tăng từ 2.000 xung lên **20.000 xung** (~10 cm)
+- **Thời gian hạ H:** Tăng từ 3 s lên **30 giây** (chờ tới công tắc)
+
+**Tại sao thay đổi:**
+- Tốc độ/gia tốc mới để hoàn thành nâng trước timeout 10 giây firmware
+- GPIO15 thay GPIO32 vì strapping level (GPIO32 có vấn đề trong boot)
+
+### 6.4 Những điều tuyệt đối không suy diễn
+
+- **Firmware đã nạp** (28/10) với PID/tốc độ như trên; chưa nạp bản cũ.
+- Xe thật chưa chạy; driver MPU6050 thật chưa có.
 - `steps_per_m` 200000 và CPR 937,2 là **suy diễn từ thông số danh nghĩa**, chưa
   đo; goal `height: 0.01` hiện nghĩa là 2000 xung, **không có nghĩa là 1 cm**.
 - PWM=0 **không** tương đương cách ly nguồn khi `R_EN/L_EN` kéo HIGH ngoài; không
