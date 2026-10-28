@@ -30,6 +30,9 @@ class CommandGate(Node):
         self.autonomous = bool(self.get_parameter('autonomous_enabled').value)
         self.declare_parameter('require_navigation_ready', False)
         self.require_navigation_ready = bool(self.get_parameter('require_navigation_ready').value)
+        self.declare_parameter('enforce_transport_height', True)
+        self.enforce_transport_height = bool(self.get_parameter('enforce_transport_height').value)
+        self.last_height_warning = -math.inf
         self.navigation_ready = False
         self.navigation_stamp = 0.
         self.estop = False
@@ -112,8 +115,15 @@ class CommandGate(Node):
         allowed = (not self.estop and not self.lift_busy and self.state is not None
                    and now-self.lift_stamp <= self.p['state_timeout']
                    and now-self.state[2] <= self.p['state_timeout']
-                   and self.state[0] <= self.p['transport_height']
                    and abs(self.state[1]) < .002)
+        if self.state is not None and self.state[0] > self.p['transport_height']:
+            if self.enforce_transport_height:
+                allowed = False
+            elif now-self.last_height_warning >= 5.:
+                self.get_logger().warning(
+                    f'LIFT_HEIGHT_WARNING: height={self.state[0]:.3f} m exceeds '
+                    f'{self.p["transport_height"]:.3f} m; driving remains enabled')
+                self.last_height_warning = now
         if selected_source == 'nav' and self.require_navigation_ready:
             # Sensor/localization interlocks bypass the normal command ramp.
             allowed = allowed and self.navigation_ready and now-self.navigation_stamp < .3

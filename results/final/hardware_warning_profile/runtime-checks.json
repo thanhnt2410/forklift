@@ -1,0 +1,42 @@
+{
+  "checks": [
+    {
+      "check": "startup_arms_without_homing",
+      "passed": true
+    },
+    {
+      "check": "unhomed_base_accepts_motion",
+      "passed": true
+    },
+    {
+      "check": "raised_forks_keep_driving",
+      "passed": true
+    },
+    {
+      "check": "wheel_warning_8_keeps_driving",
+      "passed": true
+    },
+    {
+      "check": "spike_does_not_jump_odom",
+      "passed": true
+    },
+    {
+      "check": "spike_is_warning_and_commands_continue",
+      "passed": true
+    },
+    {
+      "check": "encoder_recovers_from_raw_baseline",
+      "passed": true
+    },
+    {
+      "check": "software_estop_disarms_and_zeroes_commands",
+      "passed": true
+    },
+    {
+      "check": "legacy_mcu_fault_is_not_silently_masked",
+      "passed": true
+    }
+  ],
+  "passed": 9,
+  "total": 9
+}

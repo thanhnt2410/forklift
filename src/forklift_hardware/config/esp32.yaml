@@ -16,6 +16,8 @@ esp32_bridge:
     # Keep below the MCU's 10 rad/s limit, not the SIM controller's 12 rad/s.
     # 6 rad/s * 0.05 m = 0.30 m/s for pure translation.
     max_wheel_speed: 6.0
+    # Match MCU spike threshold: 2 * 10 rad/s + 5. Invalid samples warn only.
+    encoder_velocity_limit: 25.0
     state_timeout: 0.25
     command_timeout: 0.3
     ack_timeout: 0.25

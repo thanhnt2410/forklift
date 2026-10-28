@@ -207,6 +207,7 @@ void Controller::stop() {
   output_.lift_position_limit = false;
   target_.fill(0.); ramp_.fill(0.); stall_s_.fill(0.); direction_.fill(0);
   warnings_ = 0;
+  encoder_warning_s_.fill(0.);
   for (auto & p : pid_) p.reset();
   lift_rate_ = 0.;
 }
@@ -425,10 +426,21 @@ void Controller::tick(uint64_t now, const Sensors & s) {
   if (!config_.valid()) { stop(); previous_ticks_ = s.ticks; return; }
   if (!elapsed) return;
   const double dt = double(elapsed) / 1e6;
+  warnings_ = 0;
   for (size_t i = 0; i < 4; ++i) {
+    encoder_warning_s_[i] = std::max(0., encoder_warning_s_[i] - dt);
+    if (encoder_warning_s_[i] > 0.) warnings_ |= uint32_t(1) << i;
     const double actual = (double(s.ticks[i]) - double(previous_ticks_[i])) * kTau / config_.encoder_cpr[i] / dt;
     previous_ticks_[i] = s.ticks[i];
-    if (!std::isfinite(actual) || std::abs(actual) > 2. * config_.max_wheel_rad_s + 5.) { trip(Encoder); return; }
+    if (!std::isfinite(actual) || std::abs(actual) > 2. * config_.max_wheel_rad_s + 5.) {
+      if (!config_.encoder_spikes_warn_only) { trip(Encoder); return; }
+      // Advance the raw baseline, keep the last valid filtered speed and reset
+      // PID history. Do not feed a corrupt sample into the controller.
+      warnings_ |= uint32_t(1) << i;
+      encoder_warning_s_[i] = .5;  // Visible across the 20 Hz telemetry interval.
+      pid_[i].reset();
+      continue;
+    }
     velocity_[i] += (actual - velocity_[i]) * dt / (.03 + dt);
     stationary_s_[i] = std::abs(velocity_[i]) < .15 ? stationary_s_[i] + dt : 0.;
   }
@@ -436,7 +448,6 @@ void Controller::tick(uint64_t now, const Sensors & s) {
   // Keep controlling the last target until a new command or D arrives.
   // Silence on Serial is not a fault.
   output_.base_enable = mode_ == Mode::Active;
-  warnings_ = 0;
   for (size_t i = 0; i < 4; ++i) {
     if (mode_ != Mode::Active) {
       output_.duty[i] = 0.; stall_s_[i] = 0.; pid_[i].reset(); continue;

@@ -1,0 +1,55 @@
+[INFO] [1793197864.699020148] [esp32_bridge]: UART simple: /dev/pts/15, baud=115200, DTR/RTS=unsupported; DISARMED, waiting for telemetry
+[INFO] [1793197864.709885287] [esp32_bridge]: DISARMED; host=OK; mcu=DISARMED; fault=0; homed=0; bottom=0; steps=0; rx_bytes=27; wheel_warning=0
+[INFO] [1793197864.809721431] [esp32_bridge]: Auto arm requested with zero wheels; waiting for ACTIVE telemetry
+[INFO] [1793197864.810016126] [esp32_bridge]: ARMING; host=OK; mcu=DISARMED; fault=0; homed=0; bottom=0; steps=0; rx_bytes=82; wheel_warning=0
+[INFO] [1793197864.869678335] [esp32_bridge]: ARMING; host=OK; mcu=ACTIVE; fault=0; homed=0; bottom=0; steps=0; rx_bytes=110; wheel_warning=0
+[INFO] [1793197864.909682915] [esp32_bridge]: ARMED; host=OK; mcu=ACTIVE; fault=0; homed=0; bottom=0; steps=0; rx_bytes=138; wheel_warning=0
+[WARN] [1793197867.442759029] [command_gate]: LIFT_HEIGHT_WARNING: height=0.050 m exceeds 0.020 m; driving remains enabled
+[WARN] [1793197868.229471676] [esp32_bridge]: WHEEL_TRACKING_WARNING [RR]: stalled/low-speed, opposite or noisy encoder feedback; control remains enabled, check motor torque and encoder
+[WARN] [1793197868.529373936] [esp32_bridge]: ENCODER_SPIKE_WARNING mask=2: discarded impossible count jumps; driving remains enabled, odometry is degraded
+[INFO] [1793197868.869747808] [esp32_bridge]: DISARMED; host=OK; mcu=DISARMED; fault=0; homed=1; bottom=0; steps=10000; rx_bytes=2582; wheel_warning=10
+[INFO] [1793197868.929636088] [esp32_bridge]: DISARMED; host=OK; mcu=DISARMED; fault=0; homed=1; bottom=0; steps=10000; rx_bytes=2621; wheel_warning=10
+[ERROR] [1793197869.369455798] [esp32_bridge]: MCU_FAULT_8; no automatic wheel stop (manual-cutoff profile)
+[INFO] [1793197869.369981927] [esp32_bridge]: DISARMED; host=MCU_FAULT_8; mcu=FAULTED; fault=8; homed=1; bottom=0; steps=10000; rx_bytes=2972; wheel_warning=8
+{
+  "checks": [
+    {
+      "check": "startup_arms_without_homing",
+      "passed": true
+    },
+    {
+      "check": "unhomed_base_accepts_motion",
+      "passed": true
+    },
+    {
+      "check": "raised_forks_keep_driving",
+      "passed": true
+    },
+    {
+      "check": "wheel_warning_8_keeps_driving",
+      "passed": true
+    },
+    {
+      "check": "spike_does_not_jump_odom",
+      "passed": true
+    },
+    {
+      "check": "spike_is_warning_and_commands_continue",
+      "passed": true
+    },
+    {
+      "check": "encoder_recovers_from_raw_baseline",
+      "passed": true
+    },
+    {
+      "check": "software_estop_disarms_and_zeroes_commands",
+      "passed": true
+    },
+    {
+      "check": "legacy_mcu_fault_is_not_silently_masked",
+      "passed": true
+    }
+  ],
+  "passed": 9,
+  "total": 9
+}

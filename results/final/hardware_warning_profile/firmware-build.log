@@ -1,0 +1,4 @@
+[ 50%] Built target firmware_core
+[ 75%] Building CXX object CMakeFiles/core_tests.dir/tests/core_tests.cpp.o
+[100%] Linking CXX executable core_tests
+[100%] Built target core_tests

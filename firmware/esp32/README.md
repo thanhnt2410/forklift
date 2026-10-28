@@ -6,6 +6,12 @@ Bản khung cho **ESP32 DevKit 38 chân, WROOM**, 4 GA25-370 có encoder,
 thật. Backend ROS USB/UART CSV đơn giản đã có ở `forklift_hardware`, xem
 [hướng dẫn điều khiển ESP32](../../docs/esp32_manual_control.md).
 
+Profile mặc định `encoder_spikes_warn_only=true`: bỏ mẫu encoder nhảy phi lý
+và báo warning theo bánh, không khóa bộ điều khiển. Stall/encoder ngược chiều
+cũng chỉ warning. Vẫn giữ lỗi khi bánh còn chuyển động trong lúc nâng/hạ và
+các lỗi E-stop, I/O, công tắc, cấu hình, deadline. Cần nạp lại sketch để áp dụng;
+bridge ROS không che `fault=8` từ firmware cũ đã FAULTED.
+
 **Mặc định bật profile thử bánh + nâng một công tắc dưới. Chưa nạp hoặc thử xe thật.**
 Theo yêu cầu dùng giá trị khởi đầu để tuning sau, `base_bench_profile=true`
 cho phép khởi tạo GPIO bánh với PI dự kiến. Các cờ xác nhận điện vẫn `false`;

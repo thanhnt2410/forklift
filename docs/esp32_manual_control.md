@@ -63,16 +63,41 @@ nhiều bánh cùng cảnh báo. Bridge in `WHEEL_TRACKING_WARNING [tên bánh]`
 `wheel_warning=...` vào `/esp32/status`, và đặt `/diagnostics` mức WARN.
 Warning không khóa command gate và không được đưa vào `fault`.
 
-`MCU_FAULT_8` vẫn được dùng cho số đếm encoder nhảy tới vận tốc phi lý hoặc
-phát hiện bánh còn chạy khi đang nâng; đây là các điều kiện khác với thiếu
-mô-men khởi động. Không bỏ qua bit lỗi 8 từ firmware cũ ở phía ROS vì MCU cũ
-đã tự khóa nhận lệnh.
+Profile xe thật hiện đặt `encoder_spikes_warn_only=true` trong `board_config.h`.
+Số đếm encoder nhảy tới vận tốc trên 25 rad/s được bỏ qua riêng từng bánh,
+báo trong cùng bitmask warning và không chuyển MCU sang FAULTED. MCU giữ vận tốc
+hợp lệ gần nhất và reset lịch sử PID của bánh đó; warning giữ ít nhất 0,5 giây
+để bridge đọc được. Trần PWM và tốc độ không đổi. Đặt cờ này về `false` nếu muốn
+khôi phục lỗi dừng với xung nhảy.
+
+Bridge cũng lọc xung nhảy trước khi tích phân odometry và in
+`ENCODER_SPIKE_WARNING`, giới hạn một log mỗi 5 giây. Ngưỡng cấu hình ở
+`encoder_velocity_limit: 25.0` trong `esp32.yaml`. Dữ liệu bị bỏ gây thiếu đo
+chuyển động, nên warning này không có nghĩa odometry vẫn chính xác.
+
+`MCU_FAULT_8` vẫn được giữ nếu bánh thực sự còn quay trong lúc nâng/hạ càng.
+Không bỏ qua bit lỗi 8 từ firmware cũ ở phía ROS vì MCU cũ đã tự khóa nhận lệnh.
+`wheel_warning=8` chỉ là warning của bánh RR, khác với `fault=8`.
 
 Để áp dụng: cập nhật/build bridge trên Pi **và nạp lại firmware chính**
 `firmware/esp32/forklift_esp32/forklift_esp32.ino` lên ESP32. Chỉ restart ROS
 không thay đổi logic MCU. Bridge mới đọc được cả telemetry cũ (không có trường
 warning) và mới; firmware mới cần bridge mới. Thay đổi này không tăng trần PWM
 hoặc tự bù mô-men khởi động; tốc độ rất thấp vẫn cần tuning PID/phần cứng.
+
+### Càng cao chỉ cảnh báo khi lái xe thật
+
+`real.launch.py` mặc định `enforce_transport_height:=false`: càng đứng yên ở
+độ cao trên 2 cm chỉ in `LIFT_HEIGHT_WARNING`, tối đa một log mỗi 5 giây; không
+buộc hạ về đáy để di chuyển. Chưa home cũng không khóa lái trong profile pulse.
+Muốn khôi phục điều kiện chiều cao, chạy `real.launch.py enforce_transport_height:=true`.
+Mô phỏng vẫn dùng mặc định kiểm tra chiều cao như trước.
+
+Vẫn chặn lái khi càng đang nâng/hạ, trạng thái bị cũ/mất, E-stop, hoặc thiếu
+hiệu chuẩn ở chế độ điều khiển vị trí càng. Giữ kiểm tra lệnh không hợp lệ,
+giới hạn tốc độ/PWM, timeout ROS/telemetry/ACK, lỗi I/O, deadline MCU và công
+tắc hành trình. Chính sách giữ PWM khi mất liên lạc/lỗi đã có của dự án không
+thay đổi; xem mục dừng bên dưới.
 
 ## Luồng điều khiển
 
@@ -252,8 +277,9 @@ Chọn bộ gõ tiếng Anh, focus terminal bàn phím và chờ `Manual mode re
 | Q / Ctrl+C | Dừng và thoát bàn phím |
 
 Phím chữ nhận cả hoa/thường. Nhả phím hết timeout bàn phím vẫn là lệnh dừng chủ
-động như SIM; command gate giữ giới hạn gia tốc và khóa lái khi nâng/homing
-hoặc nâng quá chiều cao vận chuyển. Chưa home không còn khóa lái lúc khởi động.
+động như SIM; command gate giữ giới hạn gia tốc và khóa lái khi nâng/homing.
+Càng đứng yên cao quá chiều cao vận chuyển chỉ warning trong launch xe thật.
+Chưa home không còn khóa lái lúc khởi động.
 Một goal nâng chạy đến đích, không cần giữ R/F; Space hủy giữa chừng.
 
 ## Dừng, lỗi và nối lại
