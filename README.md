@@ -21,6 +21,24 @@ này trên robot thật**. Có cả chế độ trạm cố định về Home v�
 - Khi chạy Nav2 dùng vận tốc tiến/lùi và quay. Đi ngang chỉ có với bánh mecanum
   (teleop hoặc docking); bánh cao su docking bằng tiến/lùi + bẻ lái.
 
+## Chọn bài chạy thử
+
+Build và source workspace theo phần [cài đặt](#tải-mã-nguồn-và-build) trước khi chạy.
+Mỗi dòng dưới đây là một chế độ riêng; dừng phiên cũ trước khi đổi chế độ.
+
+| Bài thử | Lệnh chính | Kết quả cần quan sát |
+|---|---|---|
+| [SIM: lái tay và nâng/hạ](#chạy-thủ-công-trong-mô-phỏng) | `ros2 launch forklift_bringup sim.launch.py auto_home:=true` | Gazebo/RViz mở, càng homing, xe nhận phím |
+| [SIM: tạo bản đồ](#slam-và-điều-hướng-riêng) | `ros2 launch forklift_bringup mapping.launch.py` | Bản đồ mở rộng khi lái xe bằng teleop |
+| [SIM: điều hướng](#slam-và-điều-hướng-riêng) | `ros2 launch forklift_bringup navigation.launch.py` | Nav2 `READY`, xe tới Nav2 Goal trên RViz |
+| [SIM: lấy–giao pallet](#chạy-nhiệm-vụ-lấygiao-hàng-tại-trạm-cố-định) | `ros2 launch forklift_bringup p6.launch.py wheel_type:=mecanum` | Hoàn tất lấy, nâng, giao và rút càng; cấu hình tái hiện kết quả đã lưu |
+| [REAL: mapping](#mapping-robot-thật-pi--laptop) | Pi: `lidar.launch.py` + `real.launch.py`; laptop: `mapping_real.launch.py` | Có `/scan`, `/odom`, bản đồ và lưu được YAML/PGM |
+| [REAL: chạy với map đã lưu](#điều-hướng-robot-thật-với-bản-đồ-đã-lưu) | Pi: LiDAR `/scan_raw` + `real.launch.py`; laptop: `navigation_real.launch.py map:=...` | Scan khớp map, định vị đúng, thử một goal ngắn |
+
+Các tên launch trong hai dòng REAL đều thuộc package `forklift_bringup`.
+Xe thật mặc định dùng bánh cao su; phần [ảnh kết quả](#ảnh-và-kết-quả-đã-lưu)
+ghi rõ dữ liệu mô phỏng và bản đồ tham khảo.
+
 ## Chọn kiểu bánh
 
 Mọi launch bringup nhận tham số `wheel_type`, mặc định `rubber`:
@@ -117,7 +135,9 @@ source install/setup.bash
 
 ## Chọn ô pallet trên RViz và lấy–giao nhiều chuyến
 
-Sau khi build/source lại workspace, chạy `ros2 launch forklift_bringup p6.launch.py`.
+Sau khi build/source lại workspace, chạy
+`ros2 launch forklift_bringup p6.launch.py wheel_type:=mecanum`
+để dùng cấu hình đã có kết quả kiểm thử.
 Trong RViz, dùng **Pick slot** (phím A) đặt các ô lấy hàng — đánh số 1, 2, 3 — và
 **Drop slot** (phím B) đặt các ô đặt hàng — đánh số 4, 5, 6 — rồi bấm **Run mission**
 trong panel **Pallet mission**. Xe chạy lần lượt ô 1 → ô 4, ô 2 → ô 5, ô 3 → ô 6;
@@ -135,15 +155,17 @@ quỹ đạo và giới hạn sai số tại B.
 chẩn đoán phiên Run bị lỗi và kết quả kiểm thử sau khi chuyển sang FollowPath.
 [Nhận dạng ngay lúc Run](results/final/early_detection/README.md) ghi kết quả
 nhánh lập tuyến sớm, fallback và xác nhận lại khi tới gần pallet.
-Robot thật cần nâng đã hiệu chuẩn và phản hồi tải thật; cấu hình nâng xung preset
-hiện tại chưa đáp ứng nhiệm vụ tự động này.
+Launch robot thật hiện có chế độ thử nâng xung preset và mặc định bỏ kiểm tra
+cảm biến tải (`load_feedback:=none`), nên người vận hành phải quan sát tải.
+Chiều cao nâng chưa hiệu chuẩn và chu trình thật chưa được nghiệm thu;
+xem [cách chạy trên map thật](#điều-hướng-robot-thật-với-bản-đồ-đã-lưu).
 
 ## Chạy nhiệm vụ lấy–giao hàng tại trạm cố định
 
 Terminal 1 — mở thế giới có pallet, Gazebo, RViz, Nav2 và bộ quản lý nhiệm vụ:
 
 ```bash
-ros2 launch forklift_bringup p6.launch.py controller:=mppi
+ros2 launch forklift_bringup p6.launch.py controller:=mppi wheel_type:=mecanum
 ```
 
 Launch tự homing càng trong SIM. Chờ `/navigation/status` báo `READY` và
@@ -168,10 +190,10 @@ Một số tùy chọn:
 
 ```bash
 # Tắt hai cửa sổ, vẫn chạy mô phỏng và cần renderer cho LiDAR:
-ros2 launch forklift_bringup p6.launch.py gui:=false rviz:=false
+ros2 launch forklift_bringup p6.launch.py wheel_type:=mecanum gui:=false rviz:=false
 
 # Dùng bộ RPP để đối chiếu thay cho MPPI:
-ros2 launch forklift_bringup p6.launch.py controller:=rpp
+ros2 launch forklift_bringup p6.launch.py wheel_type:=mecanum controller:=rpp
 ```
 
 Chọn một lệnh launch cho mỗi phiên. Dừng phiên bằng **Ctrl+C tại terminal launch**
@@ -269,6 +291,9 @@ chồng với `p6.launch.py` hoặc `sim.launch.py`:
 # Lập bản đồ bằng LiDAR; dùng teleop để di chuyển:
 ros2 launch forklift_bringup mapping.launch.py
 
+# Terminal khác: lái xe để quét map (đã source ROS/workspace):
+ros2 run forklift_control arrow_teleop.py
+
 # Định vị và điều hướng trên bản đồ kho đã có, mặc định MPPI:
 ros2 launch forklift_bringup navigation.launch.py
 ```
@@ -281,20 +306,33 @@ Nếu pose ban đầu sai, đặt lại bằng **2D Pose Estimate**. Bản đồ
 ros2 launch forklift_bringup navigation.launch.py map:=/duong/dan/toi/map.yaml
 ```
 
+Để lưu map mô phỏng, dừng xe, giữ phiên mapping chạy và mở terminal khác:
+
+```bash
+mkdir -p ~/maps
+ros2 service call /slam_toolbox/save_map slam_toolbox/srv/SaveMap \
+  "{name: {data: '$HOME/maps/forklift_sim'}}"
+```
+
+Sau đó tắt mapping trước khi mở navigation với
+`map:=$HOME/maps/forklift_sim.yaml`. Dùng cùng `wheel_type` khi tạo và chạy map;
+nếu teleop đã chuyển command gate sang manual, thoát teleop rồi bật lại autonomous
+bằng service như ở phần [điều hướng thật](#điều-hướng-robot-thật-với-bản-đồ-đã-lưu).
+
 ## Phần cứng và firmware ESP32
 
 Phần cứng dự kiến: ESP32 DevKit WROOM 38 chân, bốn GA25-370 có encoder A/B,
 bốn BTS7960, TB6600/NEMA17 cho nâng và MPU6050 dự kiến nối Raspberry Pi.
 
 Đã có khung firmware đọc encoder, PID bánh, Serial CSV và điều khiển nâng. Tuy nhiên,
-PID hiện tại **Kp=0,08; Ki=0,12; Kd=0,05** được đặt cho cả bốn bánh để tuning.
-**Firmware hiện bật profile thử bánh**, trần PWM 50%, giới hạn MCU 10 rad/s,
+PI hiện tại **Kp=0,1; Ki=0,5; Kd=0** được đặt cho cả bốn bánh, kèm feedforward.
+**Firmware hiện bật profile thử bánh**, trần PWM 100%, giới hạn MCU 10 rad/s,
 giới hạn phía ROS 6 rad/s (tịnh tiến 0,255 m/s với bánh cao su r = 0,0425 m;
 0,30 m/s với mecanum r = 0,05 m), và boot
 disarm; nâng dùng **một công tắc NC dưới GPIO15**, R nâng thêm 20.000 xung,
-F/H hạ tối đa 3 giây hoặc dừng sớm tại công tắc. Không cần home trước khi nâng/lái;
+F/H hạ tối đa 30 giây hoặc dừng sớm tại công tắc. Không cần home trước khi nâng/lái;
 quãng nâng thực tế sẽ đo và hiệu chỉnh sau. Mức điện, chân boot,
-chiều motor/encoder và PI chưa được kiểm chứng trên xe. Đã bổ sung backend USB/UART CSV đơn giản và
+chiều motor/encoder và PI cần kiểm tra theo xe, mặt sàn và tải thực tế. Đã bổ sung backend USB/UART CSV đơn giản và
 `real.launch.py` để dùng cùng bàn phím với ESP32, đọc encoder và điều khiển nâng.
 Serial mặc định 115200 baud, CSV từng dòng không CRC/boot ID/ACK; ESP32 tự phát
 trạng thái 20 Hz. Cần cập nhật firmware và ROS cùng phiên bản giao thức.
@@ -321,12 +359,15 @@ thay đổi. Có thể ghi đè bằng `port:=/dev/serial/by-path/...`.
 Chế độ dò telemetry chỉ dùng khi truyền `port:=auto`, cần `fuser` từ gói `psmisc`.
 Launch mặc định `auto_arm:=true`: tự arm một lần sau khi có telemetry hợp lệ,
 bánh đứng yên và lệnh zero mới từ command gate; không cần gọi service arm.
-Dùng `auto_arm:=false` nếu muốn arm thủ công. Xem
+Dùng `auto_arm:=false` nếu muốn arm thủ công. Launch còn mặc định `auto_home:=true`
+(hạ càng lúc khởi động), `imu:=true` (MPU + EKF) và `autonomous:=true`.
+Chuẩn bị khoảng trống cho càng trước khi launch. Xem
 [hướng dẫn ESP32: cấu hình, bàn phím và reset](docs/esp32_manual_control.md).
 LiDAR trên Pi chạy riêng bằng `ros2 launch forklift_bringup lidar.launch.py`,
 dùng cấu hình `src/forklift_hardware/config/ydlidar.yaml`.
 Xem [hướng dẫn LiDAR Pi và kết nối laptop](docs/ydlidar_pi.md).
-Đã kiểm tra qua PTY với lõi firmware C++; chưa kiểm chứng kết nối USB hoặc xe thật.
+Kết quả kiểm thử bridge bằng PTY nằm trong repo; người dùng đã xác nhận mapping
+trên xe thật, còn chu trình lấy–giao thật chưa được nghiệm thu.
 
 Theo lựa chọn phần cứng hiện tại, R_EN/L_EN kéo HIGH ngoài. Bridge mặc định
 `stop_on_fault=true`, gửi D khi phát sinh lỗi nếu serial còn hoạt động.
@@ -377,7 +418,9 @@ kiểm tra tránh mở nhầm cổng LiDAR.
 
 `real.launch.py` không tự chạy LiDAR. ESP32 cắm vào Pi thì bridge phải chạy trên
 Pi, kể cả khi mở terminal qua SSH từ laptop. Đóng bridge cũ và Serial Monitor
-trước khi chạy; nếu rút/cắm lại USB, khởi động lại launch để mở lại kết nối.
+trước khi chạy. Bridge hiện thử mở lại cổng sau 3 giây không nhận dữ liệu;
+kiểm tra `/esp32/status` sau khi rút/cắm lại USB và khởi động lại launch nếu
+kết nối không phục hồi.
 
 ### 2. Trên laptop: chạy SLAM và RViz
 
@@ -400,8 +443,8 @@ ros2 launch forklift_bringup mapping_real.launch.py
 ```
 
 Launch mở RViz với Fixed Frame `map`, phát TF robot từ URDF CAD và chạy SLAM
-Toolbox bằng thời gian thực. Vị trí LiDAR theo mô hình là `[0, 0, 0.2946]` m
-so với `base_link`, roll/pitch/yaw bằng 0. Không chạy thêm static TF test cho
+Toolbox bằng thời gian thực. TF LiDAR lấy từ URDF theo `wheel_type`; launch thật
+đặt yaw LiDAR **+90°**, cùng cấu hình với navigation thật. Không chạy thêm static TF test cho
 `base_link -> laser_frame` hoặc một `robot_state_publisher` khác.
 
 Mỗi lần khởi động `mapping_real.launch.py` là **phiên tạo bản đồ mới**. Chạy một
@@ -463,9 +506,133 @@ Sau khi lưu và dừng xe, disarm trước khi kết thúc các launch:
 ros2 service call /esp32/arm std_srvs/srv/SetBool '{data: false}'
 ```
 
-Disarm hoặc lỗi sẽ hủy auto arm trong phiên hiện tại; bridge không tự arm lại
-ngay sau thao tác dừng/disarm. Có thể khởi động lại launch khi đã xử lý lỗi để
-dùng auto arm ở phiên mới, hoặc gọi service arm thủ công nếu cần.
+Disarm thủ công sẽ hủy auto arm trong phiên hiện tại. Cấu hình hiện bật
+`auto_rearm` cho lỗi timeout telemetry/lệnh sau khi dữ liệu phục hồi và bánh
+đứng yên; lỗi MCU/E-stop vẫn cần xử lý riêng. Sau khi chủ động disarm, chỉ arm
+lại khi đã sẵn sàng bằng service hoặc một phiên launch mới.
+
+## Điều hướng robot thật với bản đồ đã lưu
+
+Dùng cùng môi trường ROS/mạng như phần mapping trên **mọi terminal** của Pi và
+laptop. Ví dụ dùng `ROS_DOMAIN_ID=0`; nếu hệ thống đang dùng domain 1 thì đổi
+đồng loạt hai máy sang 1. Nếu dùng Cyclone DDS, cài `ros-humble-rmw-cyclonedds-cpp`
+và đặt `export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp` trên cả hai máy.
+
+### 1. Pi: driver và bridge phần cứng
+
+Dừng phiên SLAM `mapping_real.launch.py` trên laptop và phiên LiDAR cũ trên Pi.
+AMCL sẽ phát `map → odom` thay SLAM; không chạy hai nguồn TF này cùng lúc.
+
+Terminal 1 trên Pi — LiDAR phải xuất **`/scan_raw`**:
+
+```bash
+ros2 launch forklift_bringup lidar.launch.py scan_topic:=/scan_raw
+```
+
+Terminal 2 trên Pi — nếu bridge đã chạy đúng cấu hình thì giữ phiên đó:
+
+```bash
+ros2 launch forklift_bringup real.launch.py wheel_type:=rubber imu:=true
+```
+
+`real.launch.py` chạy bridge, command gate, MPU và EKF; không tự mở LiDAR.
+`navigation_real.launch.py` trên laptop nhận `/scan_raw` rồi relay ra `/scan`
+cho Nav2. Chạy LiDAR thẳng ra `/scan` trong chế độ này sẽ thiếu đầu vào thô.
+
+### 2. Laptop: nạp map và kiểm tra định vị
+
+Map YAML và ảnh được YAML tham chiếu phải cùng có trên **laptop**. Ví dụ dùng
+map vừa lưu trong `~/maps`:
+
+```bash
+ros2 topic echo /esp32/status --once
+ros2 topic echo /scan_raw --once --field header
+ros2 topic echo /odom --once --field header
+ros2 launch forklift_bringup navigation_real.launch.py \
+  map:=$HOME/maps/forklift_real.yaml wheel_type:=rubber use_ekf:=true
+```
+
+Nếu dùng map có sẵn trong repo, thay `map` bằng đường dẫn tuyệt đối tới
+`src/mecanum_navigation/maps/home1.yaml` trong checkout trên laptop. Map đó chỉ
+phù hợp khu vực đã quét; hãy dùng map của nơi đang thử xe.
+
+Giữ `wheel_type` giống nhau trên hai máy. Nếu Pi chạy `imu:=false`, laptop phải
+chạy `use_ekf:=false`. Không khởi chạy thêm EKF trên laptop.
+
+Launch mặc định `auto_localize:=true` để thử tìm pose ban đầu từ LiDAR. Trong
+RViz, kiểm tra scan trùng tường trên map và hướng robot đúng. Nếu chưa khớp,
+dùng **2D Pose Estimate** đặt lại pose; có thể thêm `auto_localize:=false` khi
+muốn tự đặt ngay từ đầu. Khi xe đứng yên, yêu cầu AMCL cập nhật thêm bằng:
+
+```bash
+ros2 service call /request_nomotion_update std_srvs/srv/Empty '{}'
+ros2 topic echo /navigation/status --once
+```
+
+### 3. Thử goal ngắn rồi mới thử lấy–giao
+
+Chờ navigation `READY`, ESP32 `ARMED`, `fault=0` và pose khớp map. Nếu trước đó
+đã mở `arrow_teleop.py`, dừng xe, thoát node bàn phím rồi bật lại chế độ tự động:
+
+```bash
+ros2 service call /command_gate/set_autonomous std_srvs/srv/SetBool '{data: true}'
+```
+
+Dùng **Nav2 Goal** chọn một điểm gần trong vùng trống và quan sát xe đi, quay,
+dừng. Không mở bàn phím/PS4 trong lúc chạy tự động vì teleop có ưu tiên.
+
+Để thử pallet, panel **Pallet mission** cho phép chọn các ô lấy/giao rồi bấm
+**Run mission**. Trên REAL mặc định `pick_pose_mode:=pallet`: đặt ô lấy lên mặt
+pallet, LiDAR tính điểm tiếp cận; SIM mặc định chọn pose đứng trước pallet.
+Mặc định `pick_via_x:=true` cho xe tới điểm tiếp cận rồi mới đo pallet.
+
+Đây là chế độ thử nghiệm có giám sát: `load_feedback:=none` bỏ xác nhận tải tự
+động, và `carry_joint_position:=0.1` là mã nâng **20.000 xung**, chưa phải chiều
+cao 10 cm đã đo. Khi có cảm biến tải thật, dùng `load_feedback:=external` với
+topic `/pallet/load_detected`. Các kết quả SIM bên dưới chưa xác nhận độ chính
+xác lấy–giao của xe thật.
+
+Dừng nhiệm vụ bằng **Stop mission** trên panel; khi kết thúc thử, dừng xe,
+disarm trước khi tắt các launch:
+
+```bash
+ros2 service call /esp32/arm std_srvs/srv/SetBool '{data: false}'
+```
+
+## Ảnh và kết quả đã lưu
+
+Các ảnh dưới đây lấy từ dữ liệu sẵn trong repo. Đây là kết quả đã lưu,
+không phải một lượt chạy SIM/REAL mới khi cập nhật README.
+
+### SIM: đường lập kế hoạch và quỹ đạo thực hiện
+
+![SIM: đường được chọn, đường cập nhật và quỹ đạo robot tới hai vị trí giao](results/final/path_pipeline_fix/planned_and_executed_paths.png)
+
+Xám đứt: đường công bố trước chuyển động; xanh: đường cập nhật; cam: quỹ đạo
+robot trong hệ `map`. Hai hình so sánh B mặc định và B do người dùng chọn.
+Ảnh thuộc thử nghiệm **bánh mecanum**, trước khi chuyển sang bánh cao su.
+Xem [báo cáo path và sai số tại B](results/final/path_pipeline_fix/README.md).
+
+### SIM: nhận dạng pallet và hiệu chỉnh tiếp cận
+
+![SIM: nhận dạng pallet sớm và nhánh nhận dạng lại khi tới gần](results/final/early_detection/approach_branches.png)
+
+Trái: nhận dạng trước khi đi, dùng A đã hiệu chỉnh. Phải: chưa thấy pallet ban
+đầu, tới A sơ bộ rồi chạy `REFINE_PICK`. Báo cáo đã lưu ghi **16/16 ca,
+373/373 phép kiểm tra đạt**, gồm cả ca hủy/lỗi dừng đúng dự kiến; không phải
+16 nhiệm vụ lấy–giao thành công. Xem [báo cáo nhận dạng](results/final/early_detection/README.md)
+và [số liệu gốc](results/final/early_detection/summary.json). Bộ kết quả này
+chưa được chạy lại với bánh cao su mặc định hiện tại.
+
+### REAL: bản đồ xác suất tham khảo
+
+![Bản đồ xác suất home1 đã lưu trong repo](src/mecanum_navigation/maps/home1_probability.png)
+
+Ảnh `home1_probability.png` là bản đồ nhiều mức xám đi kèm bộ map `home1`
+được dùng trong [ghi chú lệnh chạy thật](command_cmd.md), độ phân giải **0,04 m/ô**.
+Để chạy Nav2, dùng [home1.yaml](src/mecanum_navigation/maps/home1.yaml) hoặc map
+REAL tự lưu, thay vì lấy ảnh PNG làm đường dẫn `map`. Ảnh này minh họa bản đồ,
+chưa phải bằng chứng nghiệm thu chu trình lấy–giao trên xe thật.
 
 ## Cấu trúc và cấu hình chính
 
