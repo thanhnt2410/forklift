@@ -63,6 +63,12 @@ Visualization Manager:
       Value: /map
       Durability Policy: Transient Local
     Alpha: 0.6
+  # Bước 2 né vật: xanh = vật tĩnh, đỏ = vật động (mũi tên = vị trí sau 1 s), vàng = chưa rõ.
+  - Class: rviz_default_plugins/MarkerArray
+    Name: Obstacles (static/dynamic)
+    Enabled: true
+    Topic:
+      Value: /obstacles/markers
   - Class: rviz_default_plugins/Path
     Name: Global path
     Enabled: true

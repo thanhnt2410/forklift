@@ -13,7 +13,9 @@ enum Fault : uint32_t {
   Limit = 16, HomeTimeout = 32, Deadline = 64, Peripheral = 128
 };
 enum class Mode : uint8_t { Locked, Disarmed, Active, Homing, Faulted };
-enum class Operation { Control, Home, Raise, Reset, Stop };
+// Duty: lenh ban thu P,dFL,dFR,dRL,dRR dat duty tho de do ma sat; wheel[] la duty.
+// Tune: lenh ban thu G,kp,ki,kd doi he so PI ca 4 banh luc chay; wheel[0..2] la kp,ki,kd.
+enum class Operation { Control, Home, Raise, Reset, Stop, Duty, Tune };
 struct Command {
   Operation operation{Operation::Stop};
   uint64_t boot{}, sequence{};
@@ -56,6 +58,11 @@ struct Config {
   double lift_lower_timeout_s{3.};
   std::array<double, 4> encoder_cpr{};  // Actual x4 counts / output shaft revolution.
   std::array<Gains, 4> gains{};
+  // Feedforward bu ma sat: duty = sign(w)*(static_duty + velocity_duty*|w|) + PI.
+  // Mac dinh 0 = hanh vi PI cu. Gia tri phai do tren ban (lenh P).
+  std::array<double, 4> static_duty{}, velocity_duty{};
+  // Cho phep lenh P (duty tho, bo qua PI). Chi bat trong profile thu ban.
+  bool bench_duty_command{false};
   double max_wheel_rad_s{2.0}, wheel_accel{2.0}, max_duty{0.25};
   double steps_per_m{}, travel_m{}, lift_max_steps_s{}, lift_accel_steps_s2{};
   double home_steps_s{}, backoff_m{}, home_timeout_s{};
@@ -75,7 +82,8 @@ struct Outputs {
 };
 class Pid {
  public:
-  double update(double target, double actual, double dt, const Gains & gains, double bound);
+  double update(double target, double actual, double dt, const Gains & gains, double bound,
+                double feedforward = 0.);
   void reset() { integral_ = previous_ = 0.; primed_ = false; }
  private:
   double integral_{}, previous_{};
@@ -97,11 +105,16 @@ class Controller {
   const std::array<double, 4> & velocity() const { return velocity_; }
   size_t telemetry(uint64_t now_us, const Sensors & sensors, char * output, size_t capacity);
   size_t simple_telemetry(uint64_t now_us, const Sensors & sensors, char * output, size_t capacity);
+  // Dong "V,ms,vFL..vRR,dFL..dRR" chi khi dang chay lenh P; 0 neu khong.
+  size_t bench_telemetry(uint64_t now_us, char * output, size_t capacity) const;
+  bool raw_duty() const { return raw_duty_; }
+  const Gains & gains(size_t wheel) const { return config_.gains[wheel]; }
  private:
   void stop();
   void stop_for_fault();
   void trip(uint32_t fault);
   bool stopped() const;
+  bool wheels_moved_during_lift(const Sensors & sensors) const;
   void lift_tick(double dt, uint64_t now_us, const Sensors & sensors);
   void manual_lift_tick(double dt, uint64_t now_us, const Sensors & sensors);
   Config config_;
@@ -113,6 +126,12 @@ class Controller {
   std::array<Pid, 4> pid_;
   std::array<double, 4> target_{}, ramp_{}, velocity_{}, stationary_s_{}, stall_s_{};
   std::array<double, 4> encoder_warning_s_{};
+  // Khóa "bánh không lăn khi nâng": số đếm encoder lúc bắt đầu đoạn nâng và thời
+  // gian tốc độ lọc vượt ngưỡng liên tục (xem wheels_moved_during_lift).
+  std::array<int64_t, 4> lift_start_ticks_{};
+  std::array<double, 4> moving_s_{};
+  bool raw_duty_{};
+  std::array<double, 4> raw_duty_value_{};
   std::array<int, 4> direction_{};
   std::array<int64_t, 4> previous_ticks_{};
   double lift_target_{}, lift_rate_{};

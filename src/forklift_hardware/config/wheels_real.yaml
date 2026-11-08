@@ -1,0 +1,28 @@
+# Hồ sơ bánh xe thật. real.launch.py chọn bằng wheel_type:=rubber|mecanum và
+# đè các khóa này lên esp32.yaml cho CẢ esp32_bridge lẫn command_gate.
+# File YAML thường (không phải file tham số ROS). Motor/encoder giữ nguyên nên
+# encoder_cpr vẫn lấy từ esp32.yaml.
+mecanum:
+  drive_type: mecanum
+  wheel_radius: 0.05
+  # k = lx + ly theo CAD (giá trị cũ của esp32.yaml).
+  kinematic_sum: 0.260145
+  # 6 rad/s * 0,05 m = 0,30 m/s.
+  max_wheel_speed: 6.0
+rubber:
+  # Bánh cao su V3 Ø85 mm: skid-steer, KHÔNG đi ngang. Đường kính danh nghĩa,
+  # CHƯA đo chu vi thật (chạy 1 m rồi chỉnh wheel_radius).
+  drive_type: skid
+  wheel_radius: 0.0425
+  # Nửa vết bánh hiệu dụng = ly_CAD (0,155145) * 1,46 (robot.yaml track_factor).
+  # CHƯA hiệu chuẩn: quay 360° theo LiDAR/gyro, nếu xe quay thiếu so với lệnh thì
+  # tăng giá trị này (bánh trượt ngang nhiều hơn mô hình).
+  kinematic_sum: 0.2265
+  # Giữ trần 6 rad/s đã thử với firmware: 6 * 0,0425 = 0,255 m/s đi thẳng.
+  # Gate tự co max_vx 0,30 về 0,255. Chỉ nâng (<= 10, giới hạn MCU) sau khi thử bàn.
+  max_wheel_speed: 6.0
+  # 07/11/2026: trần riêng khi căn chỉnh/cắm pallet (motion_mux báo DOCKING). Bánh
+  # trước phải (FR) yếu: đo trên sàn, ở lệnh 6 rad/s bánh chỉ đạt ~4,8 rad/s, còn
+  # 4 rad/s thì bám trong ~2 %; 5 rad/s do người dùng chọn (07/11), chưa đo riêng. Chỉ gate dùng khóa này (bridge không đọc).
+  # CHƯA kiểm chứng với riêng bánh FR có tải. 0 = tắt, dùng max_wheel_speed.
+  dock_max_wheel_speed: 5.0

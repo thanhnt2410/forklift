@@ -13,6 +13,14 @@ namespace forklift_navigation {
 class GuardedMPPIController : public nav2_mppi_controller::MPPIController {
   using Base=nav2_mppi_controller::MPPIController;
   static constexpr double corridor_=0.12;
+  // Quay tại chỗ sửa góc cuối đường (03/11/2026 xe thật, bánh cao su skid-steer): trần cũ
+  // 0,18 rad/s ~ 1 rad/s mỗi bánh -> cả 4 bánh stall, "Failed to make progress" 4 lần ở
+  // REFINE_PICK. Teleop 0,6 rad/s (~3,2 rad/s bánh) quay đều. Sàn 0,45, trần 0,60 (= max_wz
+  // của command gate). Phanh khi góc còn lại < quãng trượt đo được w²/(2a), a ~ gia tốc góc
+  // velocity smoother 1,2 rad/s² (navigation_real smoother_accel). 03/11 00:45 nạp max_duty
+  // 1,0: đủ lực ở tốc độ thấp hơn, quay nhanh thì lố góc do trễ Wi-Fi -> 0,35-0,45 như Spin.
+  // Chưa hiệu chuẩn.
+  static constexpr double rotate_min_=0.35,rotate_max_=0.45,rotate_decel_=1.2;
   enum Mode {TRACK,BRAKE,ROTATE,SETTLE};
   Mode mode_{TRACK};
   double target_yaw_{0.};
@@ -78,8 +86,11 @@ public:
         }
         return command;
       }
-      if(std::abs(error)<.02){mode_=SETTLE;return command;}
-      command.twist.angular.z=std::clamp(1.2*error,-.18,.18);
+      // Quãng trượt theo vận tốc góc ĐO được: lúc mới bắt đầu ~0 nên vẫn quay, càng nhanh thì
+      // phanh càng sớm; sai lệch còn lại > 0,045 rad thì SETTLE cho quay tiếp lần nữa.
+      const double coast=speed.angular.z*speed.angular.z/(2.*rotate_decel_);
+      if(std::abs(error)<std::max(.02,coast)){mode_=SETTLE;return command;}
+      command.twist.angular.z=std::copysign(std::clamp(1.2*std::abs(error),rotate_min_,rotate_max_),error);
       nav_msgs::msg::Path sweep;sweep.header=pose.header;sweep.poses.push_back(pose);
       for(int i=1;i<=12;++i) {
         auto point=pose;

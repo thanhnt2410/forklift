@@ -1,7 +1,7 @@
 # CLAUDE.md — Ngữ cảnh dự án Xe nâng AMR mecanum
 
 > File này là bộ nhớ dài hạn cho Claude Code khi làm việc trong repo `forklift`.
-> Cập nhật: **26/10/2026**. Mọi khẳng định dưới đây phải được đối chiếu lại với code
+> Cập nhật: **30/10/2026** (đổi sang bánh cao su, §6.5). Mọi khẳng định dưới đây phải được đối chiếu lại với code
 > trước khi dùng làm cơ sở cho quyết định kỹ thuật.
 
 ---
@@ -25,10 +25,10 @@
 |---|---|
 | Hệ điều hành / ROS | Ubuntu 22.04 + **ROS 2 Humble** |
 | Mô phỏng | **Gazebo Fortress** (`ign gazebo`), `gz_ros2_control`, `ros_gz_bridge` |
-| Điều khiển bánh | `mecanum_drive_controller` (ros2_control), 4 bánh mecanum |
+| Điều khiển bánh | Chọn bằng `wheel_type` (§6.5): **`rubber` mặc định** → `diff_drive_controller` (skid-steer, bánh cao su V3 Ø85); `mecanum` → `mecanum_drive_controller` (Ø100) |
 | Cơ cấu nâng | `JointTrajectoryController` + supervisor riêng (`forklift_lift`) |
 | Cảm biến | YDLIDAR X4 (`/scan`, `laser_frame`), MPU6050 nối Raspberry Pi qua I2C |
-| Định vị | EKF 2D 30 Hz (wheel odom + gyro z), SLAM Toolbox, AMCL (`OmniMotionModel`) |
+| Định vị | EKF 2D 30 Hz (wheel odom + gyro z), SLAM Toolbox, AMCL (`DifferentialMotionModel` với bánh cao su, `OmniMotionModel` với mecanum) |
 | Điều hướng | Nav2 — **MPPI mặc định**, RPP làm phương án đối chiếu |
 | Tính toán thực | **Raspberry Pi 4B** + **ESP32-WROOM 38 chân** |
 
@@ -48,7 +48,7 @@
 ### 2.3 Sơ đồ dữ liệu (SIM)
 
 ```
-Teleop/Nav2 → CommandGate → mecanum_controller → JointTrajectoryController
+Teleop/Nav2 → CommandGate → base_controller (diff/mecanum) → JointTrajectoryController
                                   ↓                      ↓
                           gz_ros2_control → Gazebo Fortress
                                   ↓
@@ -101,9 +101,9 @@ tự động để chạy trên Pi → nới phạm vi thử bánh và hạ mứ
 | PI bốn bánh (đã nạp) | **Kp=0,032; Ki=0,16; Kd=0,0** | Tất cả 4 bánh FL/FR/RL/RR; tuned từ benchmark test |
 | Chu kỳ điều khiển | 10 ms (100 Hz) | `control_period_us` |
 | Telemetry | 50 ms (**20 Hz**) | `telemetry_period_us` |
-| Trần PWM | **50 %** | `max_duty = .50` |
+| Trần PWM | **100 %** | `max_duty = 1.` (03/11/2026, nguồn motor 12 V; build df685c3a, **đã nạp 03/11 ~00:45**). Bản 70 % nạp 30/10 |
 | Giới hạn MCU | **10 rad/s** | `max_wheel_rad_s = 10.` |
-| Giới hạn phía ROS | **6 rad/s** (0,30 m/s với r=0,05) | `esp32.yaml: max_wheel_speed: 6.0` |
+| Giới hạn phía ROS | **6 rad/s** (0,255 m/s với cao su r=0,0425; 0,30 m/s với mecanum r=0,05) | `wheels_real.yaml: max_wheel_speed: 6.0` (đè `esp32.yaml`) |
 | CPR danh nghĩa | **937,2** = 11 PPR × 4 (x4) × 21,3 | Chưa đo; `robot_measurements.yaml:36` |
 | **Tốc độ nâng (đã nạp)** | **2500 xung/s** | `lift_max_steps_s = 2500.` — nâng 20.000 bước chỉ mất ~8,5 giây |
 | **Gia tốc nâng (đã nạp)** | **3000 xung/s²** | `lift_accel_steps_s2 = 3000.` — khởi động dứt khoát, tránh trượt bước |
@@ -125,7 +125,9 @@ Lệnh xuống: C,wFL,wFR,wRL,wRR,lift_steps,enabled   |   H   |   U   |   D   |
 - `warnings`: bit0..3 = FL/FR/RL/RR. Stall > 0,5 s (ramp > 0,5 rad/s, duty > 20 %,
   tốc độ đo < 0,05 rad/s, hoặc encoder ngược chiều lệnh) **chỉ phát warning**, không
   latch fault, không disarm. Encoder nhảy số phi lý và bánh còn quay khi nâng vẫn
-  là fault 8.
+  là fault 8. "Bánh quay khi nâng" (từ 30/10/2026) = quãng thực > 20 xung kể từ lúc
+  bắt đầu nâng hoặc tốc độ > 0,15 rad/s liên tục > 0,2 s; rung ±1 xung do motor
+  bước không còn bật fault (`wheels_moved_during_lift`, chưa nạp lên ESP32).
 - Khởi động **disarm**, PWM=0; nhận ngay `C,...,1` không cần `D` trước; **không còn
   timeout Serial** — im lặng trên dây không phải lỗi.
 - `H` hạ tối đa 30 s hoặc tới công tắc dưới; `U` nâng **thêm 20.000 xung** (~10 cm) từ vị trí
@@ -137,13 +139,13 @@ Lệnh xuống: C,wFL,wFR,wRL,wRR,lift_steps,enabled   |   H   |   U   |   D   |
 | Chức năng | GPIO |
 |---|---|
 | FL RPWM/LPWM · encoder A/B | 25/26 · 34/35 |
-| FR RPWM/LPWM · encoder A/B | 18/19 · **2**/14 |
+| FR RPWM/LPWM · encoder A/B | 18/19 · **32**/14 (31/10/2026 chuyển từ GPIO2 strapping) |
 | RL RPWM/LPWM · encoder A/B | 23/22 · 5/17 |
 | RR RPWM/LPWM · encoder A/B | 21/27 · 16/4 |
-| Công tắc dưới (COM–GND, NC–GPIO) | **15** |
+| Công tắc dưới (COM–GND, NC–GPIO) | **15** (`INPUT_PULLUP`, không cần trở ngoài). Lịch sử: 15 → 36 (01/11/2026, vì 15 luôn đọc LOW) → **15 lại (06/11/2026, người dùng yêu cầu)**. Đã sửa `board_config.h` và biên dịch được, **chưa nạp lên ESP32 và chưa kiểm chứng**: nếu lại luôn LOW thì thêm 4,7 kΩ từ GPIO15 lên 3,3 V |
 | TB6600 PUL+ / DIR+ | 13 / 33 |
 
-`motor_sign={1,-1,1,-1}`, `encoder_sign={1,1,1,-1}`. Công tắc trên và E-stop GPIO
+`motor_sign={1,-1,1,-1}`, `encoder_sign={1,-1,1,-1}` (FR đổi −1 ngày 30/10/2026 sau khi sửa dây encoder FR). Công tắc trên và E-stop GPIO
 **chưa gán** (`-1`). `R_EN/L_EN` kéo HIGH ngoài, không dùng GPIO.
 
 **Chính sách khi lỗi (do người dùng chọn):** `base_enable_hardwired_high=true`,
@@ -179,6 +181,10 @@ Trong môi trường ptrace hiện tại phải chạy với `ASAN_OPTIONS=detec
 - Timeout: `state_timeout=0.25`, `command_timeout=0.3`, `ack_timeout=0.25`.
 - `auto_arm: true` — tự arm một lần khi telemetry tươi, bánh đứng yên và nhận lệnh
   zero từ command gate. Fault/disarm **hủy** auto arm cho phiên hiện tại.
+  Ngoại lệ (02/11/2026, `auto_rearm: true`): `ROS_COMMAND_TIMEOUT` tự xóa sau 1 s lệnh 0 tươi +
+  bánh đứng yên (`command_auto_recover`), `TELEMETRY_TIMEOUT` sau 2 s telemetry ổn; rồi tự gửi
+  `D` và auto arm lại. Lỗi MCU, E-stop, ACK/ARM_TIMEOUT, MCU_REBOOT vẫn latch. Số lần tự hồi:
+  `auto_recoveries` trong `/diagnostics`.
 - Dò cổng tự động qua `esp32_serial_auto.py` (`port:=auto`): nhận diện bằng
   telemetry firmware, bỏ qua cổng đang được chương trình khác dùng — **cần `fuser`
   của gói `psmisc`**.
@@ -212,7 +218,7 @@ Trong môi trường ptrace hiện tại phải chạy với `ASAN_OPTIONS=detec
 | Space / S | Dừng bánh và nâng |
 | Q / Ctrl+C | Dừng và thoát |
 
-- Mặc định: `speed 0.30`, `reverse_speed 0.30`, `strafe_speed 0.30`, `turn 0.4`
+- Mặc định: `speed 0.30`, `reverse_speed 0.30`, `strafe_speed 0.30`, `turn 0.6`
   (trần `turn 0.6`), `key_timeout 0.35 s`, `lift_step 0.01`, `lift_max_height 0.115`.
   Terminal không có sự kiện nhả phím nên sau `key_timeout` node gửi zero.
 - Publish vào `/cmd_vel_teleop`. Node **tự xin chế độ thủ công** từ
@@ -229,7 +235,8 @@ Trong môi trường ptrace hiện tại phải chạy với `ASAN_OPTIONS=detec
   `launch/mock_hardware.launch.py`. MCU giả chỉ kiểm chứng **đường dữ liệu và lỗi
   phần mềm**, không kiểm chứng UART vật lý, baud, nhiễu hay PID thật.
 
-**Công thức động học** (để trích vào báo cáo, `esp32_bridge.py:121-131`):
+**Công thức động học** (để trích vào báo cáo, `inverse`/`forward` trong `esp32_bridge.py`).
+Phần dưới là bánh **mecanum**; bánh cao su skid-steer là trường hợp $v_y = 0$, xem cuối mục:
 
 Động học ngược — vận tốc thân → bốn bánh:
 
@@ -257,8 +264,21 @@ $$\Delta\theta_i = \frac{(n_i - n_{i-1})\cdot 2\pi}{\text{CPR}},\qquad
 rồi cộng dồn $(\Delta x, \Delta y, \Delta\psi)$ theo phương trình quán tính trên
 mặt phẳng. CPR danh nghĩa $937{,}2 = 11 \times 4 \times 21{,}3$.
 
+**Skid-steer (bánh cao su, `drive_type: skid`)** — cùng hàm với `holonomic=False`:
+
+$$\dot{\varphi}_{FL} = \dot{\varphi}_{RL} = \frac{v_x - k\,\omega_z}{r},\quad
+\dot{\varphi}_{FR} = \dot{\varphi}_{RR} = \frac{v_x + k\,\omega_z}{r}$$
+
+Xuôi: $v_x$, $\omega_z$ như mecanum, còn $v_y \equiv 0$. Ở đây $k$ là **nửa vết bánh
+hiệu dụng**, gồm cả trượt ngang khi quay tại chỗ: $k = l_y\,(1 + (l_x/l_y)^2)$.
+Với $l_x = 0{,}105$, $l_y = 0{,}155$ thì hệ số ≈ 1,46 và $k = 0{,}2265$. Đây là mô
+hình ma sát đều bốn góc, **chưa hiệu chuẩn**. Odometry skid gửi phương sai $v_y$
+0,001 (ràng buộc không đi ngang) và $\omega_z$ 0,2 để EKF tin gyro hơn.
+
 **Bộ chọn nguồn và khóa liên động** (`command_gate.py`, viết báo cáo cần cả hai):
 
+- `holonomic=false` (bánh cao su): `vy` bị đặt 0 ngay khi nhận lệnh, log
+  `STRAFE_IGNORED` tối đa 5 s/lần.
 - Chọn nguồn theo thứ tự ưu tiên: `teleop` trước `nav` khi `autonomous_enabled`;
   chỉ `teleop` khi thủ công. Lệnh cũ hơn `command_timeout` bị bỏ.
 - Khóa xe (`allowed`) khi: có `estop`, đang nâng (`/lift/moving`), hoặc trạng thái
@@ -279,10 +299,12 @@ $$\frac{|v_x| + |v_y| + k\,|\omega_z|}{r} \le \text{max\_wheel\_speed}$$
 |---|---|
 | `src/forklift_control/config/command_gate.yaml` | `max_vx 0.30`, `max_vy 0.30`, `max_wz 0.6`, `max_ax/ay 0.5`, `max_aw 1.5`, `max_wheel_speed 12.0` (SIM), `transport_height 0.02`, `command_timeout 0.3`, `state_timeout 0.5` |
 | `src/forklift_lift/config/lift.yaml` | **File config duy nhất của package.** Mục `lift_supervisor`: `max_height 0.115` (giá trị launch nạp, đè mặc định 0,24 trong `lift_supervisor.py:24`; hard cap 0,24 tại dòng 29), `position_tolerance 0.002`, `home_timeout 60.0`, `auto_home false`. Mục `lift_sim_io`: `lower_position 0.0015`, `upper_position 0.12`, `switch_hysteresis 0.0005`, `command_timeout 0.3` |
-| `src/forklift_description/config/robot.yaml` | CAD: `wheel_radius 0.05`, `separation_x 0.210`, `separation_y 0.31029`, `lift_travel 0.12`, LiDAR `[0,0,0.2946]` 720 tia, IMU `[0,0,0.12]` |
+| `src/forklift_description/config/robot.yaml` | `wheel_types.rubber` (r 0.0425, rộng 0.038, `mu=mu2=1`, `track_factor 1.46`) / `wheel_types.mecanum` (r 0.05); `cad_wheel_radius 0.05`. CAD: `wheel_radius 0.05` (khóa cũ = mecanum, mock PTY dùng), `separation_x 0.210`, `separation_y 0.31029`, `lift_travel 0.12`, LiDAR `[0,0,0.2946]` 720 tia, IMU `[0,0,0.12]` |
 | `src/forklift_navigation/config/nav2_mppi.yaml` | `GuardedMPPIController`, `vx_max 0.25`, `vx_min -0.16`, `wz_max 0.6`, `motion_model DiffDrive`, 7 critic, `controller_frequency 20.0` |
 | `src/forklift_navigation/config/nav2.yaml` | RPP `StableReversingController` (`desired_linear_vel 0.25`), goal checker xy 0,035 / yaw 0,05, planner `TerminalApproachPlanner` |
 | `src/forklift_task_manager/config/stations.yaml` | A `[0.35,0.65]`, B `[0.35,-0.60]`, Home `[0,0,-1.309]`, `carry_joint_position 0.016`, `approach_speed 0.035`, `insertion_speed 0.015`, `retreat_speed 0.08`, `withdrawal 0.35` |
+| `src/forklift_control/config/diff_drive.yaml` | `base_controller` cho bánh cao su: trái `[front_left, rear_left]`, phải `[front_right, rear_right]`, `cmd_vel_timeout 0.3`; `wheel_radius`/`wheel_separation 0.31029`/`wheel_separation_multiplier 1.46` nạp từ `robot.yaml` |
+| `src/forklift_hardware/config/wheels_real.yaml` | Hồ sơ REAL: `rubber` (`skid`, r 0.0425, `kinematic_sum 0.2265`, 6 rad/s) và `mecanum` (r 0.05, 0.260145, 6 rad/s). YAML thường, `real.launch.py` đè lên `esp32.yaml` |
 | `src/forklift_hardware/config/ydlidar.yaml` | LiDAR thật **115200 baud**, dòng một chiều — **khác profile X4 mặc định 128000** |
 | `config/robot_measurements.yaml` | Số liệu người dùng báo cáo vs số đo thật (`pending_physical_measurements` gần như toàn `null`) |
 
@@ -352,8 +374,10 @@ trên máy phát triển. Vì vậy **không kiểm chứng lại số lượt t
   cập nhật cả launch, RViz và tài liệu.
 - `/cmd_vel` là **đầu ra nội bộ** sau command gate; teleop gửi vào
   `/cmd_vel_teleop`, Nav2 vào `/cmd_vel_nav`. Không publish trực tiếp `/cmd_vel`.
-- `mecanum_drive_controller` nhận `Twist` **unstamped** (`use_stamped_vel=false`),
-  remap từ `/cmd_vel` sang `/base_controller/reference_unstamped`.
+- Cả hai controller bánh nhận `Twist` **unstamped** (`use_stamped_vel=false`):
+  `mecanum_drive_controller` remap `/cmd_vel` → `/base_controller/reference_unstamped`;
+  `diff_drive_controller` remap `/cmd_vel` → `/base_controller/cmd_vel_unstamped` và
+  `/base_controller/odom` → odom (`ros2_control.xacro`).
 - Mọi node SIM đặt `use_sim_time=true`, node REAL `false`. Không trộn lẫn.
 - Node an toàn phải xử lý: timeout, dữ liệu cũ (stale), fault latch và **không tự
   phục hồi** — cần thao tác chủ động (reset/home lại).
@@ -406,9 +430,9 @@ SIM để bỏ qua bước nào.
    trên Pi phải khớp.
 2. **Chốt mâu thuẫn baud** — xem §6.1.
 3. Xác nhận `step_up_level`/mức điện TB6600 và cực tính `ENA` trước khi bật driver.
-4. Kiểm tra `GPIO2` (FR encoder A) và `GPIO5` (RL encoder A) là chân strapping:
-   `GPIO2` phải LOW hoặc trạng thái đúng khi vào chế độ nạp UART, nếu không tháo
-   dây tín hiệu khi nạp.
+4. FR encoder A dùng **GPIO32** (31/10/2026, chuyển dây từ GPIO2 strapping; hết phải rút dây khi
+   nạp). `GPIO5` (RL A) và `GPIO15` (công tắc dưới) vẫn là chân strapping: nạp lỗi "Wrong boot
+   mode" thì tháo dây GPIO5. Thử trên không 31/10 sau khi chuyển: 4 bánh bám PI ±0,02 rad/s.
 
 ---
 
@@ -470,6 +494,35 @@ nếu đổi thì phải đổi cả hai phía cùng lúc.
 - LiDAR 2D và Nav2 **không chứng minh** khả năng đưa càng vào pallet chính xác;
   tuyến P6 phụ thuộc trạm cố định và pallet mẫu.
 - Kết quả SIM không thay thế nghiệm thu phần cứng ở bất kỳ gate nào.
+- Kết quả SIM trước 30/10/2026 (P6, T5...) là của **bánh mecanum**. Chưa chạy lại với
+  `wheel_type:=rubber`; muốn tái hiện số cũ phải truyền `wheel_type:=mecanum`.
+
+### 6.5 Đổi bánh mecanum → bánh cao su (30/10/2026)
+
+Người dùng đã thay bánh mecanum Ø100 bằng **bánh cao su V3 Ø85**, nên xe **không đi
+ngang được nữa**. Mọi launch bringup (`sim`, `p5`, `p6`, `mapping`, `navigation`, `real`,
+`navigation_real`, `mapping_real`) có `wheel_type:=rubber|mecanum`, **mặc định `rubber`**.
+
+| Lớp | `rubber` | `mecanum` |
+|---|---|---|
+| URDF | Trụ r 0,0425; khung/LiDAR/IMU/càng hạ 7,5 mm (`ground_drop`) | Mesh CAD, như cũ |
+| SIM controller | `diff_drive_controller` (`diff_drive.yaml`) | `mecanum_drive_controller` |
+| Bridge REAL | `drive_type: skid` | `drive_type: mecanum` |
+| Command gate | `holonomic=false`, bỏ `vy` | `holonomic=true` |
+| AMCL / smoother | `DifferentialMotionModel`; smoother `vy = 0` (đè `smoother_max_lateral`) | `OmniMotionModel`; như cũ |
+| P6 SIM docking | `dock_no_strafe=true` (`dock_steer`) | strafe như cũ |
+
+- `forklift_cad.urdf.xacro` được **sửa tay** sau khi sinh (macro `wheel_friction`,
+  `rubber_wheel_body` trong `forklift.urdf.xacro`). Chạy lại
+  `scripts/cad/import_forklift_cad.py` sẽ mất phần này.
+- Với `wheel_type:=mecanum`, URDF expand ra giống bản trước khi đổi.
+- Trên Pi và laptop phải dùng **cùng** `wheel_type`.
+- Firmware không đổi vì chỉ nhận tốc độ từng bánh. Encoder/CPR giữ nguyên vì cùng motor.
+- **Chưa hiệu chuẩn**: r 0,0425 (chạy 1 m), `kinematic_sum` 0,2265/`track_factor` 1,46
+  (quay 360°: quay thiếu thì tăng), bề rộng 38 mm và khối lượng 0,12 kg của bánh.
+- Chưa chạy Gazebo/P6 với bánh cao su. Càng thấp hơn 7,5 mm có thể đổi độ khớp khe
+  pallet trong P6 SIM.
+- Phím A/D và cần trái ngang của PS4 không làm xe chạy khi dùng bánh cao su.
 
 ---
 

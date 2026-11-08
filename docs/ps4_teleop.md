@@ -53,7 +53,7 @@ giữa rồi mới đẩy cần. Cần làm lại trình tự này sau timeout h
 | Thao tác | Chức năng |
 |---|---|
 | Giữ L1 + cần trái lên/xuống | Tiến/lùi, tối đa 0,15 m/s |
-| Giữ L1 + cần trái trái/phải | Đi ngang, tối đa 0,12 m/s |
+| Giữ L1 + cần trái trái/phải | Đi ngang, tối đa 0,12 m/s (chỉ bánh mecanum; bánh cao su bị gate bỏ) |
 | Giữ L1 + cần phải trái/phải | Xoay, tối đa 0,4 rad/s |
 | Giữ L1 + D-pad lên | Nâng thêm 0,01 m mỗi lần nhấn |
 | Giữ L1 + D-pad xuống | Hạ 0,01 m mỗi lần nhấn |
@@ -70,6 +70,22 @@ Circle không yêu cầu giữ L1 và không phải E-stop vật lý.
 Nấc nâng bị giới hạn trong 0–0,115 m theo supervisor SIM hiện tại. Các khóa của
 command gate vẫn áp dụng, gồm homing, càng đang di chuyển và độ cao vận chuyển.
 Vì thế khi nâng cao, cần hạ càng về vùng vận chuyển trước khi lái.
+
+## Xe thật (ESP32)
+
+Cắm tay cầm vào **laptop** (cùng `ROS_DOMAIN_ID`/CycloneDDS với Pi), Pi chạy
+`real.launch.py` như khi dùng bàn phím. Trên laptop:
+
+```bash
+ros2 launch forklift_bringup ps4.launch.py
+```
+
+Node tự nhận chế độ nâng xung của ESP32 qua `/lift/preset_target` (giống
+`arrow_teleop`): giữ L1 + D-pad lên = nâng thêm một bậc 20.000 xung; D-pad xuống
+hoặc Triangle = hạ tới công tắc dưới (tối đa 30 s). Phải giữ L1 tới khi nâng/hạ
+xong, nhả L1 là hủy. Xe thật không cần homing trước khi lái. Không mở cùng lúc
+bàn phím và tay cầm; muốn chạy mission thì tắt tay cầm rồi bật lại chế độ tự động
+(`/command_gate/set_autonomous`).
 
 ## Ánh xạ và mất kết nối
 

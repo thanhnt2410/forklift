@@ -16,6 +16,7 @@
   <exec_depend>trajectory_msgs</exec_depend>
   <exec_depend>controller_manager</exec_depend>
   <exec_depend>mecanum_drive_controller</exec_depend>
+  <exec_depend>diff_drive_controller</exec_depend>
   <exec_depend>joint_state_broadcaster</exec_depend>
   <exec_depend>joint_trajectory_controller</exec_depend>
   <exec_depend>teleop_twist_keyboard</exec_depend>

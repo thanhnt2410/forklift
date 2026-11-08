@@ -105,9 +105,14 @@ launch mapping không tự chạy hoặc arm motor.
 
 Trong mô hình đã chuẩn hóa, `base_link` nằm ở mặt đất. Joint từ `base_link`
 đến `chassis` cao 0,0704 m; joint CAD từ chassis đến LiDAR cao 0,2242 m.
-Frame `laser_frame` vì thế ở `[0, 0, 0.2946]` m, roll/pitch/yaw đều 0,
-theo `forklift_description/config/robot.yaml`. Đây là vị trí theo mô hình;
-đối chiếu hướng quét thực tế nếu scan không khớp tường khi xe quay.
+Frame `laser_frame` ở `[0, 0, 0.2946]` m theo
+`forklift_description/config/robot.yaml`. Launch mapping thật truyền Xacro
+`laser_yaw=1.5707963267948966` (+90°), roll/pitch bằng 0: kiểm tra trên xe cho
+thấy vật phía trước hiện ở -Y, vật bên trái hiện ở +X trước khi bù góc.
+Xacro mặc định yaw 0 cho mô phỏng. Không bù góc lần nữa trong driver hoặc bằng
+static publisher khác. Với Fixed Frame `base_link`, xác nhận vật trước xe ở +X
+và vật bên trái ở +Y sau khi khởi động lại mapping. Bắt đầu bản đồ mới sau khi
+đổi góc; không dùng bản đồ đã tạo với hướng scan cũ để đánh giá bản sửa.
 
 Trước khi chạy, dừng node `lidar_test_static_tf` hoặc static publisher test
 `base_link -> laser_frame` bằng Ctrl+C tại terminal tương ứng. Không chạy thêm

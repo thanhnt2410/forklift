@@ -11,22 +11,46 @@ esp32_bridge:
     # Nominal encoder calibration: 11 PPR * x4 * 21.3, verify on output shaft.
     encoder_cpr: 937.2
     # CAD geometry remains provisional on hardware; overrides injected into gate.
+    # real.launch.py ĐÈ wheel_radius/kinematic_sum/max_wheel_speed/drive_type bằng
+    # hồ sơ trong wheels_real.yaml (wheel_type:=rubber mặc định). Giá trị dưới đây
+    # chỉ dùng khi chạy bridge trực tiếp không qua launch (bánh mecanum cũ).
+    drive_type: mecanum
     wheel_radius: 0.05
     kinematic_sum: 0.260145
     # Keep below the MCU's 10 rad/s limit, not the SIM controller's 12 rad/s.
     # 6 rad/s * 0.05 m = 0.30 m/s for pure translation.
     max_wheel_speed: 6.0
-    state_timeout: 0.6
+    state_timeout: 1.0
+    # Clear a host-only telemetry timeout after 2s of continuous valid feedback.
+    telemetry_auto_recover: true
+    telemetry_recovery_duration: 2.0
+    # 02/11/2026: Wi-Fi nghẽn làm /cmd_vel khựng > command_timeout -> ROS_COMMAND_TIMEOUT
+    # latch và mission bị reject. Tự xóa sau 1 s lệnh 0 tươi liên tục + bánh đứng yên.
+    command_auto_recover: true
+    command_recovery_duration: 1.0
+    # Sau khi TELEMETRY/COMMAND_TIMEOUT tự hồi: tự gửi D rồi auto arm (thay /esp32/arm
+    # false -> true). false = giữ DISARMED, người vận hành tự arm. Lỗi MCU, E-stop,
+    # ACK/ARM_TIMEOUT, MCU_REBOOT vẫn latch, không tự arm.
+    auto_rearm: true
+    # Không nhận byte nào trong 3 s (hoặc USB rớt) -> đóng/mở lại cổng by-path.
+    # Rút cắm USB ESP32 không cần chạy lại launch; vẫn DISARMED. 0 = tắt. Phải > state_timeout.
+    serial_reopen_after: 3.0
+    # Request MCU stop when host faults; USB loss still needs firmware protection.
+    stop_on_fault: true
     command_timeout: 0.6
     ack_timeout: 0.5
-    # Manual pulse lift: R adds 2000 pulses; F/H lowers up to 3s or bottom switch.
+    # Manual pulse lift: R adds 20000 pulses; F/H lowers up to 30s or bottom switch.
     # H/U commands execute once on the MCU; no home required before raising.
+    # Phải khớp firmware board_config.h (lift_raise_steps = lift_max_steps = 20000).
     lift_preset_mode: true
-    lift_raise_steps: 2000
-    lift_max_steps: 2000  # Legacy goal-token scale, not an absolute travel limit.
+    lift_raise_steps: 20000
+    lift_max_steps: 20000  # Legacy goal-token scale, not an absolute travel limit.
     # Provisional UART coordinate conversion only; measure travel and revise later.
+    # Goal nâng hợp lệ duy nhất = 20000/200000 = 0.1: mã lệnh "nâng 20000 xung",
+    # CHƯA hiệu chuẩn, không có nghĩa 10 cm. Mission REAL gửi đúng giá trị này
+    # (navigation_real.launch.py carry_joint_position).
     lift_steps_per_m: 200000.0
-    lift_max_height: 0.01
+    lift_max_height: 0.1
     lift_tolerance: 0.002
     # Disable when a future real IMU/EKF node owns odom -> base_link.
     publish_odom_tf: true

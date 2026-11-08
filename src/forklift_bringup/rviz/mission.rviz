@@ -63,6 +63,40 @@ Visualization Manager:
       Value: /map
       Durability Policy: Transient Local
     Alpha: 0.6
+  # AMCL (chỉ hiển thị): đám hạt gọn quanh xe = định vị chắc; elip nhỏ = sai số nhỏ.
+  - Class: nav2_rviz_plugins/ParticleCloud
+    Name: AMCL particles
+    Enabled: true
+    Topic:
+      Value: /particle_cloud
+      Reliability Policy: Best Effort
+    Color: 255; 140; 0
+    Shape: Arrow (Flat)
+    Arrow Length: 0.08
+  - Class: rviz_default_plugins/PoseWithCovariance
+    Name: AMCL pose
+    Enabled: true
+    Topic:
+      Value: /amcl_pose
+      Durability Policy: Transient Local
+    Shape: Arrow
+    Covariance:
+      Value: true
+      Position:
+        Value: true
+        Color: 255; 60; 200
+        Alpha: 0.35
+        Scale: 1
+      Orientation:
+        Value: true
+        Alpha: 0.5
+        Scale: 1
+  # Bước 2 né vật: xanh = vật tĩnh, đỏ = vật động (mũi tên = vị trí sau 1 s), vàng = chưa rõ.
+  - Class: rviz_default_plugins/MarkerArray
+    Name: Obstacles (static/dynamic)
+    Enabled: true
+    Topic:
+      Value: /obstacles/markers
   - Class: rviz_default_plugins/Path
     Name: Planner candidates (debug)
     Enabled: false

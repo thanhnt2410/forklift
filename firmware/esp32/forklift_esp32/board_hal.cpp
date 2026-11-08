@@ -115,8 +115,9 @@ bool initialize() {
     pinMode(estop_pin,INPUT_PULLUP);attachInterrupt(estop_pin,emergency_interrupt,CHANGE);
   }
   if (enable_lift) {
-    pinMode(lower_pin,INPUT_PULLUP);
-    if (upper_pin >= 0) pinMode(upper_pin,INPUT_PULLUP);
+    // GPIO34-39 chỉ đọc, không có pull-up trong (IDF báo lỗi nếu bật): dùng điện trở ngoài.
+    pinMode(lower_pin,lower_pin >= 34 ? INPUT : INPUT_PULLUP);
+    if (upper_pin >= 0) pinMode(upper_pin,upper_pin >= 34 ? INPUT : INPUT_PULLUP);
     pinMode(step_pin,OUTPUT); digitalWrite(step_pin,LOW);
     pinMode(direction_pin,OUTPUT); digitalWrite(direction_pin,LOW);
     if (lift_enable_pin >= 0) {

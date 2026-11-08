@@ -133,7 +133,9 @@ class Check:
         # Transport through the same A/B topics used by the RViz tools.
         for key,value in [('pick',a),('drop',b)]:
             self.publishers[key].publish(value);self.spin(.3)
-        self.mark('both_rviz_inputs_received',set(json.loads(self.data['input'].data)['poses'])=={'pick','drop'})
+        # mission_input giữ hàng đợi ô: một cặp là picks=drops=1.
+        status=json.loads(self.data['input'].data)
+        self.mark('both_rviz_inputs_received',status['picks']==1 and status['drops']==1)
         self.mark('start_service_accepted',self.call(Trigger,'/mission/start',Trigger.Request()).success)
         start=len(self.rows);end=time.monotonic()+440.;injected=False
         automatic_faults=('nominal','rotated','user_drop','early_direct','early_fallback','moved_pallet','missing_pallet','invalid_pick','invalid_drop')

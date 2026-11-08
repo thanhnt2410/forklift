@@ -50,6 +50,22 @@ def stable_face(samples, position_tolerance=.025, yaw_tolerance=.05):
     return result
 
 
+def face_spread(samples):
+    """(lech vi tri lon nhat, lech goc lon nhat) cua cac mau so voi trung vi.
+
+    Chỉ để chẩn đoán: stable_face() chỉ nói đạt/không đạt, còn khi DETECT_PICK thất bại
+    cần biết rung bao nhiêu và rung ở trục nào (vị trí hay góc).
+    """
+    if not samples:
+        return (float('inf'), float('inf'))
+    a = samples[0][2]
+    mx = statistics.median(s[0] for s in samples)
+    my = statistics.median(s[1] for s in samples)
+    ma = wrap(a + statistics.median(wrap(s[2]-a) for s in samples))
+    return (max(math.hypot(s[0]-mx, s[1]-my) for s in samples),
+            max(abs(wrap(s[2]-ma)) for s in samples))
+
+
 def refined_approach(face, distance, laser_x=0.):
     return compose(face, [-distance-laser_x, 0., 0.])
 

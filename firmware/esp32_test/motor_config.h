@@ -10,14 +10,15 @@ const char * const MOTOR_NAME[MOTOR_COUNT] = {"FL", "FR", "RL", "RR"};
 // Da doi FL/RL theo thu nghiem: GPIO25/26 = truoc trai, 23/22 = sau trai.
 const int RPWM_PIN[MOTOR_COUNT] = {25, 18, 23, 21};
 const int LPWM_PIN[MOTOR_COUNT] = {26, 19, 22, 27};
-const int ENCODER_A_PIN[MOTOR_COUNT] = {34, 2, 5, 16};
+// FR A: GPIO32 (31/10/2026, khớp firmware chính; GPIO2 strapping phải rút dây khi nạp).
+const int ENCODER_A_PIN[MOTOR_COUNT] = {34, 32, 5, 16};
 const int ENCODER_B_PIN[MOTOR_COUNT] = {35, 14, 17, 4};
 
 // Lenh PWM duong = quay tien, theo ket qua test tung banh.
 const int MOTOR_SIGN[MOTOR_COUNT] = {1, -1, 1, -1};
 // RR truoc day lui nhung dem duong: dao ca dau motor va encoder.
 // FR chi dao dong 0/1: giu dau tam thoi, kiem tra day A/B roi test lai.
-const int ENCODER_SIGN[MOTOR_COUNT] = {1, 1, 1, -1};
+const int ENCODER_SIGN[MOTOR_COUNT] = {1, -1, 1, -1};
 
 const unsigned long SERIAL_BAUD = 115200;
 const unsigned long STATUS_INTERVAL_MS = 250;

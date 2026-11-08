@@ -1,0 +1,28 @@
+# Bánh cao su (wheel_type:=rubber): sim.launch.py thay mục base_controller của
+# controllers.yaml bằng file này. Lái skid-steer 4 bánh: hai bánh cùng bên nhận
+# cùng tốc độ, không có vy.
+# wheel_radius, wheel_separation, wheel_separation_multiplier được nạp từ
+# forklift_description/config/robot.yaml (wheel_types.rubber) lúc launch.
+base_controller:
+  ros__parameters:
+    left_wheel_names: [front_left_wheel_joint, rear_left_wheel_joint]
+    right_wheel_names: [front_right_wheel_joint, rear_right_wheel_joint]
+    use_stamped_vel: false
+    # Cùng ngưỡng reference_timeout của mecanum_drive_controller.
+    cmd_vel_timeout: 0.3
+    publish_rate: 50.0
+    base_frame_id: base_link
+    odom_frame_id: odom
+    enable_odom_tf: true
+    open_loop: false
+    position_feedback: true
+    velocity_rolling_window_size: 10
+    # Skid-steer trượt ngang khi quay: tin wz bánh ít hơn mecanum (0,04) để EKF
+    # dựa nhiều vào gyro. vy = 0 theo ràng buộc không đi ngang.
+    pose_covariance_diagonal: [0.01, 0.01, 1000.0, 1000.0, 1000.0, 0.1]
+    twist_covariance_diagonal: [0.02, 0.001, 1000.0, 1000.0, 1000.0, 0.2]
+    # Gate đã giới hạn tốc độ/gia tốc; controller không giới hạn thêm.
+    linear.x.has_velocity_limits: false
+    linear.x.has_acceleration_limits: false
+    angular.z.has_velocity_limits: false
+    angular.z.has_acceleration_limits: false

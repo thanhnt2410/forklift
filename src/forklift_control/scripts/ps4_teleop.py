@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: Apache-2.0
-"""PS4 / SDL teleop for the existing SIM command gate and lift actions."""
+"""PS4 / SDL teleop for the command gate and lift actions (SIM and ESP32 REAL)."""
 import math
 import time
 
@@ -13,6 +13,7 @@ from rclpy.signals import SignalHandlerOptions
 from geometry_msgs.msg import Twist
 from nav_msgs.msg import Odometry
 from sensor_msgs.msg import Joy
+from std_msgs.msg import Float64
 from std_srvs.srv import SetBool, Trigger
 from forklift_interfaces.action import HomeLift, MoveLift
 from forklift_interfaces.msg import LiftState
@@ -98,14 +99,27 @@ class Ps4Teleop(Node):
         self.pending = self.cancel_requested = False
         self.closing = False
         self.lift_handle = None
+        # Xe thật (esp32_bridge, lift_preset_mode): /lift/preset_target latched có giá trị.
+        # Bridge coi MoveLift height != 0 là "nâng thêm một bậc xung", height == 0 là hạ
+        # tới công tắc -> D-pad xuống phải gửi HomeLift, không phải height - lift_step
+        # (sẽ thành NÂNG). Giống arrow_teleop. Không có tin = SIM chế độ mét như cũ.
+        self.preset_target = None
+        self.create_subscription(Float64, '/lift/preset_target', self.pulse_preset,
+                                 QoSProfile(depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL))
         self.create_subscription(Joy, '/joy', self.joy,
                                  QoSProfile(depth=1, reliability=ReliabilityPolicy.BEST_EFFORT))
         self.create_subscription(LiftState, '/lift/state', self.lift_state,
                                  QoSProfile(depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL))
         self.create_subscription(Odometry, '/odom', self.odometry, 10)
         self.create_timer(.02, self.tick, clock=Clock())
-        self.get_logger().info('PS4 SIM teleop: release L1 and center sticks, then hold L1 to enable. '
+        self.get_logger().info('PS4 teleop: release L1 and center sticks, then hold L1 to enable. '
                                'Circle stops; D-pad up/down moves lift; Triangle homes.')
+
+    def pulse_preset(self, msg):
+        if math.isfinite(msg.data) and msg.data > 0.:
+            self.preset_target = msg.data
+            self.get_logger().info('ESP32 pulse lift: D-pad up adds one pulse increment; '
+                                   'D-pad down/Triangle lower for up to 30 s or until the bottom switch.')
 
     def lift_state(self, msg):
         self.lift, self.lift_stamp = msg, time.monotonic()
@@ -147,8 +161,10 @@ class Ps4Teleop(Node):
             self.get_logger().warning('Lift button ignored: center sticks and wait for fresh, stationary lift/base.')
             return
         kind = actions.pop()
-        if kind == 'home':
-            client, goal = self.home, HomeLift.Goal(timeout=60.)
+        if kind == 'home' or (kind == 'down' and self.preset_target is not None):
+            client, goal = self.home, HomeLift.Goal(timeout=30. if self.preset_target is not None else 60.)
+        elif self.preset_target is not None:
+            client, goal = self.move, MoveLift.Goal(height=self.preset_target, timeout=15.)
         else:
             if not self.lift.homed:
                 self.get_logger().warning('Home the lift before using D-pad up/down.')
@@ -214,8 +230,11 @@ class Ps4Teleop(Node):
         if not self.pad.enabled(now) and self.pending and not self.cancel_requested:
             self.stop_lift()
         out = Twist()
-        if (self.manual and self.pad.enabled(now) and not self.pending and self.lift_fresh(now) and
-                self.lift.homed and not self.lift.moving and not self.lift.inhibited):
+        # SIM đòi home trước khi lái; ESP32 thì không (giống bàn phím: vừa bật ESP32 báo
+        # homed=0 cho tới lần hạ đầu, command gate vẫn khóa theo độ cao/càng đang chạy).
+        homed_ok = self.lift_fresh(now) and (self.lift.homed or self.preset_target is not None)
+        if (self.manual and self.pad.enabled(now) and not self.pending and homed_ok and
+                not self.lift.moving and not self.lift.inhibited):
             out.linear.x = self.pad.values[0] * self.p['speed_forward']
             out.linear.y = self.pad.values[1] * self.p['speed_lateral']
             out.angular.z = self.pad.values[2] * self.p['speed_yaw']

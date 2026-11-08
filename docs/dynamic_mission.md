@@ -14,15 +14,32 @@ ros2 launch forklift_bringup p6.launch.py
 
 Chờ `/navigation/status` là `READY` và càng đã homing. Trên RViz:
 
-1. Chọn **Pick A** (phím A), click–kéo một pose **đứng trước pallet**, hướng càng
-   vào pallet. Mặc định khoảng cách từ LiDAR tới mặt nhận dạng là 0,65 m.
-2. Chọn **Drop B** (phím B), click–kéo **pose robot khi hạ hàng**, không phải tâm
-   pallet. Chừa vùng trống cho hàng và đoạn lùi rút càng sau khi hạ.
-3. Kiểm tra hai mũi tên A/B, rồi bấm **Run mission** trong panel **Pallet mission**.
-4. **Stop mission** dừng nhiệm vụ, giữ vị trí cơ cấu nâng. **Clear A/B** xóa lựa
-   chọn khi không có nhiệm vụ đang chạy.
+1. Chọn **Pick slot** (phím A), click–kéo một pose **đứng trước pallet**, hướng càng
+   vào pallet. Mặc định khoảng cách từ LiDAR tới mặt nhận dạng là 0,65 m. Với
+   `pick_pose_mode:=pallet` thì bấm thẳng lên **mặt pallet**, xe tự tính điểm đứng.
+   Mỗi lần bấm là **thêm một ô** vào hàng đợi, đánh số 1, 2, 3.
+2. Chọn **Drop slot** (phím B), click–kéo **pose robot khi hạ hàng**, không phải tâm
+   pallet. Chừa vùng trống cho hàng và đoạn lùi rút càng sau khi hạ. Các ô đặt
+   đánh số tiếp theo: 4, 5, 6.
+3. Kiểm tra khung ô và số trên RViz, rồi bấm **Run mission** trong panel
+   **Pallet mission**. Xe chạy **lần lượt từng cặp**: ô 1 → ô 4, ô 2 → ô 5,
+   ô 3 → ô 6. Mỗi chuyến là một goal `pick_and_place` riêng; goal sau chỉ gửi khi
+   goal trước báo `SUCCEEDED`. Một chuyến lỗi thì cả chuỗi dừng tại đó.
+4. **Stop mission** dừng nhiệm vụ, giữ vị trí cơ cấu nâng. **Clear slots** xóa toàn
+   bộ ô khi không có nhiệm vụ đang chạy. **Save slots** / **Load slots** ghi và nạp
+   lại danh sách ô (mặc định `~/.ros/forklift_slots.yaml`) để lần sau khỏi bấm lại.
 
-Hai đầu vào phải thuộc hệ `map`, có quaternion hợp lệ và cách nhau ít nhất 0,30 m.
+Mọi pose phải thuộc hệ `map`, có quaternion hợp lệ; ô lấy và ô đặt của cùng một
+chuyến phải cách nhau ít nhất 0,30 m. Số ô lấy phải bằng số ô đặt mới chạy được.
+
+Khung ô vẽ trên RViz **chỉ là hiển thị**: tâm ô suy ra từ pose đã bấm cộng
+`staging_distance` (ô lấy, chế độ staging) hoặc `inserted_distance` (ô đặt), nên
+hai tham số này của `mission.launch.py` phải khớp `stations.yaml`, nếu không khung
+ô vẽ lệch so với chỗ pallet thật sự nằm. Hợp đồng `RunMission` không đổi: vẫn là
+một cặp `pick_pose`/`drop_pose` mỗi goal.
+
+Chuỗi nhiều chuyến nên chạy với `return_to_pick:=false` (mặc định): thả xong xe
+dừng ngay tại chỗ và bắt đầu chuyến kế từ đó, không mất thời gian quay về điểm cũ.
 
 Không dùng nút Nav2 Goal để gửi chặng thứ hai khi nhiệm vụ đang chạy. Nhánh mới
 sử dụng cách lập tuyến của code cũ: `ComputePathToPose` → công bố toàn tuyến →

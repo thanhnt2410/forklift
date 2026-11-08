@@ -9,6 +9,10 @@
 // C,1,0,0,0,0,1 : banh truoc trai 1 rad/s, chi can gui mot lan.
 // D: dung tat ca. H: ha toi da 3s/cong tac. U: nang them 2000 step.
 // R: xoa loi khi da dung (khac phim R tren ban phim ROS).
+// P,0.2,0,0,0 : BAN THU (ke banh) - duty tho 20% banh truoc trai, bo qua PI.
+//   Khi dang P, them dong V,ms,vFL,vFR,vRL,vRR,dFL,dFR,dRL,dRR (rad/s, duty).
+//   P,0,0,0,0 hoac D de dung. Khong dung P khi bridge ROS dang ket noi.
+// G,0.06,0.2,0 : BAN THU - doi Kp,Ki,Kd ca 4 banh khi dang dung; mat khi reset.
 // Thu tu banh: truoc trai, truoc phai, sau trai, sau phai.
 
 forklift_mcu::Config motorConfig = forklift_board::control_config();
@@ -78,6 +82,14 @@ void sendStatus() {
   // Chi gui khi bo dem du cho, tranh lam tre vong dieu khien.
   if (length > 0 && Serial.availableForWrite() >= int(length)) {
     Serial.write(reinterpret_cast<const uint8_t *>(line), length);
+  }
+
+  // Dong do ban thu chi co khi dang chay lenh P (simple_serial).
+  if (forklift_board::simple_serial) {
+    length = controller.bench_telemetry(esp_timer_get_time(), line, sizeof(line));
+    if (length > 0 && Serial.availableForWrite() >= int(length)) {
+      Serial.write(reinterpret_cast<const uint8_t *>(line), length);
+    }
   }
 }
 

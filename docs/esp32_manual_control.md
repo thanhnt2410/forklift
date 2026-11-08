@@ -8,7 +8,7 @@ PID hiện tại để tuning: Kp=0,08, Ki=0,12, Kd=0,05; PWM tối đa 50%, MCU
 Firmware khởi động disarm; ROS launch mặc định tự arm sau khi kiểm tra telemetry
 và nhận zero từ command gate, không cần gọi service. Serial Monitor có thể gửi thẳng
 `C,...,1`, không cần gửi `D` trước hoặc gửi lệnh lặp. Profile không xác nhận mức điện/đấu dây.
-Nâng hiện dùng **một công tắc NC dưới GPIO32**, điều khiển theo số xung, chưa
+Nâng hiện dùng **một công tắc NC dưới GPIO15**, điều khiển theo số xung, chưa
 hiệu chuẩn quãng đường thực. Không có công tắc trên hoặc phản hồi E-stop GPIO.
 
 
@@ -125,30 +125,45 @@ Không chạy launch SIM, node tay cầm hay backend khác cùng ROS domain vớ
 [esp32.yaml](../src/forklift_hardware/config/esp32.yaml) dùng baud **115200, 8N1**.
 Hình học CAD và CPR **937,2** là giá trị ban đầu, chưa phải hiệu chuẩn xe thật.
 `max_wheel_speed: 6.0` phải khớp hoặc thấp hơn giới hạn trong firmware (10 rad/s).
-Bàn phím mặc định tiến/lùi/đi ngang 0,30 m/s; bánh bán kính 0,05 m cần 6 rad/s
-để nhận đủ lệnh này khi tịnh tiến. Cần cập nhật YAML, nạp firmware và khởi động
-lại bridge lẫn bàn phím để áp dụng; tốc độ thực còn phụ thuộc PI, tải và trần PWM.
-Với bánh bán kính 0,05 m, chuyển động thẳng bị giới hạn khoảng **0,30 m/s**;
-chuyển động kết hợp được scale chung bốn bánh để giữ hướng vận tốc.
+Bàn phím mặc định tiến/lùi/đi ngang 0,30 m/s. Cần cập nhật YAML, nạp firmware và
+khởi động lại bridge lẫn bàn phím để áp dụng; tốc độ thực còn phụ thuộc PI, tải và
+trần PWM. Chuyển động kết hợp được scale chung bốn bánh để giữ hướng vận tốc.
+
+`real.launch.py wheel_type:=rubber|mecanum` (mặc định `rubber`) chọn hồ sơ bánh trong
+[wheels_real.yaml](../src/forklift_hardware/config/wheels_real.yaml). Hồ sơ này đè
+`drive_type`, `wheel_radius`, `kinematic_sum` và `max_wheel_speed` của `esp32.yaml`
+cho cả bridge lẫn command gate:
+
+| Hồ sơ | `drive_type` | r | `kinematic_sum` | Tịnh tiến tối đa ở 6 rad/s |
+|---|---|---|---|---|
+| `rubber`, cao su V3 Ø85 | `skid` | 0,0425 m | 0,2265 (nửa vết hiệu dụng) | **0,255 m/s**, không đi ngang |
+| `mecanum`, Ø100 | `mecanum` | 0,05 m | 0,260145 (lx + ly) | 0,30 m/s |
+
+Với `skid`, bridge tính lệnh bánh với vy = 0 và odometry luôn báo vy = 0. Phương sai
+ωz của odometry bánh được tăng lên để EKF dựa vào gyro. Gate chạy với
+`holonomic=false` và bỏ mọi vy. Hồ sơ cao su **chưa hiệu chuẩn**: chạy thẳng 1 m để
+chỉnh `wheel_radius`; quay 360° để chỉnh `kinematic_sum`, nếu xe quay thiếu so với
+lệnh thì tăng giá trị này.
 
 Firmware dùng dấu `motor_sign` và `encoder_sign` trong
 [board_config.h](../firmware/esp32/forklift_esp32/board_config.h). Không đảo dấu
 lần nữa trong bridge. Kiểm tra chiều từng bánh khi hoàn tất cấu hình thử bàn.
 Sau test từng motor, cấu hình đã đồng bộ với `firmware/esp32_test`: PWM theo thứ tự
 FL/FR/RL/RR là `25/26`, `18/19`, `23/22`, `21/27`; dấu motor `{1,-1,1,-1}`,
-dấu encoder `{1,1,1,-1}`. Chân encoder là `34/35`, `2/14`, `5/17`, `16/4`;
-encoder A của FR đã chuyển từ GPIO12 sang GPIO2.
+dấu encoder `{1,-1,1,-1}` (FR đổi −1 ngày 30/10/2026 sau khi sửa dây). Chân encoder là `34/35`, `2/14`, `5/17`, `16/4`;
+encoder A của FR: GPIO12 → GPIO2 (thử GPIO32 rồi quay về GPIO2 ngày 30/10/2026 vì dây
+thật vẫn cắm GPIO2).
 
 Profile mặc định là `lift_preset_mode: true`, `lift_raise_steps: 2000`,
-`lift_max_steps: 2000`. Giá trị max này giữ thang goal ROS cũ, không phải giới hạn
+`lift_max_steps: 20000`. Giá trị max này giữ thang goal ROS cũ, không phải giới hạn
 tổng số xung nâng. Firmware và ROS phải dùng cùng `lift_raise_steps`.
-Nối **COM công tắc → GND, NC → GPIO32**. Input kéo lên 3,3 V nội; trạng thái
-bình thường LOW, chạm đáy/hở HIGH. Không nối GPIO32 lên 5 V.
+Nối **COM công tắc → GND, NC → GPIO15**. Input kéo lên 3,3 V nội; trạng thái
+bình thường LOW, chạm đáy/hở HIGH. Không nối GPIO15 lên 5 V.
 
 Sau khi arm có thể lái và nâng ngay, không cần home trước.
-**F hoặc H** hạ tối đa 3 giây, hoặc dừng sớm khi công tắc tác động. Nếu công tắc
+**F hoặc H** hạ tối đa 30 giây, hoặc dừng sớm khi công tắc tác động. Nếu công tắc
 đã tác động thì không hạ. Không còn pha đi lên nhả công tắc/chạm lại, không báo
-fault 32 vì hết 3 giây. **R** nâng thêm 2.000 xung từ vị trí hiện tại mỗi lần bấm;
+fault 32 vì hết 30 giây. **R** nâng thêm 20.000 xung từ vị trí hiện tại mỗi lần bấm;
 nhả rồi bấm lại để nâng thêm. Giữ phím không tự xếp hàng các lần nâng.
 Space/S dừng giữa chừng. Không tự chạy càng khi vừa mở kết nối.
 Chỉ khi hạ chạm công tắc mới đặt bước về 0 và `homed=1`; dừng do hết thời gian
@@ -270,7 +285,7 @@ Chọn bộ gõ tiếng Anh, focus terminal bàn phím và chờ `Manual mode re
 |---|---|
 | ↑ / ↓ | Tiến / lùi |
 | ← / → | Quay trái / phải |
-| A / D, hoặc Shift + ← / → | Đi ngang trái / phải |
+| A / D, hoặc Shift + ← / → | Đi ngang trái / phải (chỉ `wheel_type:=mecanum`; bánh cao su: gate bỏ, log `STRAFE_IGNORED`) |
 | H / Home, F / Page Down | Hạ tối đa 3 s hoặc tới công tắc dưới |
 | R / Page Up | Nâng thêm 2.000 xung, xe phải dừng; không cần home |
 | Space / S | Gửi zero bánh và D dừng/hủy nâng |
@@ -301,13 +316,15 @@ ros2 service call /esp32/reset std_srvs/srv/Trigger '{}'
 Phản hồi service chỉ xác nhận **đã gửi R**. Chờ telemetry fault=0, DISARMED và
 host=OK trước khi arm lại. Reset bị firmware từ chối sẽ không được coi là hoàn tất.
 
-Theo lựa chọn đã có của dự án, **fault/mất liên lạc không tự ngắt PWM bánh**.
-Firmware không còn watchdog lệnh Serial: khi không có lệnh mới, PID tiếp tục
-điều khiển theo mục tiêu cuối. Timeout phía ROS bridge vẫn giữ nguyên.
-Khi telemetry/lệnh ROS mất quá hạn hoặc MCU báo lỗi/khởi động lại, bridge khóa phiên điều
-khiển, ngừng tự gửi frame; không tự gửi D/C-disabled để thay đổi chính sách giữ
-PWM của firmware. PWM thực tế có thể vẫn còn cho đến khi ngắt nguồn hoặc lệnh D
-chủ động được nhận. `DISARMED` phía host khi lỗi **không xác nhận bánh đã dừng**.
+Firmware hiện không có watchdog lệnh Serial: khi không có lệnh mới, PID tiếp tục
+điều khiển theo mục tiêu cuối. Bridge mặc định `stop_on_fault=true`: khi telemetry/
+lệnh ROS mất quá hạn hoặc MCU báo lỗi/khởi động lại, bridge khóa phiên điều khiển
+và gửi một lệnh `D` nếu cổng serial còn hoạt động. Lệnh này dừng bánh và nâng;
+lỗi host vẫn được giữ theo chính sách phục hồi, không tự arm hoặc phát lại lệnh cũ.
+Bridge theo dõi telemetry sau lệnh D để xác nhận MCU đã dừng/disarm.
+Nếu cổng đã hỏng/rút USB, MCU treo hoặc không nhận được D, PWM có thể vẫn còn;
+phải ngắt nguồn động lực thủ công. `DISARMED` phía host khi lỗi **không xác nhận
+bánh đã dừng**. `stop_on_fault=false` khôi phục profile cũ không gửi D khi lỗi.
 Cơ cấu nâng vẫn dừng khi lỗi phần cứng, quá hạn vòng điều khiển hoặc quá hạn
 homing; mất lệnh Serial không còn làm dừng nâng.
 
@@ -318,6 +335,22 @@ báo lỗi theo chính sách firmware; E-stop ROS không thay cho mạch ngắt 
 Nối lại telemetry không tự tiếp tục lệnh cũ. Cần dừng chủ động, reset nếu MCU có
 fault rồi arm lại. Nếu USB bị rút, lỗi đọc/ghi hoặc ghi dở frame: khởi động lại
 launch sau khi nối lại. Không tự reconnect hoặc mở khóa firmware.
+
+Bridge tự xóa riêng `TELEMETRY_TIMEOUT` khi nhận telemetry hợp lệ liên tục ít nhất
+`telemetry_recovery_duration` (mặc định 2 giây), mỗi khoảng nhận nhỏ hơn
+`state_timeout`, cùng boot MCU, không có lỗi MCU/E-stop hoặc lỗi cổng serial.
+Log `TELEMETRY_RECOVERED` xác nhận `host=OK`; bridge vẫn DISARMED, không phát lại
+lệnh cũ và không tự arm, kể cả `auto_arm=true`. Khi lệnh D tự động đã được xác
+nhận và bánh đứng yên có thể arm lại; nếu chưa xác nhận, gửi disarm chủ động
+trước. Không cần restart launch chỉ vì telemetry timeout thoáng qua.
+Đặt `telemetry_auto_recover=false` để giữ lỗi như trước. Gói hỏng/bị loại không
+được tính vào thời gian ổn định; khoảng mất telemetry mới bắt đầu đếm lại.
+
+Các lỗi khác không tự xóa: `ROS_COMMAND_TIMEOUT`, `ACK_TIMEOUT` (v2),
+`ARM_TIMEOUT`, `MCU_REBOOT`, `MCU_FAULT_*` và `MCU_ESTOP`. Sau khi xử lý nguyên
+nhân, dừng chủ động, reset MCU nếu cần rồi arm lại; không nhất thiết restart
+launch. Riêng `UART_READ`/`UART_WRITE` đặt `transport_broken`, cần khởi động lại
+bridge để mở lại cổng USB. Node chết/lỗi mở cổng cũng cần chạy lại launch.
 
 `/esp32/status` và `/diagnostics` hiển thị trạng thái, số xung, bộ đếm RX và lỗi và lỗi
 host như `TELEMETRY_TIMEOUT`, `ROS_COMMAND_TIMEOUT`, `MCU_REBOOT` (ACK_TIMEOUT chỉ ở v2 cũ).
@@ -351,7 +384,7 @@ Trong mục `forklift_hardware/esp32`:
 
 Sau 5 giây chưa có telemetry hợp lệ, terminal launch sẽ báo các bộ đếm này.
 Nếu `rx_bytes` vẫn bằng 0, nhấn EN/RESET một lần (không giữ BOOT), xem bộ đếm
-có tăng không. Encoder A FR hiện dùng GPIO2, không dùng GPIO12. GPIO2 cần LOW
-hoặc thả nổi khi vào chế độ nạp UART; chỉ thay đổi dây khi đã tắt nguồn.
+có tăng không. Encoder A FR dùng GPIO2 (chân strapping): **rút dây GPIO2 trước khi
+nạp và cắm lại sau khi nạp**; chỉ thay đổi dây khi đã tắt nguồn.
 Riêng thay đổi RTS/DTR không cần nạp lại; đổi chân encoder cần nạp lại firmware
 và chuyển dây tương ứng.

@@ -1,0 +1,7 @@
+image: home_probability.png
+mode: scale
+resolution: 0.04
+origin: [-3.95, -4.17, 0]
+negate: 0
+occupied_thresh: 0.99
+free_thresh: 0.01

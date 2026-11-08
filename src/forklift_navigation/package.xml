@@ -16,7 +16,7 @@
   <depend>nav2_map_server</depend>
   <depend>rclcpp_lifecycle</depend>
   <exec_depend>nav2_lifecycle_manager</exec_depend>
-  <exec_depend>rclpy</exec_depend><exec_depend>tf2_ros_py</exec_depend><exec_depend>tf2_msgs</exec_depend>
+  <exec_depend>rclpy</exec_depend><exec_depend>tf2_ros_py</exec_depend><exec_depend>visualization_msgs</exec_depend><exec_depend>tf2_msgs</exec_depend><exec_depend>action_msgs</exec_depend>
   <depend>nav_msgs</depend><depend>geometry_msgs</depend>
   <exec_depend>sensor_msgs</exec_depend><exec_depend>std_msgs</exec_depend><exec_depend>std_srvs</exec_depend>
   <exec_depend>launch_ros</exec_depend><exec_depend>python3-yaml</exec_depend>

@@ -5,7 +5,7 @@ from pathlib import Path
 import xacro
 from ament_index_python.packages import get_package_share_directory as share
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, EmitEvent
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, EmitEvent, OpaqueFunction
 from launch.events import Shutdown
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.conditions import IfCondition
@@ -14,9 +14,23 @@ from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
 
 
-def generate_launch_description():
+def robot_description(context):
     description = Path(share('forklift_description')) / 'urdf/forklift.urdf.xacro'
-    robot = xacro.process_file(str(description)).toxml()
+    # Physical scan check: front obstacle appeared at -Y, left at +X.
+    # Rotate laser_frame +90 degrees relative to base_link to align both axes.
+    # wheel_type đổi bán kính bánh và độ cao LiDAR trong TF.
+    robot = xacro.process_file(str(description),
+                              mappings={'laser_yaw': '1.5707963267948966',
+                                        'wheel_type': LaunchConfiguration('wheel_type').perform(context)}).toxml()
+    common = {'use_sim_time': LaunchConfiguration('use_sim_time').perform(context) == 'true'}
+    # URDF sensor/control tags are inert in robot_state_publisher: it only
+    # publishes the CAD transforms and consumes hardware /joint_states.
+    return [Node(package='robot_state_publisher', executable='robot_state_publisher',
+                 parameters=[common, {'robot_description': robot}], output='screen',
+                 condition=IfCondition(LaunchConfiguration('publish_robot_description')))]
+
+
+def generate_launch_description():
     common = {'use_sim_time': ParameterValue(LaunchConfiguration('use_sim_time'), value_type=bool)}
     return LaunchDescription([
         DeclareLaunchArgument('rviz', default_value='true', choices=['true', 'false']),
@@ -28,11 +42,8 @@ def generate_launch_description():
         DeclareLaunchArgument(
             'slam_params_file',
             default_value=str(Path(share('forklift_navigation')) / 'config/slam.yaml')),
-        # URDF sensor/control tags are inert in robot_state_publisher: it only
-        # publishes the CAD transforms and consumes hardware /joint_states.
-        Node(package='robot_state_publisher', executable='robot_state_publisher',
-             parameters=[common, {'robot_description': robot}], output='screen',
-             condition=IfCondition(LaunchConfiguration('publish_robot_description'))),
+        DeclareLaunchArgument('wheel_type', default_value='rubber', choices=['rubber', 'mecanum']),
+        OpaqueFunction(function=robot_description),
         Node(package='forklift_navigation', executable='mapping_scan_filter.py',
              parameters=[common, {'max_scan_age': ParameterValue(
                  LaunchConfiguration('max_scan_age'), value_type=float),

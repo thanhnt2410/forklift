@@ -136,6 +136,24 @@ bool parse_simple_command(const char * input, size_t size, double steps_per_m, C
     fields[fieldCount++] = text + i + 1;
   }
 
+  // P,dFL,dFR,dRL,dRR: duty tho cho ban thu, |d| <= 1; Controller con kep theo max_duty.
+  if (fieldCount == 5 && std::strcmp(fields[0], "P") == 0) {
+    next.operation = Operation::Duty;
+    for (size_t wheel = 0; wheel < 4; wheel++) {
+      if (!real_value(fields[wheel + 1], next.wheel[wheel]) || std::abs(next.wheel[wheel]) > 1.) return false;
+    }
+    command = next;
+    return true;
+  }
+  // G,kp,ki,kd: doi he so PI tren ban thu (khong luu, mat khi reset).
+  if (fieldCount == 4 && std::strcmp(fields[0], "G") == 0) {
+    next.operation = Operation::Tune;
+    for (size_t k = 0; k < 3; k++) {
+      if (!real_value(fields[k + 1], next.wheel[k])) return false;
+    }
+    command = next;
+    return true;
+  }
   if (fieldCount != 7 || std::strcmp(fields[0], "C") != 0) return false;
   next.operation = Operation::Control;
   for (size_t wheel = 0; wheel < 4; wheel++) {
@@ -177,6 +195,10 @@ bool Config::valid() const {
     const auto & g = gains[i];
     if (!positive(encoder_cpr[i]) || !positive(g.kp) || !std::isfinite(g.ki) || g.ki < 0. ||
         !std::isfinite(g.kd) || g.kd < 0.) return false;
+    // Feedforward rieng khong duoc tu no cham tran duty, de PI con bien dieu chinh.
+    if (!std::isfinite(static_duty[i]) || static_duty[i] < 0. || static_duty[i] >= max_duty ||
+        !std::isfinite(velocity_duty[i]) || velocity_duty[i] < 0. ||
+        velocity_duty[i] * max_wheel_rad_s > max_duty) return false;
   }
   return !lift_ready || (positive(steps_per_m) && positive(travel_m) && positive(lift_max_steps_s) &&
     (!lower_only_lift || (lift_raise_steps > 0 && positive(lift_lower_timeout_s))) &&
@@ -184,18 +206,22 @@ bool Config::valid() const {
     lift_max_steps_s <= 5000. && positive(lift_accel_steps_s2) && positive(home_steps_s) &&
     home_steps_s <= lift_max_steps_s && positive(backoff_m) && backoff_m < travel_m && positive(home_timeout_s));
 }
-double Pid::update(double target, double actual, double dt, const Gains & g, double bound) {
-  if (!std::isfinite(target) || !std::isfinite(actual) || !positive(dt)) { reset(); return 0.; }
+double Pid::update(double target, double actual, double dt, const Gains & g, double bound,
+                   double feedforward) {
+  if (!std::isfinite(target) || !std::isfinite(actual) || !positive(dt) || !std::isfinite(feedforward)) {
+    reset(); return 0.;
+  }
   if (std::abs(target) < 1e-6) { reset(); return 0.; }
   const double error = target - actual;
   const double derivative = primed_ ? -(actual - previous_) / dt : 0.;
   const double proposed = integral_ + g.ki * error * dt;
-  const double raw = g.kp * error + proposed + g.kd * derivative;
+  // Chong bao hoa tinh ca feedforward: PI chi tich luy phan con thieu sau ff.
+  const double raw = feedforward + g.kp * error + proposed + g.kd * derivative;
   if (std::abs(raw) <= bound || raw * error < 0.) integral_ = std::clamp(proposed, -bound, bound);
   previous_ = actual; primed_ = true;
   // Overspeed stops PWM; the bridge wiring determines braking vs coasting.
   // Never reverse H-bridge polarity just to brake a wheel.
-  const double output = std::clamp(g.kp * error + integral_ + g.kd * derivative, -bound, bound);
+  const double output = std::clamp(feedforward + g.kp * error + integral_ + g.kd * derivative, -bound, bound);
   return output * target > 0. ? output : 0.;
 }
 Controller::Controller(const Config & config, uint64_t boot) : config_(config), boot_(boot) {
@@ -206,6 +232,7 @@ void Controller::stop() {
   output_.duty.fill(0.); output_.base_enable = false; output_.lift_steps_s = 0.;
   output_.lift_position_limit = false;
   target_.fill(0.); ramp_.fill(0.); stall_s_.fill(0.); direction_.fill(0);
+  raw_duty_ = false; raw_duty_value_.fill(0.);
   warnings_ = 0;
   encoder_warning_s_.fill(0.);
   for (auto & p : pid_) p.reset();
@@ -229,6 +256,27 @@ void Controller::trip(uint32_t fault) {
 bool Controller::stopped() const {
   for (double v : velocity_) if (std::abs(v) > .15) return false;
   return true;
+}
+// Khóa an toàn khi nâng: bánh phải đứng yên. Trước 30/10/2026 dùng thẳng stopped():
+// chỉ 1 xung encoder trong chu kỳ 10 ms đã cho tốc độ lọc 0,168 > 0,15 rad/s, nên
+// khung rung do motor bước (2500 xung/s) làm bánh đứng ở mép xung dao động ±1 xung
+// và bật fault 8 ở khoảng 4 cm. Giờ chỉ coi là bánh lăn thật khi:
+//  - quãng đường thực kể từ lúc bắt đầu nâng vượt kLiftWheelDriftTicks (rung ±1 xung
+//    có tổng ~0), hoặc
+//  - tốc độ lọc > 0,15 rad/s liên tục quá kLiftWheelMovingS (rung không kéo dài).
+// 20 xung = 0,134 rad = 5,7 mm ở mép bánh r 0,0425; bánh lăn 0,5 rad/s bị bắt trong
+// ~0,2 s. Ngưỡng danh nghĩa, chưa đo biên độ rung thật.
+namespace {
+constexpr int64_t kLiftWheelDriftTicks = 20;
+constexpr double kLiftWheelMovingS = .2;
+}  // namespace
+bool Controller::wheels_moved_during_lift(const Sensors & s) const {
+  for (size_t i = 0; i < 4; ++i) {
+    const int64_t drift = s.ticks[i] - lift_start_ticks_[i];
+    if (drift > kLiftWheelDriftTicks || drift < -kLiftWheelDriftTicks ||
+        moving_s_[i] > kLiftWheelMovingS) return true;
+  }
+  return false;
 }
 bool Controller::receive(const Command & c, uint64_t now, const Sensors & s) {
   if (c.boot != boot_ || c.sequence <= ack_ || !primed_) return false;
@@ -270,6 +318,38 @@ bool Controller::receive(const Command & c, uint64_t now, const Sensors & s) {
     home_phase_ = s.low ? HomePhase::Backoff : HomePhase::Seek;
     released_ = false;
     home_phase_start_step_ = s.lift_steps;
+    lift_start_ticks_ = s.ticks;
+    moving_s_.fill(0.);
+
+  } else if (c.operation == Operation::Tune) {
+    // G: chi ban thu, chi khi dung (Disarmed) de khong doi he so giua chung.
+    if (!config_.bench_duty_command || mode_ != Mode::Disarmed) return false;
+    Config trial = config_;
+    for (auto & g : trial.gains) g = Gains{c.wheel[0], c.wheel[1], c.wheel[2]};
+    if (!trial.valid()) return false;
+    config_.gains = trial.gains;
+    for (auto & p : pid_) p.reset();
+
+  } else if (c.operation == Operation::Duty) {
+    // P: chi ban thu (ke banh). Duty tho bo qua PI de do duty bat dau quay/duy
+    // tri quay va duty theo toc do. Cung khoa lien dong nhu lenh C.
+    if (!config_.bench_duty_command || faults_ || s.estop || s.emergency_event || !s.io_ok ||
+        mode_ == Mode::Homing || (mode_ != Mode::Active && !stopped())) {
+      return false;
+    }
+    bool any = false;
+    for (double duty : c.wheel) {
+      if (!std::isfinite(duty) || std::abs(duty) > config_.max_duty) return false;
+      any = any || duty != 0.;
+    }
+    stop();
+    if (any) {
+      raw_duty_ = true;
+      raw_duty_value_ = c.wheel;
+      mode_ = Mode::Active;
+    } else {
+      mode_ = Mode::Disarmed;
+    }
 
   } else {
     // C: kiem tra van toc banh va dich nang truoc khi cap nhat muc tieu.
@@ -303,6 +383,11 @@ bool Controller::receive(const Command & c, uint64_t now, const Sensors & s) {
         for (double speed : c.wheel) {
           if (std::abs(speed) > 1e-6) return false;
         }
+      }
+      if (raw_duty_) {
+        // Roi che do P: PI bat dau lai tu ramp 0, khong ke thua duty tho.
+        raw_duty_ = false; raw_duty_value_.fill(0.); ramp_.fill(0.);
+        for (auto & p : pid_) p.reset();
       }
       target_ = c.wheel;
       lift_target_ = c.lift_m;
@@ -348,7 +433,7 @@ void Controller::manual_lift_tick(double dt, uint64_t now, const Sensors & s) {
       std::sqrt(2. * config_.lift_accel_steps_s2 * remaining));
   }
 
-  if (!stopped()) { trip(Encoder); return; }
+  if (wheels_moved_during_lift(s)) { trip(Encoder); return; }
   lift_rate_ = approach(lift_rate_, requested, config_.lift_accel_steps_s2 * dt);
   output_.lift_steps_s = lift_rate_;
   output_.lift_hold = true;
@@ -406,7 +491,9 @@ void Controller::lift_tick(double dt, uint64_t now, const Sensors & s) {
     if (mode_ == Mode::Homing && requested < 0. && s.low) requested = 0.;
     else { trip(Limit); return; }
   }
-  if (requested != 0. && !stopped()) { trip(Encoder); return; }
+  // Càng đứng yên: dời mốc theo bánh, để đoạn nâng kế tiếp đo từ lúc bắt đầu chạy.
+  if (requested == 0. && lift_rate_ == 0.) { lift_start_ticks_ = s.ticks; moving_s_.fill(0.); }
+  if (requested != 0. && wheels_moved_during_lift(s)) { trip(Encoder); return; }
   lift_rate_ = approach(lift_rate_, requested, config_.lift_accel_steps_s2 * dt);
   if (requested == 0.) lift_rate_ = 0.;
   output_.lift_steps_s = lift_rate_;
@@ -443,6 +530,7 @@ void Controller::tick(uint64_t now, const Sensors & s) {
     }
     velocity_[i] += (actual - velocity_[i]) * dt / (.03 + dt);
     stationary_s_[i] = std::abs(velocity_[i]) < .15 ? stationary_s_[i] + dt : 0.;
+    moving_s_[i] = std::abs(velocity_[i]) > .15 ? moving_s_[i] + dt : 0.;
   }
   if (faults_) { stop_for_fault(); return; }
   // Keep controlling the last target until a new command or D arrives.
@@ -452,13 +540,21 @@ void Controller::tick(uint64_t now, const Sensors & s) {
     if (mode_ != Mode::Active) {
       output_.duty[i] = 0.; stall_s_[i] = 0.; pid_[i].reset(); continue;
     }
+    if (raw_duty_) {
+      output_.duty[i] = std::clamp(raw_duty_value_[i], -config_.max_duty, config_.max_duty);
+      stall_s_[i] = 0.; continue;
+    }
     const int wanted = sign(target_[i]);
     if (wanted && direction_[i] && wanted != direction_[i] && stationary_s_[i] < .03) {
       ramp_[i] = 0.; output_.duty[i] = 0.; stall_s_[i] = 0.; pid_[i].reset(); continue;
     }
     if (wanted && wanted != direction_[i]) { direction_[i] = wanted; ramp_[i] = 0.; pid_[i].reset(); }
     ramp_[i] = approach(ramp_[i], target_[i], config_.wheel_accel * dt);
-    output_.duty[i] = pid_[i].update(ramp_[i], velocity_[i], dt, config_.gains[i], config_.max_duty);
+    // Bu ma sat ngay tu chu ky dau: banh lan duoc o toc do thap thay vi cho
+    // khau I tich luy roi giat. 0 khi chua do (hanh vi PI cu).
+    const double feedforward = std::abs(ramp_[i]) > 1e-6 ?
+      sign(ramp_[i]) * (config_.static_duty[i] + config_.velocity_duty[i] * std::abs(ramp_[i])) : 0.;
+    output_.duty[i] = pid_[i].update(ramp_[i], velocity_[i], dt, config_.gains[i], config_.max_duty, feedforward);
     const bool stalled = std::abs(ramp_[i]) > .5 && std::abs(output_.duty[i]) > .2 && std::abs(velocity_[i]) < .05;
     const bool wrong_direction = ramp_[i] * velocity_[i] < -.1;
     stall_s_[i] = stalled || wrong_direction ? stall_s_[i] + dt : 0.;
@@ -483,6 +579,14 @@ size_t Controller::simple_telemetry(uint64_t now, const Sensors & s, char * outp
     now/1000,s.ticks[0],s.ticks[1],s.ticks[2],s.ticks[3],s.lift_steps,
     unsigned(mode_),unsigned(homed_),unsigned(s.low),faults_,
     unsigned(config_.valid() ? (config_.lift_ready ? 3 : 1) : 0), warnings_);
+  return n>0 && size_t(n)<capacity ? size_t(n) : 0;
+}
+size_t Controller::bench_telemetry(uint64_t now, char * output, size_t capacity) const {
+  // Chi khi chay lenh P; dong S giu nguyen dinh dang nen bridge ROS khong doi.
+  if (!raw_duty_) return 0;
+  const int n=std::snprintf(output,capacity,"V,%" PRIu64 ",%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f\n",
+    now/1000,velocity_[0],velocity_[1],velocity_[2],velocity_[3],
+    output_.duty[0],output_.duty[1],output_.duty[2],output_.duty[3]);
   return n>0 && size_t(n)<capacity ? size_t(n) : 0;
 }
 }  // namespace forklift_mcu

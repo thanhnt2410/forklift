@@ -5,6 +5,31 @@ wheel_separation_x: 0.210
 wheel_separation_y: 0.31029
 wheel_width: 0.05685
 wheel_mass: 0.25157608748247
+# Hồ sơ bánh chọn bằng tham số launch `wheel_type` (xacro, controller SIM, gate).
+# Ba khóa wheel_* phía trên giữ nguyên là bánh mecanum CAD cho mock PTY/script cũ.
+# Trục motor gắn cố định vào khung, nên bánh nhỏ hơn hạ toàn khung (LiDAR, IMU,
+# càng) xuống đúng (cad_wheel_radius - wheel_radius); base_link vẫn nằm trên sàn.
+cad_wheel_radius: 0.05
+wheel_types:
+  mecanum:
+    drive: mecanum
+    wheel_radius: 0.05
+    wheel_width: 0.05685
+    wheel_mass: 0.25157608748247
+  # Bánh cao su V3 Ø85 mm: bám cả hai phương -> xe 4 bánh lái kiểu skid-steer,
+  # KHÔNG đi ngang. Bề rộng/khối lượng là danh nghĩa, CHƯA ĐO.
+  rubber:
+    drive: skid
+    wheel_radius: 0.0425
+    wheel_width: 0.038
+    wheel_mass: 0.12
+    mu: 1.0
+    mu2: 1.0
+    # Skid-steer quay tại chỗ thì bánh trượt ngang, vết bánh hiệu dụng rộng hơn
+    # vết hình học 2·ly. Mô hình ma sát đều 4 góc: ly_eff = (lx² + ly²)/ly
+    # -> hệ số = 1 + (lx/ly)² = 1 + (0,105/0,15515)² ≈ 1,46. CHƯA hiệu chuẩn:
+    # quay 360° trong SIM/xe thật rồi chỉnh theo góc đo được.
+    track_factor: 1.46
 # CAD fixed-assembly envelope excludes moving forks.
 body_length: 0.3102
 body_width: 0.269439
@@ -30,10 +55,19 @@ fork_thickness: 0.002
 fork_spacing: 0.145
 fork_root_x: 0.2313
 fork_tip_x: 0.4313
-fork_top_z: 0.09613
+# Mặt dưới càng cách sàn khi càng hạ thấp nhất (lift_joint = 0). Người dùng chọn 01/11/2026
+# để càng lọt khe pallet cao 4,5 cm (ván mặt mỏng 0,5 cm -> khe 4,0 cm). CHƯA đo trên xe thật.
+# Chỉ đổi hình/va chạm trong SIM và RViz; code xe thật không dùng độ cao càng.
+fork_bottom_z: 0.035
+fork_top_z: 0.037  # = fork_bottom_z + fork_thickness (CAD gốc: 0,09613 với bánh Ø100)
 footprint_xmin: -0.1751
 footprint_xmax: 0.4513
 footprint_halfwidth: 0.225145
-loaded_xmin: 0.28
+# Vùng scan_relay xóa khỏi /scan khi đang chở (pallet tự che LiDAR). 31/10/2026 xe
+# thật: càng cắm sâu (dist 0,269) nên mặt sau pallet ở x 0,27-0,28, y ±0,16 lọt qua
+# 0,28/0,17 -> costmap đánh dấu pallet trước mũi xe, MPPI "prediction footprint
+# collision", NAV_DROP hủy. Nới về gốc càng (fork_root_x 0,23): x < 0,45 là thân xe nên
+# không có vật thật ở đó. loaded_halfwidth chỉ tăng footprint khi > footprint_halfwidth.
+loaded_xmin: 0.22
 loaded_xmax: 0.52
-loaded_halfwidth: 0.17
+loaded_halfwidth: 0.20

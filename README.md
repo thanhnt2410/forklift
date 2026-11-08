@@ -2,7 +2,9 @@
 
 Đồ án xe nâng tự hành dùng **ROS 2 Humble** và **Gazebo Fortress**, phát triển từ
 [Trkkhrmn/ros2_amr_mecanumbot](https://github.com/Trkkhrmn/ros2_amr_mecanumbot).
-Robot sử dụng bốn bánh mecanum, LiDAR, IMU và cơ cấu nâng vít me.
+Robot dùng bốn bánh, LiDAR, IMU và cơ cấu nâng vít me. Từ 30/10/2026 xe thật dùng
+**bánh cao su V3 Ø85 mm** (lái skid-steer, không đi ngang) thay cho bánh mecanum
+Ø100 mm; hai kiểu bánh chọn được khi launch, xem [Chọn kiểu bánh](#chọn-kiểu-bánh).
 
 Người dùng đã xác nhận robot thật và mô phỏng tạo được map. Chu trình lấy–giao
 tự động trong repo được kiểm chứng trong mô phỏng; **chưa nghiệm thu chu trình
@@ -11,12 +13,50 @@ này trên robot thật**. Có cả chế độ trạm cố định về Home v�
 ## Chức năng hiện tại
 
 - Mô hình CAD URDF20 được tích hợp trong `forklift_description`.
-- Điều khiển bốn bánh mecanum, nâng/hạ và homing càng trong mô phỏng.
+- Điều khiển bốn bánh (cao su skid-steer hoặc mecanum), nâng/hạ và homing càng trong mô phỏng.
 - SLAM, định vị AMCL và điều hướng Nav2; EKF kết hợp odometry bánh với IMU mô phỏng.
 - Bộ bám đường mặc định **MPPI**, cho phép tiến/lùi theo đường cong.
 - Nhiệm vụ trạm cố định dùng Nav2 FollowPath theo các điểm đã duyệt.
 - Nhiệm vụ A/B chọn trên RViz thử nhận dạng LiDAR ngay lúc Run, tạo tuyến tới A đã sửa theo các profile cũ và dùng FollowPath; kiểm tra lại trước khi căn chỉnh/chèn càng.
-- Khi chạy Nav2 dùng vận tốc tiến/lùi và quay; đi ngang dùng cho teleop hoặc docking.
+- Khi chạy Nav2 dùng vận tốc tiến/lùi và quay. Đi ngang chỉ có với bánh mecanum
+  (teleop hoặc docking); bánh cao su docking bằng tiến/lùi + bẻ lái.
+
+## Chọn kiểu bánh
+
+Mọi launch bringup nhận tham số `wheel_type`, mặc định `rubber`:
+
+| `wheel_type` | Bánh | Động học | Đi ngang |
+|---|---|---|---|
+| `rubber` (mặc định) | Cao su V3 Ø85 mm, r = 0,0425 m | Skid-steer: hai bánh cùng bên cùng tốc độ | Không |
+| `mecanum` | Mecanum Ø100 mm, r = 0,05 m | Mecanum (vx, vy, ωz) | Có |
+
+```bash
+ros2 launch forklift_bringup real.launch.py                      # bánh cao su
+ros2 launch forklift_bringup real.launch.py wheel_type:=mecanum  # bánh mecanum cũ
+ros2 launch forklift_bringup p6.launch.py wheel_type:=mecanum    # tái hiện kết quả SIM cũ
+```
+
+Tham số này đổi đồng thời:
+
+- **URDF**: bán kính, hình và ma sát bánh; khung, LiDAR, IMU và càng hạ theo
+  chênh lệch bán kính (bánh cao su thấp hơn 7,5 mm).
+- **SIM**: `diff_drive_controller` cho bánh cao su, `mecanum_drive_controller` cho mecanum.
+- **Xe thật**: hồ sơ trong `src/forklift_hardware/config/wheels_real.yaml` đè
+  `wheel_radius`, `kinematic_sum`, `max_wheel_speed`, `drive_type` của `esp32.yaml`.
+  Firmware ESP32 không đổi vì chỉ nhận tốc độ từng bánh.
+- **Command gate**: bánh cao su bỏ mọi `vy` (log `STRAFE_IGNORED`).
+- **Nav2**: AMCL `DifferentialMotionModel` và smoother khóa `vy = 0` với bánh cao su.
+
+Với nhiệm vụ trên xe thật, truyền **cùng** `wheel_type` cho `real.launch.py` trên Pi
+và `navigation_real.launch.py`/`mapping_real.launch.py` trên laptop.
+
+Động học bánh cao su: bánh trái = (vx − k·ωz)/r, bánh phải = (vx + k·ωz)/r. Ở đây k là
+nửa vết bánh hiệu dụng, gồm cả trượt ngang khi quay: k = ly·(1 + (lx/ly)²) ≈ 1,46·ly.
+**Các số của bánh cao su là danh nghĩa, chưa hiệu chuẩn**: r = 0,0425 m,
+k = 0,2265 m (xe thật), bề rộng 38 mm, khối lượng 0,12 kg. Cần chạy thẳng 1 m để
+chỉnh `wheel_radius` và quay 360° để chỉnh `kinematic_sum` (quay thiếu thì tăng).
+Trần bánh giữ 6 rad/s nên tốc độ thẳng tối đa còn **0,255 m/s** (mecanum: 0,30).
+Kết quả SIM trước 30/10/2026 là của bánh mecanum; chưa chạy lại P6 SIM với bánh cao su.
 
 Ở chế độ trạm cố định, đường nhiệm vụ được công bố đầy đủ trước khi xe di chuyển. Nếu tuyến không hợp lệ,
 xe dừng/báo lỗi thay vì tự chọn tuyến khác. Giới hạn vận tốc nhiệm vụ hiện tại:
@@ -75,11 +115,14 @@ source /opt/ros/humble/setup.bash
 source install/setup.bash
 ```
 
-## Chọn A/B trên RViz và lấy–giao pallet
+## Chọn ô pallet trên RViz và lấy–giao nhiều chuyến
 
 Sau khi build/source lại workspace, chạy `ros2 launch forklift_bringup p6.launch.py`.
-Trong RViz, dùng **Pick A** để đặt pose đứng trước pallet, **Drop B** để đặt pose
-robot lúc hạ hàng, rồi bấm **Run mission** trong panel **Pallet mission**.
+Trong RViz, dùng **Pick slot** (phím A) đặt các ô lấy hàng — đánh số 1, 2, 3 — và
+**Drop slot** (phím B) đặt các ô đặt hàng — đánh số 4, 5, 6 — rồi bấm **Run mission**
+trong panel **Pallet mission**. Xe chạy lần lượt ô 1 → ô 4, ô 2 → ô 5, ô 3 → ô 6;
+mỗi chuyến chở một pallet, chuyến sau chỉ bắt đầu khi chuyến trước thành công.
+**Save slots** / **Load slots** giữ lại danh sách ô cho lần chạy sau.
 Robot dùng LiDAR sửa pose tiếp cận A, căn chỉnh/chèn càng, nâng, vận chuyển tới B,
 hạ và lùi ra; nhiệm vụ kết thúc tại đó. B là vùng thả trống, độ chính xác vật lý
 còn phụ thuộc AMCL. Đây là nhánh `pick_and_place`; lệnh `a_to_b` bên dưới giữ
@@ -156,8 +199,8 @@ Click vào terminal điều khiển để nhận phím:
 | Phím | Chức năng |
 |---|---|
 | ↑ / ↓ | Tiến / lùi 0,30 m/s |
-| ← / → | Quay trái / phải, 0,4 rad/s |
-| A / D hoặc Shift + ← / → | Đi ngang trái / phải, 0,30 m/s |
+| ← / → | Quay trái / phải, 0,6 rad/s |
+| A / D hoặc Shift + ← / → | Đi ngang trái / phải, 0,30 m/s (chỉ `wheel_type:=mecanum`) |
 | R hoặc Page Up | Nâng càng thêm 1 cm |
 | F hoặc Page Down | Hạ càng 1 cm |
 | H hoặc Home | Homing càng |
@@ -209,7 +252,7 @@ Bluetooth. Chạy mô phỏng thủ công như trên, rồi ở terminal đã so
 ros2 launch forklift_bringup ps4.launch.py
 ```
 
-Thả L1 và đưa cần về giữa, sau đó giữ L1 để chạy: cần trái tiến/lùi/đi ngang,
+Thả L1 và đưa cần về giữa, sau đó giữ L1 để chạy: cần trái tiến/lùi/đi ngang (đi ngang chỉ với mecanum),
 cần phải xoay. L1 + D-pad lên/xuống nâng/hạ từng 1 cm; L1 + Triangle homing;
 Circle gửi dừng bánh và nâng. Nhả L1 hoặc mất Joy sẽ gửi zero trong SIM.
 Không chạy đồng thời với bàn phím hoặc nhiệm vụ tự động.
@@ -246,8 +289,9 @@ bốn BTS7960, TB6600/NEMA17 cho nâng và MPU6050 dự kiến nối Raspberry P
 Đã có khung firmware đọc encoder, PID bánh, Serial CSV và điều khiển nâng. Tuy nhiên,
 PID hiện tại **Kp=0,08; Ki=0,12; Kd=0,05** được đặt cho cả bốn bánh để tuning.
 **Firmware hiện bật profile thử bánh**, trần PWM 50%, giới hạn MCU 10 rad/s,
-giới hạn phía ROS 6 rad/s (tịnh tiến 0,30 m/s với bánh bán kính 0,05 m), và boot
-disarm; nâng dùng **một công tắc NC dưới GPIO32**, R nâng thêm 2.000 xung,
+giới hạn phía ROS 6 rad/s (tịnh tiến 0,255 m/s với bánh cao su r = 0,0425 m;
+0,30 m/s với mecanum r = 0,05 m), và boot
+disarm; nâng dùng **một công tắc NC dưới GPIO15**, R nâng thêm 20.000 xung,
 F/H hạ tối đa 3 giây hoặc dừng sớm tại công tắc. Không cần home trước khi nâng/lái;
 quãng nâng thực tế sẽ đo và hiệu chỉnh sau. Mức điện, chân boot,
 chiều motor/encoder và PI chưa được kiểm chứng trên xe. Đã bổ sung backend USB/UART CSV đơn giản và
@@ -260,7 +304,8 @@ Bánh không quay ở tốc độ thấp dù PWM cao, hoặc encoder ngược ch
 dài trên 0,5 s, hiện chỉ phát `WHEEL_TRACKING_WARNING` theo từng bánh; không
 khóa MCU hoặc tự disarm. Warning tự hết khi điều kiện hết hoặc nhận lệnh dừng.
 Phải **nạp lại firmware chính và cập nhật/build bridge trên Pi** để áp dụng.
-Các trường hợp encoder nhảy số phi lý hoặc bánh còn chạy khi nâng vẫn là lỗi 8.
+Các trường hợp encoder nhảy số phi lý hoặc bánh còn chạy khi nâng vẫn là lỗi 8
+(bánh lăn thật hơn 20 xung hoặc > 0,15 rad/s liên tục 0,2 s; rung ±1 xung không tính).
 Đổi sang warning không tự khắc phục thiếu mô-men ở tốc độ thấp; xem
 [chi tiết cảnh báo encoder](docs/esp32_manual_control.md#cảnh-báo-bánh-không-quay-ở-tốc-độ-thấp).
 
@@ -283,9 +328,11 @@ dùng cấu hình `src/forklift_hardware/config/ydlidar.yaml`.
 Xem [hướng dẫn LiDAR Pi và kết nối laptop](docs/ydlidar_pi.md).
 Đã kiểm tra qua PTY với lõi firmware C++; chưa kiểm chứng kết nối USB hoặc xe thật.
 
-Theo lựa chọn phần cứng hiện tại, R_EN/L_EN kéo HIGH ngoài và khi lỗi/mất liên lạc,
-firmware giữ PWM cuối của bánh để người vận hành ngắt nguồn thủ công; lệnh dừng
-chủ động vẫn có hiệu lực. Cơ cấu nâng giữ homing/giới hạn và dừng khi lỗi.
+Theo lựa chọn phần cứng hiện tại, R_EN/L_EN kéo HIGH ngoài. Bridge mặc định
+`stop_on_fault=true`, gửi D khi phát sinh lỗi nếu serial còn hoạt động.
+Firmware chưa có watchdog Serial: nếu USB mất hoặc MCU không nhận được D,
+bánh có thể giữ lệnh/PWM cuối, cần ngắt nguồn động lực thủ công.
+Cơ cấu nâng giữ homing/giới hạn và dừng khi lỗi.
 Đây là cấu hình firmware phần cứng, **không thay đổi cơ chế dừng của mô phỏng ROS**.
 
 Xem [hướng dẫn firmware và GPIO](firmware/esp32/README.md),
@@ -390,7 +437,7 @@ ros2 run forklift_control arrow_teleop.py
 ```
 
 Focus terminal bàn phím, chờ `Manual mode ready`. Dùng phím mũi tên để tiến/lùi
-và quay, A/D để đi ngang; Space/S để dừng. Điều khiển xe chậm qua khu vực cần
+và quay (A/D đi ngang chỉ khi `wheel_type:=mecanum`); Space/S để dừng. Điều khiển xe chậm qua khu vực cần
 quét rồi quay về vùng đã đi qua. Trong RViz, tường nên đứng yên và các lượt quét
 chồng khớp; nếu tường bị đôi hoặc xoay theo xe, dừng để kiểm tra TF, odom và
 timestamp trước khi quét tiếp.
@@ -426,7 +473,7 @@ dùng auto arm ở phiên mới, hoặc gọi service arm thủ công nếu cầ
 |---|---|
 | `src/forklift_bringup/` | Launch và cấu hình hiển thị RViz |
 | `src/forklift_description/` | URDF, CAD, mesh và hình học xe |
-| `src/forklift_control/` | Điều khiển mecanum, command gate và EKF |
+| `src/forklift_control/` | Cấu hình controller bánh (mecanum/diff drive), command gate và EKF |
 | `src/forklift_gazebo/` | World và bridge ROS–Gazebo |
 | `src/forklift_navigation/` | SLAM, AMCL, Nav2, MPPI và bản đồ |
 | `src/forklift_lift/`, `src/forklift_interfaces/` | Giám sát nâng, message và action |

@@ -41,6 +41,20 @@ Khoảng cách trước–sau 210 mm; ngang giữa hai mặt phẳng giữa bán
 Bán kính tiếp xúc danh định 50 mm; mesh con lăn có biên khoảng 98–98,5 mm do
 trạng thái góc quay trong bản xuất CAD, không được co giãn lên 100 mm.
 
+**Kiểu bánh (`wheel_type`, từ 30/10/2026).** Tham số xacro/launch `wheel_type` chọn
+một hồ sơ trong mục `wheel_types` của `config/robot.yaml`:
+
+- `rubber` (mặc định): bánh cao su V3 Ø85 mm. Không có CAD nên dùng hình trụ
+  r = 42,5 mm, rộng 38 mm, nặng 0,12 kg (danh nghĩa, chưa đo).
+- `mecanum`: mesh CAD gốc như trên.
+
+Trục motor gắn cố định vào khung. Vì vậy bánh nhỏ hơn hạ `chassis_fixed`,
+`lift_joint`, `laser_joint` và `imu_joint` xuống `cad_wheel_radius − r` (7,5 mm với
+bánh cao su). `base_link` vẫn ở mặt sàn, vị trí trục bánh so với khung giữ nguyên.
+Các macro `rubber_wheel_body` và `wheel_friction` nằm trong `forklift.urdf.xacro`.
+`forklift_cad.urdf.xacro` đã được **sửa tay** sau khi sinh để gọi các macro này;
+chạy lại `scripts/cad/import_forklift_cad.py` sẽ ghi đè và mất phần sửa.
+
 Bản xuất CAD chứa cả mesh càng và LiDAR lặp lại trong `base_link`.
 Importer loại các tam giác trùng với link con (sai số tối đa 20 micromet), tạo
 `meshes/chassis.stl`; không thay mesh gốc. Điều này tránh càng cố định trùng với càng
@@ -49,8 +63,11 @@ Importer loại các tam giác trùng với link con (sai số tối đa 20 micr
 ## Vật lý, nâng và cảm biến
 
 Collision khung và càng được đơn giản hóa, tines giữ kích thước CAD
-200 × 15 × 2 mm, khoảng cách tâm 145 mm. Collision bánh dùng cầu và ma sát dị hướng
-đã dùng trong Fortress, không phải mô phỏng từng con lăn. Footprint bảo thủ có tính
+200 × 15 × 2 mm, khoảng cách tâm 145 mm. Collision bánh là hình cầu bán kính r.
+Bánh mecanum dùng ma sát dị hướng (`mu2 = 0`, `fdir1` 45°) trong Fortress, không mô
+phỏng từng con lăn. Bánh cao su dùng ma sát đẳng hướng `mu = mu2 = 1` và
+`diff_drive_controller` với `wheel_separation_multiplier = track_factor` (1,46, chưa
+hiệu chuẩn) để bù trượt ngang khi quay tại chỗ. Footprint bảo thủ có tính
 đến mô hình tiếp xúc này. Khối lượng/inertia khai báo CAD được giữ lại; không coi
 đó là số đo thực (assembly CAD có chi tiết lặp và có thể thiếu linh kiện điện).
 

@@ -1,0 +1,29 @@
+# MPU6050/MPU6500 trên I2C-1 của Raspberry Pi (SDA chân 3, SCL chân 5, AD0 -> GND).
+# Module đang lắp 29/10/2026 trả WHO_AM_I = 0x70 (MPU6500), địa chỉ 0x68.
+mpu_driver:
+  ros__parameters:
+    use_sim_time: false
+    bus: 1
+    address: 104  # = 0x68 (AD0 -> GND); viết thập phân cho chắc parser YAML của ROS
+    # 30 Hz = tần số EKF; 50 Hz chỉ tăng tải Pi và lưu lượng Wi-Fi (guard laptop đăng ký).
+    rate_hz: 30.0
+    dlpf: 3
+    # Ánh xạ trục chip -> imu_link (thẳng hàng base_link). Đo 29/10/2026, MPU lắp
+    # giữa xe, chip nằm ngửa: trọng lực trên +z (nghiêng 1,0°); xoay tay CCW ~90° ->
+    # gyro z +93,3° (x, y < 1°); trôi 0,4°/30 s sau khi trừ bias. Chỉ trục z kiểm
+    # chứng (EKF chỉ dùng vyaw); x/y chưa đo hướng tiến. Đổi chỗ lắp thì đo lại bằng
+    #   ros2 run forklift_hardware imu_mount_check.py
+    axes: "x y z"
+    calib_seconds: 2.0
+    max_still_gyro_std: 0.02
+    # Sàn phương sai gyro (rad/s)^2; giá trị thật lấy từ nhiễu lúc hiệu chuẩn.
+    min_gyro_variance: 9.0e-06
+    accel_variance: 0.0025
+    max_read_errors: 10
+    # 08/11/2026 chiều: chip từng lắp nghiêng (~56°, gyro z chỉ ~0,51 tốc độ quay thật) nên
+    # bật bù bằng phần mềm. 08/11/2026 tối đã gắn lại phẳng, đo trên Pi: tilt 3,0° (roll 2,2°,
+    # pitch 2,0°), |a| 10,61 m/s^2 -> gyro z sai < 0,2 % (cos 3°), không cần bù nữa.
+    # true: lấy hướng "lên" từ gia tốc lúc hiệu chuẩn rồi publish wz = gyro . hướng_lên
+    # (đúng với mọi kiểu lắp, nhưng phụ thuộc gia tốc kế clone lệch ~7 %).
+    # false: dùng nguyên gyro z (cấu hình đã kiểm chứng 29/10). Lắp nghiêng > 5° thì bật lại.
+    yaw_from_gravity: false

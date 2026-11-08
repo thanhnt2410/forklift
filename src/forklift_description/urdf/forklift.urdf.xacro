@@ -12,8 +12,17 @@
   <xacro:arg name="odometry_topic" default="/odom"/>
   <xacro:arg name="p6" default="false"/>
   <xacro:arg name="lift_test_mass" default="0.0"/>
+  <!-- Physical scan alignment is supplied by real mapping; SIM stays at zero. -->
+  <xacro:arg name="laser_yaw" default="0.0"/>
+  <!-- rubber: bánh cao su V3 Ø85 (skid-steer); mecanum: bánh mecanum Ø100 cũ. -->
+  <xacro:arg name="wheel_type" default="rubber"/>
   <xacro:property name="g" value="${xacro.load_yaml('$(arg geometry_file)')}"/>
-  <xacro:property name="r" value="${g['wheel_radius']}"/>
+  <xacro:property name="wheel_type" value="$(arg wheel_type)"/>
+  <xacro:property name="wt" value="${g['wheel_types'][wheel_type]}"/>
+  <xacro:property name="mecanum" value="${wt['drive'] == 'mecanum'}"/>
+  <xacro:property name="r" value="${wt['wheel_radius']}"/>
+  <!-- Trục bánh cố định trên khung: bánh nhỏ hạ cả khung, giữ base_link trên sàn. -->
+  <xacro:property name="ground_drop" value="${g['cad_wheel_radius'] - r}"/>
   <xacro:property name="lx" value="${g['wheel_separation_x']/2}"/>
   <xacro:property name="ly" value="${g['wheel_separation_y']/2}"/>
   <material name="body_blue"><color rgba="0.06 0.25 0.55 1"/></material>
@@ -41,6 +50,31 @@
     </link>
   </xacro:macro>
 
+  <!-- Thân bánh cao su: chưa có CAD, dùng trụ đặc. Gốc link nằm giữa bề rộng bánh. -->
+  <xacro:macro name="rubber_wheel_body">
+    <visual>
+      <origin rpy="${pi/2} 0 0"/>
+      <geometry><cylinder radius="${r}" length="${wt['wheel_width']}"/></geometry>
+      <material name="rubber"/>
+    </visual>
+    <inertial>
+      <mass value="${wt['wheel_mass']}"/>
+      <inertia ixx="${wt['wheel_mass']*(3*r*r+wt['wheel_width']**2)/12}" ixy="0" ixz="0"
+               iyy="${wt['wheel_mass']*r*r/2}" iyz="0"
+               izz="${wt['wheel_mass']*(3*r*r+wt['wheel_width']**2)/12}"/>
+    </inertial>
+  </xacro:macro>
+  <!-- Mecanum: con lăn 45° -> chỉ bám theo fdir1 (mu2=0). Cao su: bám cả hai phương. -->
+  <xacro:macro name="wheel_friction" params="fdir">
+    <collision><surface><friction><ode>
+      <xacro:if value="${mecanum}">
+        <mu>1</mu><mu2>0</mu2>
+        <fdir1 ignition:expressed_in="base_link">${fdir}</fdir1>
+      </xacro:if>
+      <xacro:unless value="${mecanum}"><mu>${wt['mu']}</mu><mu2>${wt['mu2']}</mu2></xacro:unless>
+    </ode></friction></surface></collision>
+  </xacro:macro>
+
   <!-- CAD dimensions, meshes and inertias from cad_source; ground-normalized root. -->
   <xacro:include filename="forklift_cad.urdf.xacro"/>
   <!-- Optional rigid SIM proof mass, not a pallet grasp or a REAL load rating. -->
@@ -51,7 +85,7 @@
 
   <joint name="laser_joint" type="fixed">
     <parent link="base_link"/><child link="laser_frame"/>
-    <origin xyz="${g['laser_xyz'][0]} ${g['laser_xyz'][1]} ${g['laser_xyz'][2]}"/>
+    <origin xyz="${g['laser_xyz'][0]} ${g['laser_xyz'][1]} ${g['laser_xyz'][2]-ground_drop}" rpy="0 0 $(arg laser_yaw)"/>
   </joint>
   <link name="laser_frame"/>
   <gazebo reference="laser_frame">
@@ -69,7 +103,7 @@
   <!-- MPU6050-like six-axis sensor; no absolute yaw enters the estimator. -->
   <joint name="imu_joint" type="fixed">
     <parent link="base_link"/><child link="imu_link"/>
-    <origin xyz="${g['imu_xyz'][0]} ${g['imu_xyz'][1]} ${g['imu_xyz'][2]}"
+    <origin xyz="${g['imu_xyz'][0]} ${g['imu_xyz'][1]} ${g['imu_xyz'][2]-ground_drop}"
             rpy="${g['imu_rpy'][0]} ${g['imu_rpy'][1]} ${g['imu_rpy'][2]}"/>
   </joint>
   <link name="imu_link"/>
@@ -93,5 +127,6 @@
   </gazebo>
 
   <xacro:include filename="ros2_control.xacro"/>
-  <xacro:simulation_control controllers_file="$(arg controllers_file)" backend="$(arg backend)" port_file="$(arg port_file)"/>
+  <xacro:simulation_control controllers_file="$(arg controllers_file)" backend="$(arg backend)" port_file="$(arg port_file)"
+                            mecanum="${mecanum}"/>
 </robot>

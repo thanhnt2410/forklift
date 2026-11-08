@@ -28,7 +28,7 @@ firmware vẫn khóa/capability 0. Đặt `base_bench_profile=false` để trở
 | Tần số vòng điều khiển | 100 Hz |
 | Trần PWM | 50% |
 | Vận tốc MCU / gia tốc bánh | 10 rad/s / 2 rad/s² |
-| Giới hạn bánh phía ROS | 6 rad/s (0,30 m/s với bán kính 0,05 m) |
+| Giới hạn bánh phía ROS | 6 rad/s (0,255 m/s với bánh cao su r = 0,0425 m; 0,30 m/s với mecanum r = 0,05 m) |
 | CPR | 937,2 danh nghĩa |
 
 Tuning tại `wheel_pi[4]` trong `board_config.h`, theo thứ tự **FL, FR, RL, RR**.
@@ -38,7 +38,8 @@ dùng thang đo encoder/PWM riêng, không sao chép trực tiếp hệ số san
 Kd=0 để bắt đầu bằng PI và tránh khuếch đại nhiễu tốc độ encoder.
 
 `enable_lift=true`, `single_lower_bench_profile=true`: dùng một công tắc NC,
-**COM → GND, NC → GPIO32**, `INPUT_PULLUP`, không nối tín hiệu lên 5 V.
+**COM → GND, NC → GPIO36 (SVP)**, điện trở ngoài 10 kΩ từ GPIO36 lên 3,3 V (GPIO34–39
+không có pull-up trong), nên thêm tụ 100 nF xuống GND; không nối tín hiệu lên 5 V.
 Bình thường LOW; chạm đáy/hở mạch HIGH. Không có công tắc trên, `upper_pin=-1`;
 không đọc GPIO âm. Phản hồi E-stop chưa gán trong profile thử thủ công này.
 
@@ -114,7 +115,7 @@ Thứ tự bánh: FL, FR, RL, RR nhìn theo hướng tiến của xe.
 | RR encoder A / B | 16 / 4 |
 | R_EN và L_EN của mỗi BTS7960 | Kéo HIGH ngoài theo user, không dùng GPIO; EN pin `-1` |
 | Phản hồi E-stop | Chưa có; `-1`, bỏ qua trong profile thử thủ công |
-| Limit dưới / trên | GPIO32 (COM–GND, NC–GPIO32) / không có (`-1`) |
+| Limit dưới / trên | GPIO36/SVP (COM–GND, NC–GPIO36, 10 kΩ lên 3,3 V) / không có (`-1`) |
 | TB6600 PUL+ / DIR+ | 13 / 33 |
 | TB6600 PUL− / DIR− | GND / GND |
 | TB6600 ENA | Chưa gán; phải xác minh cực tính và cách giữ dòng của module |
@@ -123,19 +124,24 @@ Thứ tự bánh: FL, FR, RL, RR nhìn theo hướng tiến của xe.
 Hiểu nhãn user “RHW/LPW” là RPWM/LPWM, “DTR+” là DIR+. Mảng firmware giữ thứ tự
 FL/FR/RL/RR; không thay thứ tự joint ROS theo thứ tự liệt kê FR/RR/FL/RL của user.
 Đã đồng bộ cấu hình sau test từng bánh với `firmware/esp32_test`: đổi cặp PWM
-FL/RL, `motor_sign={1,-1,1,-1}`, `encoder_sign={1,1,1,-1}`.
-Encoder A của FR đã chuyển từ GPIO12 sang GPIO2; B vẫn GPIO14.
+FL/RL, `motor_sign={1,-1,1,-1}`, `encoder_sign={1,-1,1,-1}` (FR đổi sang −1 ngày 30/10/2026
+sau khi sửa dây encoder FR; trước đó là `{1,1,1,-1}`).
+Encoder A của FR: GPIO12 → **GPIO2**; B vẫn GPIO14. Ngày 30/10/2026 đã thử GPIO32 nhưng
+dây thật vẫn ở GPIO2 (FR đo 0 rad/s) nên quay về GPIO2, khớp `firmware/esp32_test`.
 PCNT dùng HIGH=INVERSE, LOW=KEEP để cùng quy ước với bộ giải mã ngắt của bản test:
 chuỗi AB `00 → 01 → 11 → 10 → 00` đếm +4 trước khi nhân `encoder_sign`.
 Không giữ GPIO5/23/4/13 ở chức năng EN/E-stop/limit của bảng dự kiến cũ.
 
 GPIO34/35 chỉ vào và không có pull-up/pull-down nội, cần mạch ngoài nếu encoder
 yêu cầu kéo mức. FR A đã chuyển khỏi GPIO12 để tránh chọn sai điện áp flash lúc reset.
-GPIO2 (FR A) và GPIO5 (RL A) vẫn là chân strapping; GPIO2 cần LOW hoặc thả nổi
-khi vào chế độ nạp UART. Nếu encoder giữ GPIO2 HIGH và không nạp được, tắt nguồn
-rồi tháo dây tín hiệu GPIO2 trong lúc nạp; không nối tắt ngõ ra encoder xuống GND.
+GPIO2 là chân strapping: encoder giữ GPIO2 HIGH làm không vào được chế độ nạp, nên
+**phải tháo dây FR A mỗi lần nạp và cắm lại sau đó**. Quên cắm lại thì FR mất kênh A,
+PI đẩy FR lên trần duty và xe lệch trái.
+GPIO5 (RL A) vẫn là chân strapping; nếu nạp lỗi "Wrong boot mode", tắt nguồn và
+tháo dây GPIO5 trong lúc nạp; không nối tắt ngõ ra encoder xuống GND.
 [Giải thích boot của Espressif](https://docs.espressif.com/projects/esptool/en/latest/esp32/advanced-topics/boot-mode-selection.html).
-GPIO32 hiện dành cho công tắc dưới; không dùng đồng thời làm FR encoder A.
+Công tắc dưới chuyển sang GPIO36/SVP (01/11/2026: GPIO15 luôn đọc LOW kể cả khi ấn);
+GPIO15 hiện để trống, GPIO32 dùng cho encoder A bánh FR.
 `strapping_levels_reviewed=false`
 vẫn ghi nhận chưa kiểm chứng; profile thử bánh hiện bỏ qua khóa xác nhận này,
 không xử lý được mức điện lúc boot. Chỉ đặt cờ `true` sau khi kiểm chứng thực tế.
@@ -169,7 +175,7 @@ dội tiếp điểm và thời gian dừng khi thử bàn. Chưa có lọc dộ
 3. Hành trình hữu dụng, backoff homing, tốc độ/gia tốc nâng và timeout đo được.
    Không lấy 10000 step/m hoặc hành trình CAD làm hiệu chuẩn thật.
 4. Mạch nguồn, tầng đệm, HIGH cho EN và ngắt nguồn thủ công; PID và dấu từng bánh.
-   Profile thử hiện chỉ dùng limit dưới GPIO32 và giới hạn xung, chưa có E-stop GPIO.
+   Profile thử hiện chỉ dùng limit dưới GPIO15 và giới hạn xung, chưa có E-stop GPIO.
 
 Profile thử bánh bỏ qua yêu cầu xác nhận điện theo lựa chọn người dùng, giữ bảng
 chân đã cung cấp. Khi thử, kê bánh khỏi mặt đất, chưa mang tải; kiểm tra chiều
@@ -202,7 +208,9 @@ S,1200,0,0,0,0,0,1,0,1,0,3,0
 - `warnings`: bitmask FL=1, FR=2, RL=4, RR=8. Bánh không quay dù PWM cao hoặc
   encoder ngược chiều lệnh trên 0,5 s chỉ phát warning, không latch fault hay
   chặn điều khiển. Warning tự hết khi điều kiện hết hoặc nhận D. Các lỗi encoder
-  nhảy số phi lý và bánh còn chạy khi nâng vẫn là fault 8.
+  nhảy số phi lý và bánh còn chạy khi nâng vẫn là fault 8. Từ 30/10/2026 "bánh chạy
+  khi nâng" nghĩa là lăn thật hơn 20 xung kể từ lúc bắt đầu nâng, hoặc tốc độ > 0,15 rad/s
+  liên tục hơn 0,2 s; rung ±1 xung do motor bước không còn bật fault.
 
 Trường `warnings` cũng được thêm cuối telemetry UART v2 trước checksum.
 Bridge ROS mới đọc được bản tin cũ lẫn mới; cập nhật/build bridge trên Pi trước

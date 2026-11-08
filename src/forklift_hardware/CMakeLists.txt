@@ -19,8 +19,9 @@ pluginlib_export_plugin_description_file(hardware_interface forklift_hardware.xm
 install(TARGETS forklift_pty_system DESTINATION lib)
 install(DIRECTORY include/ DESTINATION include)
 install(DIRECTORY launch config DESTINATION share/${PROJECT_NAME})
-install(PROGRAMS scripts/mock_mcu.py scripts/esp32_bridge.py DESTINATION lib/${PROJECT_NAME})
-install(FILES scripts/esp32_serial_auto.py DESTINATION lib/${PROJECT_NAME})
+install(PROGRAMS scripts/mock_mcu.py scripts/esp32_bridge.py scripts/mpu_driver.py scripts/imu_mount_check.py
+        DESTINATION lib/${PROJECT_NAME})
+install(FILES scripts/esp32_serial_auto.py scripts/mpu_registers.py DESTINATION lib/${PROJECT_NAME})
 install(FILES LICENSE DESTINATION share/${PROJECT_NAME})
 if(BUILD_TESTING AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/test")
   find_package(ament_cmake_gtest REQUIRED)

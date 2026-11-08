@@ -2,8 +2,10 @@
 # SPDX-License-Identifier: Apache-2.0
 """Gate autonomous velocity with live scan/odom/map TF and valid localization.
 
-Faults after initial readiness latch until explicitly reset. Runs on wall time
-so a paused simulator cannot keep an old velocity enabled indefinitely.
+Feedback loss while a Nav2 motion action runs (or a non-zero command was just
+issued) latches until explicitly reset. While idle it only reports WAITING, so
+re-setting the AMCL pose does not latch. Runs on wall time so a paused
+simulator cannot keep an old velocity enabled indefinitely.
 """
 import math
 import time
@@ -17,6 +19,11 @@ from sensor_msgs.msg import LaserScan
 from std_msgs.msg import Bool, String
 from std_srvs.srv import Trigger
 from tf2_msgs.msg import TFMessage
+from action_msgs.msg import GoalStatus, GoalStatusArray
+
+# Action Nav2 có thể làm xe chạy; goal của chúng còn sống = đang chuyển động tự động.
+MOTION_ACTIONS = ('follow_path', 'navigate_to_pose', 'spin', 'backup', 'drive_on_heading')
+LIVE_GOAL = (GoalStatus.STATUS_ACCEPTED, GoalStatus.STATUS_EXECUTING, GoalStatus.STATUS_CANCELING)
 
 
 class NavigationGuard(Node):
@@ -30,6 +37,14 @@ class NavigationGuard(Node):
         self.fault = False
         self.declare_parameter('require_imu', False)
         self.require_imu = bool(self.get_parameter('require_imu').value)
+        # TF map->odom chỉ được AMCL phát lại mỗi scan xử lý được. Xe thật: LiDAR
+        # 6 Hz + odom TF qua Wi-Fi trễ tới 0,5 s làm AMCL bỏ scan ("earlier than all
+        # the data in the transform cache"); 29/10/2026 đo khoảng trống tới 1,46 s,
+        # ready tụt mỗi 7-12 s -> FEEDBACK_OR_NAVIGATION_FAULT. scan/odom giữ 0,7 s.
+        self.declare_parameter('map_tf_timeout', .7)
+        self.map_tf_timeout = float(self.get_parameter('map_tf_timeout').value)
+        if not .7 <= self.map_tf_timeout <= 3.:
+            raise ValueError('map_tf_timeout must be within [0.7, 3.0] s')
         self.pub = self.create_publisher(Twist, '/cmd_vel_nav', 10)
         self.ready_pub = self.create_publisher(Bool, '/navigation/ready', 10)
         self.status_pub = self.create_publisher(String, '/navigation/status', 10)
@@ -44,14 +59,30 @@ class NavigationGuard(Node):
         self.create_subscription(PoseWithCovarianceStamped, '/amcl_pose', self.pose,
                                  QoSProfile(depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL))
         self.create_subscription(TFMessage, '/tf', self.tf, 100)
+        self.motion_goals = {}
+        self.moving_stamp = 0.
+        status_qos = QoSProfile(depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL)
+        for name in MOTION_ACTIONS:
+            self.create_subscription(GoalStatusArray, '/'+name+'/_action/status',
+                                     lambda msg, n=name: self.motion_goals.__setitem__(
+                                         n, any(s.status in LIVE_GOAL for s in msg.status_list)), status_qos)
         self.create_service(Trigger, '~/reset', self.reset)
-        self.create_timer(.02, self.tick, clock=rclpy.clock.Clock())
+        # 20 Hz = nhịp smoother/controller; 50 Hz trước đây chỉ nhân bản lệnh cũ và
+        # đẩy 100 tin/s /navigation/ready + /cmd_vel_nav qua Wi-Fi sang gate trên Pi.
+        # Gate vẫn coi lệnh cũ sau 0,3 s và ready cũ sau 0,3 s.
+        self.create_timer(.05, self.tick, clock=rclpy.clock.Clock())
 
     def receive(self, msg):
         values=(msg.linear.x,msg.linear.y,msg.angular.z)
         if all(math.isfinite(v) for v in values):
             self.command=msg;self.command_stamp=time.monotonic()
+            if any(abs(v)>1e-3 for v in values):self.moving_stamp=self.command_stamp
         else:self.fault=True
+
+    def motion_active(self):
+        # Velocity smoother phát số 0 liên tục khi rảnh, nên không dùng "có tin
+        # nhắn". Dùng goal action còn sống, hoặc lệnh khác 0 trong 1 s gần nhất.
+        return any(self.motion_goals.values()) or time.monotonic()-self.moving_stamp<1.
 
     def scan(self, msg):
         if msg.header.frame_id=='laser_frame' and len(msg.ranges)>10 and any(math.isfinite(v) and v>msg.range_min for v in msg.ranges):
@@ -85,10 +116,13 @@ class NavigationGuard(Node):
             if t.header.frame_id=='map' and t.child_frame_id=='odom':
                 self.stamps['tf']=time.monotonic()
 
+    def timeout(self, key):
+        return self.map_tf_timeout if key=='tf' else .7
+
     def feedback_ready(self):
         now=time.monotonic()
         keys=['scan','odom','tf']+(['imu','wheel'] if self.require_imu else [])
-        return self.good_pose and all(now-self.stamps.get(k,0.)<.7 for k in keys)
+        return self.good_pose and all(now-self.stamps.get(k,0.)<self.timeout(k) for k in keys)
 
     def reset(self, req, res):
         res.success=self.feedback_ready()
@@ -100,10 +134,12 @@ class NavigationGuard(Node):
 
     def tick(self):
         ready=self.feedback_ready()
-        if self.ever_ready and not ready:
+        # Chỉ khóa khi mất phản hồi trong lúc đang chạy tự động; lúc đứng yên
+        # (vd. đặt lại 2D Pose Estimate) chỉ chờ, không cho lệnh nào đi qua.
+        if self.ever_ready and not ready and self.motion_active():
             if not self.fault:
                 stale=[k for k in ['scan','odom','tf']+(['imu','wheel'] if self.require_imu else [])
-                       if time.monotonic()-self.stamps.get(k,0.)>=.7]
+                       if time.monotonic()-self.stamps.get(k,0.)>=self.timeout(k)]
                 self.get_logger().error(f'FAULT_LATCHED: stale={stale}, localization_valid={self.good_pose}; cancel goal and reset after feedback recovers')
             self.fault=True
         if ready:self.ever_ready=True

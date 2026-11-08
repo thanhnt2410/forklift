@@ -14,6 +14,7 @@ class TerminalApproachPlanner : public nav2_core::GlobalPlanner {
   std::mutex plan_mutex_;
   double length_{.5};
   double minimum_radius_{.5};
+  bool reuse_cached_{true};
   rclcpp::Clock::SharedPtr clock_;
 public:
   void configure(const rclcpp_lifecycle::LifecycleNode::WeakPtr & parent,std::string name,
@@ -21,6 +22,12 @@ public:
     auto node=parent.lock();if(!node)throw std::runtime_error("Planner lifecycle node unavailable");
     nav2_util::declare_parameter_if_not_declared(node,name+".terminal_distance",rclcpp::ParameterValue(.5));
     node->get_parameter(name+".terminal_distance",length_);
+    // Tái dùng đường đã lập chỉ hợp lý khi planner được gọi lặp theo chu kỳ trong lúc xe đang
+    // chạy. task_manager chỉ gọi planner đúng một lần mỗi lần replan, thường SAU khi Nav2 abort
+    // trên chính đường đó; cache khi ấy trả lại đúng đường cũ (xe còn trong 0,20 m của đường)
+    // nên replan không đổi gì và lặp lại cùng lỗi. Hồ sơ Pallet* trong navigation.launch.py tắt.
+    nav2_util::declare_parameter_if_not_declared(node,name+".reuse_cached_path",rclcpp::ParameterValue(true));
+    node->get_parameter(name+".reuse_cached_path",reuse_cached_);
     if(!std::isfinite(length_) || length_<.2 || length_>2.)throw std::runtime_error("Invalid terminal_distance");
     clock_=node->get_clock();costmap_=map;curve_=std::make_unique<nav2_smac_planner::SmacPlannerHybrid>();
     curve_->configure(parent,name,tf,map);
@@ -35,7 +42,7 @@ public:
     const double a=tf2::getYaw(goal.pose.orientation),c=std::cos(a),s=std::sin(a);
     // Commit to the same valid route across replans. Small odometry changes
     // must not switch between different maneuvers on every planner tick.
-    if(!cached_.poses.empty() && goal.header.frame_id==cached_goal_.header.frame_id &&
+    if(reuse_cached_ && !cached_.poses.empty() && goal.header.frame_id==cached_goal_.header.frame_id &&
       std::hypot(goal.pose.position.x-cached_goal_.pose.position.x,goal.pose.position.y-cached_goal_.pose.position.y)<1e-5 &&
       std::abs(wrap_angle(a-tf2::getYaw(cached_goal_.pose.orientation)))<1e-5) {
       size_t closest=0;double best=1e9,travelled=0.;

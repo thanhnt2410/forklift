@@ -37,15 +37,34 @@ def setup(context):
     auto_home = LaunchConfiguration('auto_home').perform(context).lower() == 'true'
     test_mass = float(LaunchConfiguration('lift_test_mass').perform(context))
     if not 0<=test_mass<=1:raise ValueError('SIM test mass must be between 0 and 1 kg')
-    if world not in ('minimal', 'warehouse', 'p6'):
-        raise ValueError('world must be minimal, warehouse or p6')
+    if world not in ('minimal', 'warehouse', 'p6', 'bays'):
+        raise ValueError('world must be minimal, warehouse, p6 or bays')
+    # Kho ô pallet có bản đồ riêng; chỉ thay khi người dùng để map mặc định.
+    if world == 'bays' and Path(map_file).name == 'warehouse.yaml':
+        map_file = str(Path(share('forklift_navigation'))/'maps/bays.yaml')
     geometry = Path(share('forklift_description')) / 'config/robot.yaml'
     g = yaml.safe_load(geometry.read_text())
-    controllers = yaml.safe_load((Path(share('forklift_control')) / 'config/controllers.yaml').read_text())
-    params = controllers['base_controller']['ros__parameters']['kinematics']
-    params['wheels_radius'] = g['wheel_radius']
-    kinematic_sum = (g['wheel_separation_x']+g['wheel_separation_y'])/2
-    params['sum_of_robot_center_projection_on_X_Y_axis'] = kinematic_sum
+    wheel_type = LaunchConfiguration('wheel_type').perform(context)
+    wheel = g['wheel_types'][wheel_type]
+    holonomic = wheel['drive'] == 'mecanum'
+    control_dir = Path(share('forklift_control')) / 'config'
+    controllers = yaml.safe_load((control_dir / 'controllers.yaml').read_text())
+    if holonomic:
+        params = controllers['base_controller']['ros__parameters']['kinematics']
+        params['wheels_radius'] = wheel['wheel_radius']
+        # k = lx + ly của động học mecanum.
+        kinematic_sum = (g['wheel_separation_x']+g['wheel_separation_y'])/2
+        params['sum_of_robot_center_projection_on_X_Y_axis'] = kinematic_sum
+    else:
+        # Skid-steer: thay hẳn controller. Gate dùng chung công thức bao tốc độ bánh
+        # (|vx| + k|wz|)/r với k = nửa vết bánh hiệu dụng (đã nhân hệ số trượt).
+        controllers['controller_manager']['ros__parameters']['base_controller']['type'] = \
+            'diff_drive_controller/DiffDriveController'
+        controllers['base_controller'] = yaml.safe_load((control_dir / 'diff_drive.yaml').read_text())['base_controller']
+        params = controllers['base_controller']['ros__parameters']
+        params.update(wheel_radius=wheel['wheel_radius'], wheel_separation=g['wheel_separation_y'],
+                      wheel_separation_multiplier=wheel['track_factor'])
+        kinematic_sum = g['wheel_separation_y']*wheel['track_factor']/2
     controllers['base_controller']['ros__parameters']['enable_odom_tf'] = not use_ekf
     # Each launch owns its generated YAML. Remove it when launch shuts down.
     fd, config_path = tempfile.mkstemp(prefix='forklift_controllers_', suffix='.yaml')
@@ -54,6 +73,7 @@ def setup(context):
     robot = xacro.process_file(str(Path(share('forklift_description'))/'urdf/forklift.urdf.xacro'),
                                mappings={'controllers_file': config_path,
                                          'geometry_file': str(geometry),
+                                         'wheel_type': wheel_type,
                                          'lift_test_mass': str(test_mass),
                                          'p6': str(world=='p6').lower(),
                                          'odometry_topic': '/wheel/odometry' if use_ekf else '/odom'}).toxml()
@@ -99,7 +119,15 @@ def setup(context):
     js, base, lift = (spawner(n) for n in ('joint_state_broadcaster', 'base_controller', 'lift_controller'))
     gate = Node(package='forklift_control', executable='command_gate.py',
                 parameters=[str(Path(share('forklift_control'))/'config/command_gate.yaml'),
-                            {'wheel_radius': g['wheel_radius'], 'kinematic_sum': kinematic_sum,
+                            {'wheel_radius': wheel['wheel_radius'], 'kinematic_sum': kinematic_sum,
+                             'holonomic': holonomic,
+                             # Lớp an toàn LiDAR: LiDAR SIM không xoay (laser_yaw 0 như URDF mặc định).
+                             'laser_x': float(g['laser_xyz'][0]), 'laser_y': float(g['laser_xyz'][1]),
+                             'footprint_xmin': float(g['footprint_xmin']),
+                             'footprint_xmax': float(g['footprint_xmax']),
+                             'footprint_halfwidth': float(g['footprint_halfwidth']),
+                             'loaded_xmax': float(g['loaded_xmax']),
+                             'loaded_halfwidth': float(g['loaded_halfwidth']),
                              'autonomous_enabled': navigation == 'localization',
                              'require_navigation_ready': navigation == 'localization'}],
                 output='screen', on_exit=EmitEvent(event=Shutdown(reason='Command gate exited')))
@@ -133,7 +161,8 @@ def setup(context):
             launch_arguments={'mode': navigation, 'map': map_file,
                               'controller': LaunchConfiguration('controller'),
                               'autostart': LaunchConfiguration('autostart'),
-                              'use_ekf': str(use_ekf).lower(), 'p6': str(world=='p6').lower()}.items()))
+                              'use_ekf': str(use_ekf).lower(), 'p6': str(world=='p6').lower(),
+                              'wheel_type': wheel_type}.items()))
     if rviz:
         ready.append(Node(package='rviz2', executable='rviz2', parameters=[common],
                           arguments=['-d', rviz_config or str(Path(share('forklift_bringup'))/'rviz'/('mapping_real.rviz' if navigation == 'mapping' else ('navigation.rviz' if navigation != 'none' else ('p5.rviz' if lift_mode=='supervised' else 'sim.rviz'))))], output='screen'))
@@ -168,7 +197,9 @@ def setup(context):
 
 def generate_launch_description():
     return LaunchDescription([
-        DeclareLaunchArgument('world', default_value='minimal', choices=['minimal', 'warehouse', 'p6']),
+        DeclareLaunchArgument('world', default_value='minimal', choices=['minimal', 'warehouse', 'p6', 'bays']),
+        DeclareLaunchArgument('wheel_type', default_value='rubber', choices=['rubber', 'mecanum'],
+                              description='rubber: V3 85 mm skid-steer (no strafe); mecanum: 100 mm omni'),
         DeclareLaunchArgument('gui', default_value='true', choices=['true', 'false']),
         DeclareLaunchArgument('rviz', default_value='true', choices=['true', 'false']),
         DeclareLaunchArgument('rviz_config', default_value='', description='Optional RViz config override'),

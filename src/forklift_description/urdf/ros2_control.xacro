@@ -7,7 +7,7 @@
       <state_interface name="position"/><state_interface name="velocity"/>
     </joint>
   </xacro:macro>
-  <xacro:macro name="simulation_control" params="controllers_file backend port_file">
+  <xacro:macro name="simulation_control" params="controllers_file backend port_file mecanum:=true">
     <ros2_control name="ForkliftSimSystem" type="system">
       <hardware>
         <xacro:if value="${backend == 'gazebo'}"><plugin>gz_ros2_control/GazeboSimSystem</plugin></xacro:if>
@@ -31,9 +31,17 @@
       <plugin filename="gz_ros2_control-system" name="gz_ros2_control::GazeboSimROS2ControlPlugin">
         <parameters>${controllers_file}</parameters>
         <ros>
-          <remapping>/base_controller/reference_unstamped:=/cmd_vel</remapping>
-          <remapping>/base_controller/odometry:=$(arg odometry_topic)</remapping>
-          <remapping>/base_controller/tf_odometry:=/tf</remapping>
+          <!-- Cùng hợp đồng /cmd_vel -> odom cho cả hai controller; tên topic
+               nội bộ khác nhau. diff_drive_controller tự phát TF lên /tf. -->
+          <xacro:if value="${mecanum}">
+            <remapping>/base_controller/reference_unstamped:=/cmd_vel</remapping>
+            <remapping>/base_controller/odometry:=$(arg odometry_topic)</remapping>
+            <remapping>/base_controller/tf_odometry:=/tf</remapping>
+          </xacro:if>
+          <xacro:unless value="${mecanum}">
+            <remapping>/base_controller/cmd_vel_unstamped:=/cmd_vel</remapping>
+            <remapping>/base_controller/odom:=$(arg odometry_topic)</remapping>
+          </xacro:unless>
         </ros>
       </plugin>
     </gazebo></xacro:if>

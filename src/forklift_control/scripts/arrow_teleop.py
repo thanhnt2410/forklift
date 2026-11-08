@@ -68,8 +68,16 @@ def read_key(fd, timeout=.02):
 class ArrowTeleop(Node):
     def __init__(self):
         super().__init__('arrow_teleop')
+        # turn 0,4 -> 0,6 (30/10/2026): bánh cao su k 0,2265 / r 0,0425 thì 0,4 rad/s
+        # chỉ là 2,1 rad/s mỗi bánh, so với 6 rad/s (kịch phong bào) khi tiến 0,3 m/s.
+        # 0,6 = trần max_wz của command gate -> 3,2 rad/s bánh.
+        # 08/11/2026: 0,6 -> 1,0 -> 0,4. Thử 1,0 thì quay trên sàn kẹt cả 4 bánh (xem
+        # command_gate.yaml). 0,4 rad/s = 2,1 rad/s mỗi bánh, cùng trần max_wz của command gate.
+        # 08/11/2026: 0,4 -> 0,6 theo yêu cầu người dùng để thử lại (3,2 rad/s mỗi bánh,
+        # cùng trần max_wz của command gate). Chưa đo lại: nếu bridge báo
+        # WHEEL_TRACKING_WARNING cả bốn bánh thì hạ về 0,4.
         defaults = dict(speed=.3, reverse_speed=.3, strafe_speed=.3,
-                        turn=.4, key_timeout=.35, state_timeout=.5,
+                        turn=.6, key_timeout=.35, state_timeout=.5,
                         lift_step=.01, lift_max_height=.115)
         limits = dict(speed=.3, reverse_speed=.3, strafe_speed=.3,
                       turn=.6, key_timeout=1., state_timeout=1.,
@@ -136,7 +144,8 @@ class ArrowTeleop(Node):
     def pulse_preset(self, msg):
         if math.isfinite(msg.data) and 0. < msg.data <= self.p['lift_max_height']:
             self.preset_target = msg.data
-            self.get_logger().info('Manual lift: R adds one configured pulse increment; F/H lowers for up to 3 seconds or until the bottom switch.')
+            # ĐÃ SỬA: Cập nhật dòng log hiển thị 30 giây
+            self.get_logger().info('Manual lift: R adds one configured pulse increment; F/H lowers for up to 30 seconds or until the bottom switch.')
 
     def start_lift(self, key, now):
         if self.pending:
@@ -164,8 +173,10 @@ class ArrowTeleop(Node):
         if reason is not None:
             self.get_logger().warning(f'Lift key ignored: {reason}.')
             return
+        
+        # ĐÃ SỬA: Tăng timeout từ 5. giây lên 30. giây để hạ liên tục không bị ngắt giữa chừng
         if key == 'home' or (key == 'lift_down' and self.preset_target is not None):
-            client, goal = self.lift_home, HomeLift.Goal(timeout=5. if self.preset_target is not None else 60.)
+            client, goal = self.lift_home, HomeLift.Goal(timeout=30. if self.preset_target is not None else 60.)
         else:
             if self.preset_target is None and not self.lift.homed:
                 self.get_logger().warning('Press H to home the lift first.')
@@ -255,7 +266,7 @@ def main():
         print('Forklift keyboard: Up/Down = forward/reverse; Left/Right = turn; '
               'A/D or Shift+Left/Right = strafe.\n'
               'R/PageUp = raise; F/PageDown = lower; H/Home = homing.\n'
-              'Position mode: 1 cm steps. Manual pulse mode: R raises one increment; F/H lowers up to 3 s or bottom switch.\n'
+              'Position mode: 1 cm steps. Manual pulse mode: R raises one increment; F/H lowers up to 30 s or bottom switch.\n'
               'Letter keys work with or without Shift/Caps Lock.\n'
               'Space = stop wheels and lift; Q/Ctrl+C = stop and quit.\n'
               'Focus this terminal. Drive keys expire after 0.35 s by default; lift goals run to their target.',

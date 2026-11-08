@@ -5,6 +5,12 @@ command_gate:
     state_timeout: 0.5
     max_vx: 0.30
     max_vy: 0.30
+    # 08/11/2026: 0,6 -> 1,0 -> 0,4. Thử 1,0 thì xe quay trên sàn kẹt cả 4 bánh (bridge báo
+    # WHEEL_TRACKING_WARNING [FL,FR,RL,RR]; 1,0 rad/s = 5,3 rad/s mỗi bánh, PI chạm trần duty
+    # cả bốn). Đo gyro: quay thật chỉ ~0,15 rad/s ở mọi lệnh 0,23-0,84 rad/s nên lệnh thấp không
+    # kém. 0,4 rad/s = 2,1 rad/s mỗi bánh (người dùng chọn thử). Chưa đo lại ở 0,4.
+    # 08/11/2026 (sau): 0,4 -> 0,6 theo yêu cầu người dùng để thử lại; 0,6 rad/s = 3,2 rad/s
+    # mỗi bánh. Chưa đo lại; nếu cả bốn bánh stall thì hạ về 0,4.
     max_wz: 0.6
     max_ax: 0.5
     max_ay: 0.5

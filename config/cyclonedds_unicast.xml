@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- CycloneDDS khong dung multicast: discovery bang danh sach peer unicast.
+     Ly do (06/11/2026): tren mang "Gia Linh", multicast tu Pi ra laptop bi chan
+     -> laptop khong thay topic nao do Pi publish (SPDP cua Pi khong toi dich),
+     trong khi chieu laptop -> Pi van chay. SSH/TCP binh thuong nen de nham la
+     mang tot. Qua hotspot "QuangHoan" thi multicast ca hai chieu deu chay.
+
+     Dung tren CA HAI may:
+       export CYCLONEDDS_URI=file:///<duong_dan>/config/cyclonedds_unicast.xml
+     Liet ke du IP cua ca hai mang; peer khong ton tai thi bi bo qua, khong loi. -->
+<CycloneDDS xmlns="https://cdds.io/config">
+  <Domain id="any">
+    <General>
+      <!-- Chi dinh thang card Wi-Fi: autodetermine co the chon tailscale0 tren
+           laptop (point-to-point, khong multicast) -> hai ben khong gap nhau.
+           presence_required=false de dung CHUNG mot file cho Pi (wlan0) va
+           laptop (wlp0s20f3): thieu card nao thi bo qua card do. -->
+      <Interfaces>
+        <NetworkInterface name="wlan0" presence_required="false"/>
+        <NetworkInterface name="wlp0s20f3" presence_required="false"/>
+      </Interfaces>
+      <AllowMulticast>false</AllowMulticast>
+    </General>
+    <Discovery>
+      <ParticipantIndex>auto</ParticipantIndex>
+      <MaxAutoParticipantIndex>20</MaxAutoParticipantIndex>
+      <Peers>
+        <Peer address="192.168.100.205"/>  <!-- Pi tren Gia Linh -->
+        <Peer address="192.168.100.182"/>  <!-- laptop tren Gia Linh -->
+        <Peer address="10.164.140.215"/>   <!-- Pi tren QuangHoan (hotspot dien thoai) -->
+        <Peer address="10.164.140.253"/>   <!-- laptop tren QuangHoan -->
+        <Peer address="127.0.0.1"/>
+      </Peers>
+    </Discovery>
+  </Domain>
+</CycloneDDS>

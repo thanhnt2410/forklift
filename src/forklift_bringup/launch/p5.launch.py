@@ -14,6 +14,7 @@ def generate_launch_description():
         DeclareLaunchArgument('world',default_value='minimal'),
         DeclareLaunchArgument('navigation',default_value='none'),
         DeclareLaunchArgument('lift_test_mass',default_value='0.0'),
+        DeclareLaunchArgument('wheel_type',default_value='rubber',choices=['rubber','mecanum']),
         IncludeLaunchDescription(PythonLaunchDescriptionSource(str(Path(share('forklift_bringup'))/'launch/sim.launch.py')),
-            launch_arguments={**{k:LaunchConfiguration(k) for k in ['gui','rviz','world','navigation','lift_test_mass']},
+            launch_arguments={**{k:LaunchConfiguration(k) for k in ['gui','rviz','world','navigation','lift_test_mass','wheel_type']},
                               'lift_mode':'supervised','auto_home':'false'}.items())])
